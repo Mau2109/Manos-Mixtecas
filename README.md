@@ -1,36 +1,93 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+📦 Manos Mixtecas – Proyecto Next.js con Supabase y Pruebas
 
-## Getting Started
+Este proyecto corresponde al sistema Manos Mixtecas, desarrollado con Next.js, Supabase y Jest, incluyendo pruebas unitarias y una prueba de integración real con la base de datos.
 
-First, run the development server:
+🧰 Requisitos previos
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+Antes de ejecutar el proyecto, asegúrate de tener instalado:
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+1️⃣ Node.js (obligatorio)
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+Versión recomendada: LTS
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Descargar desde: https://nodejs.org
 
-## Learn More
+Verificar instalación:
 
-To learn more about Next.js, take a look at the following resources:
+node -v
+npm -v
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+2️⃣ Git (opcional pero recomendado)
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Descargar desde: https://git-scm.com
 
-## Deploy on Vercel
+Verificar:
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+git --version
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+🚀 Clonar el proyecto
+git clone <URL_DEL_REPOSITORIO>
+cd manos-mixtecas
+
+📥 Instalar dependencias
+
+Ejecutar una sola vez:
+
+npm install
+
+
+Esto instala:
+
+Next.js
+
+Supabase SDK
+
+Jest
+
+ts-jest
+
+Testing Library
+
+dotenv
+
+🔐 Variables de entorno (Supabase)
+
+Crear un archivo llamado .env.local en la raíz del proyecto:
+
+NEXT_PUBLIC_SUPABASE_URL=https://TU_PROYECTO.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=TU_CLAVE_PUBLICA
+
+
+📌 Estas variables son necesarias para:
+
+Ejecutar la app
+
+Ejecutar la prueba de integración con Supabase
+Instalar Supabase SDK
+
+(Necesario para conexión real y pruebas de integración)
+
+npm install @supabase/supabase-js
+
+3️⃣ Instalar Jest y soporte para TypeScript
+
+(Pruebas unitarias)
+
+npm install --save-dev jest ts-jest @types/jest
+
+
+Esto permite:
+
+Ejecutar test, expect
+
+Probar archivos .ts
+
+4️⃣ Instalar entorno jsdom para Jest
+
+(Necesario desde Jest 28)
+
+npm install --save-dev jest-environment-jsdom
+
+▶️ Ejecutar pruebas
+Pruebas unitarias
+npx jest
