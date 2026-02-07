@@ -1,106 +1,163 @@
-📦 Manos Mixtecas – Proyecto Next.js con Supabase y Pruebas
-Este proyecto corresponde al sistema Manos Mixtecas, desarrollado con Next.js, Supabase y Jest, incluyendo pruebas unitarias y una prueba de integración real con la base de datos.
+# 📦 Manos Mixtecas – Proyecto Next.js con Supabase y Pruebas
 
-🧰 Requisitos previos
+Este proyecto corresponde al sistema **Manos Mixtecas**, desarrollado con **Next.js**, **Supabase** y **Jest**, incluyendo pruebas unitarias y una prueba de integración real con la base de datos.
+
+---
+
+## 🧰 Requisitos previos
+
 Antes de ejecutar el proyecto, asegúrate de tener instalado:
-1️⃣ Node.js (obligatorio)
 
-Versión recomendada: LTS
-Descargar desde: https://nodejs.org
+### 1️⃣ Node.js (obligatorio)
 
-Verificar instalación:
-bashnode -v
+- **Versión recomendada:** LTS
+- **Descargar desde:** [https://nodejs.org](https://nodejs.org)
+
+**Verificar instalación:**
+
+```bash
+node -v
 npm -v
-2️⃣ Git (opcional pero recomendado)
+```
 
-Descargar desde: https://git-scm.com
+### 2️⃣ Git (opcional pero recomendado)
 
-Verificar:
-bashgit --version
+- **Descargar desde:** [https://git-scm.com](https://git-scm.com)
 
-🚀 Clonar el proyecto
-bashgit clone <URL_DEL_REPOSITORIO>
+**Verificar:**
+
+```bash
+git --version
+```
+
+---
+
+## 🚀 Clonar el proyecto
+
+```bash
+git clone <URL_DEL_REPOSITORIO>
 cd manos-mixtecas
+```
 
-📥 Instalar dependencias
-Ejecutar una sola vez:
-bashnpm install
+---
+
+## 📥 Instalar dependencias
+
+Ejecutar **una sola vez**:
+
+```bash
+npm install
+```
+
 Esto instala:
 
-Next.js
-Supabase SDK
-Jest
-ts-jest
-Testing Library
-dotenv
+- Next.js
+- Supabase SDK
+- Jest
+- ts-jest
+- Testing Library
+- dotenv
 
+---
 
-🔐 Variables de entorno (Supabase)
-Crear un archivo llamado .env.local en la raíz del proyecto:
-envNEXT_PUBLIC_SUPABASE_URL=https://TU_PROYECTO.supabase.co
+## 🔐 Variables de entorno (Supabase)
+
+Crear un archivo llamado `.env.local` en la raíz del proyecto:
+
+```env
+NEXT_PUBLIC_SUPABASE_URL=https://TU_PROYECTO.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=TU_CLAVE_PUBLICA
-📌 Estas variables son necesarias para:
+```
 
-Ejecutar la app
-Ejecutar la prueba de integración con Supabase
+📌 **Estas variables son necesarias para:**
 
+- Ejecutar la app
+- Ejecutar la prueba de integración con Supabase
 
-🛠️ Instalación de dependencias adicionales
-Instalar Supabase SDK
+---
+
+## 🛠️ Instalación de dependencias adicionales
+
+### Instalar Supabase SDK
+
 (Necesario para conexión real y pruebas de integración)
-bashnpm install @supabase/supabase-js
-Instalar Jest y soporte para TypeScript
+
+```bash
+npm install @supabase/supabase-js
+```
+
+### Instalar Jest y soporte para TypeScript
+
 (Pruebas unitarias)
-bashnpm install --save-dev jest ts-jest @types/jest
+
+```bash
+npm install --save-dev jest ts-jest @types/jest
+```
+
 Esto permite:
 
-Ejecutar test, expect
-Probar archivos .ts
+- Ejecutar `test`, `expect`
+- Probar archivos `.ts`
 
-Instalar entorno jsdom para Jest
+### Instalar entorno jsdom para Jest
+
 (Necesario desde Jest 28)
-bashnpm install --save-dev jest-environment-jsdom
 
-▶️ Ejecutar pruebas
-Pruebas unitarias
-bashnpx jest
-Ejecutar todas las pruebas
-bashnpm test
-Ejecutar pruebas en modo watch
-bashnpm test -- --watch
+```bash
+npm install --save-dev jest-environment-jsdom
+```
 
-🏃 Ejecutar el proyecto en desarrollo
-bashnpm run dev
+---
+
+## ▶️ Ejecutar pruebas
+
+### Pruebas unitarias
+
+```bash
+npx jest
+```
+
+### Ejecutar todas las pruebas
+
+```bash
+npm test
+```
+
+### Ejecutar pruebas en modo watch
+
+```bash
+npm test -- --watch
+```
+
+---
+
+## 🏃 Ejecutar el proyecto en desarrollo
+
+```bash
+npm run dev
 ```
 
 El proyecto estará disponible en: [http://localhost:3000](http://localhost:3000)
 
+
 ---
 
-## 📂 Estructura del proyecto
-```
-manos-mixtecas/
-├── __tests__/          # Pruebas unitarias e integración
-├── components/         # Componentes de React
-├── pages/             # Páginas de Next.js
-├── lib/               # Utilidades y configuraciones
-├── public/            # Archivos estáticos
-├── .env.local         # Variables de entorno (no subir a Git)
-├── jest.config.js     # Configuración de Jest
-├── package.json       # Dependencias del proyecto
-└── README.md          # Este archivo
+## 🤝 Contribuir
 
-🤝 Contribuir
+1. Fork el proyecto
+2. Crea una rama para tu feature (`git checkout -b feature/nueva-funcionalidad`)
+3. Commit tus cambios (`git commit -m 'Agregar nueva funcionalidad'`)
+4. Push a la rama (`git push origin feature/nueva-funcionalidad`)
+5. Abre un Pull Request
 
-Fork el proyecto
-Crea una rama para tu feature (git checkout -b feature/nueva-funcionalidad)
-Commit tus cambios (git commit -m 'Agregar nueva funcionalidad')
-Push a la rama (git push origin feature/nueva-funcionalidad)
-Abre un Pull Request
+---
 
+## 📄 Licencia
 
-📄 Licencia
 Este proyecto está bajo la Licencia MIT.
 
-📧 Contacto
+---
+
+## 📧 Contacto
+
 Para cualquier duda o sugerencia, contacta al equipo de desarrollo.
