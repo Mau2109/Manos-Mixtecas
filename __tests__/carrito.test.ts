@@ -1,38 +1,115 @@
 jest.mock("../lib/supabaseClient", () => ({
   supabase: {
-    from: jest.fn(() => ({
-      insert: jest.fn().mockReturnThis(),
-      delete: jest.fn().mockReturnThis(),
-      eq: jest.fn().mockReturnThis(),
-    })),
+    from: jest.fn(),
   },
 }));
 
-import { agregarProductoCarrito, eliminarProductoCarrito } from "../lib/services/carritoService";
+import {
+  agregarProductoCarrito,
+  eliminarProductoCarrito,
+  obtenerCarrito,
+  calcularTotalCarrito,
+  listarMetodosPago,
+} from "../lib/services/carritoService";
 import { supabase } from "../lib/supabaseClient";
 
-test("Agregar producto al carrito", async () => {
-  const resultado = await agregarProductoCarrito(1, 1, 2, 100);
-  expect(resultado).toBe(true);
+beforeEach(() => {
+  jest.clearAllMocks();
 });
 
-test("Error si cantidad inválida", async () => {
-  await expect(
-    agregarProductoCarrito(1, 1, 0, 100)
-  ).rejects.toThrow("Cantidad inválida");
+// ─── USD01 - Visualizar productos del carrito ──────────────────────────────
+describe("USD01 - Visualizar productos del carrito", () => {
+  test("Retorna los items del carrito con datos del producto", async () => {
+    const mockItems = [
+      {
+        id_detalle: 1, cantidad: 2, precio_unitario: 150,
+        productos: { id_producto: 1, nombre: "Tapete", imagen: null, fragilidad: "alta" },
+      },
+    ];
+    (supabase.from as jest.Mock).mockReturnValue({
+      select: jest.fn().mockReturnThis(),
+      eq: jest.fn().mockResolvedValue({ data: mockItems, error: null }),
+    });
+    const items = await obtenerCarrito(1);
+    expect(items).toHaveLength(1);
+    expect(items[0].cantidad).toBe(2);
+  });
+
+  test("Error si no se envía ID de carrito", async () => {
+    await expect(obtenerCarrito(0)).rejects.toThrow("ID de carrito requerido");
+  });
 });
 
-describe("Eliminar producto del carrito", () => {
-  test("Elimina un producto del carrito correctamente", async () => {
-    // Mock del delete exitoso
+// ─── USD02 - Cálculo total del carrito ────────────────────────────────────
+describe("USD02 - Cálculo total del carrito", () => {
+  test("Calcula correctamente el total sumando cantidad × precio_unitario", async () => {
+    const mockItems = [
+      { id_detalle: 1, cantidad: 2, precio_unitario: 150 },
+      { id_detalle: 2, cantidad: 1, precio_unitario: 300 },
+    ];
+    (supabase.from as jest.Mock).mockReturnValue({
+      select: jest.fn().mockReturnThis(),
+      eq: jest.fn().mockResolvedValue({ data: mockItems, error: null }),
+    });
+    const total = await calcularTotalCarrito(1);
+    expect(total).toBe(600); // (2*150) + (1*300)
+  });
+
+  test("Retorna 0 si el carrito está vacío", async () => {
+    (supabase.from as jest.Mock).mockReturnValue({
+      select: jest.fn().mockReturnThis(),
+      eq: jest.fn().mockResolvedValue({ data: [], error: null }),
+    });
+    const total = await calcularTotalCarrito(1);
+    expect(total).toBe(0);
+  });
+});
+
+// ─── USD02 (original) - Agregar producto al carrito ───────────────────────
+describe("USD02 - Agregar producto al carrito", () => {
+  test("Agrega producto correctamente", async () => {
+    (supabase.from as jest.Mock).mockReturnValue({
+      insert: jest.fn().mockResolvedValue({ error: null }),
+    });
+    const resultado = await agregarProductoCarrito(1, 1, 2, 100);
+    expect(resultado).toBe(true);
+  });
+
+  test("Error si cantidad es 0 o negativa", async () => {
+    await expect(agregarProductoCarrito(1, 1, 0, 100)).rejects.toThrow("Cantidad inválida");
+    await expect(agregarProductoCarrito(1, 1, -1, 100)).rejects.toThrow("Cantidad inválida");
+  });
+});
+
+// ─── USD01 - Eliminar producto del carrito ────────────────────────────────
+describe("USD01 - Eliminar producto del carrito", () => {
+  test("Elimina un detalle del carrito por ID", async () => {
     (supabase.from as jest.Mock).mockReturnValue({
       delete: jest.fn().mockReturnThis(),
-      eq: jest.fn().mockReturnThis(),
+      eq: jest.fn().mockResolvedValue({ error: null }),
     });
-
-    const resultado = await eliminarProductoCarrito(1, 5);
-
+    const resultado = await eliminarProductoCarrito(1);
     expect(resultado).toBe(true);
-    expect(supabase.from).toHaveBeenCalledWith("carrito");
+  });
+
+  test("Error si no se envía ID de detalle", async () => {
+    await expect(eliminarProductoCarrito(0)).rejects.toThrow("ID de detalle requerido");
+  });
+});
+
+// ─── USD12 - Listar métodos de pago ───────────────────────────────────────
+describe("USD12 - Selección método de pago", () => {
+  test("Retorna lista de métodos de pago activos", async () => {
+    const mockMetodos = [
+      { id_metodo_pago: 1, nombre: "Transferencia bancaria", descripcion: null },
+      { id_metodo_pago: 2, nombre: "Efectivo en entrega", descripcion: null },
+    ];
+    (supabase.from as jest.Mock).mockReturnValue({
+      select: jest.fn().mockReturnThis(),
+      eq: jest.fn().mockResolvedValue({ data: mockMetodos, error: null }),
+    });
+    const metodos = await listarMetodosPago();
+    expect(metodos).toHaveLength(2);
+    expect(metodos[0].nombre).toBe("Transferencia bancaria");
   });
 });
