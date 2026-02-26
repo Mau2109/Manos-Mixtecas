@@ -1,4 +1,7 @@
 import {
+  actualizarArtesanoDb,
+  crearArtesanoDb,
+  eliminarArtesanoDb,
   listarArtesanosDb,
   listarTiposArtesanoDb,
   obtenerGaleriaArtesanoDb,
@@ -37,4 +40,66 @@ export async function listarTiposArtesano(): Promise<string[]> {
    =============================== */
 export async function listarArtesanos() {
   return listarArtesanosDb();
+}
+
+/* ===============================
+   ADM08 - Registrar artesano
+   =============================== */
+export async function crearArtesano(artesano: {
+  nombre: string;
+  apellido?: string;
+  biografia?: string;
+  tipo?: string;
+  comunidad?: string;
+  historia?: string;
+  ubicacion?: string;
+  foto_perfil?: string;
+  telefono?: string;
+  email?: string;
+  id_categoria?: number;
+  estado?: boolean;
+}) {
+  if (!artesano.nombre) {
+    throw new Error("El nombre del artesano es obligatorio");
+  }
+
+  return crearArtesanoDb(artesano);
+}
+
+/* ===============================
+   ADM10 - Actualizar artesano
+   =============================== */
+export async function actualizarArtesano(
+  idArtesano: number,
+  artesano: {
+    nombre?: string;
+    apellido?: string;
+    biografia?: string;
+    tipo?: string;
+    comunidad?: string;
+    historia?: string;
+    ubicacion?: string;
+    foto_perfil?: string;
+    telefono?: string;
+    email?: string;
+    id_categoria?: number;
+    estado?: boolean;
+  }
+) {
+  if (!idArtesano) {
+    throw new Error("ID de artesano requerido");
+  }
+
+  return actualizarArtesanoDb(idArtesano, artesano);
+}
+
+/* ===============================
+   ADM11 - Eliminar artesano
+   =============================== */
+export async function eliminarArtesano(idArtesano: number) {
+  if (!idArtesano) {
+    throw new Error("ID de artesano requerido");
+  }
+
+  return eliminarArtesanoDb(idArtesano);
 }
