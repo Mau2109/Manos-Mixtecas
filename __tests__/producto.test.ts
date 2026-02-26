@@ -1,7 +1,14 @@
-jest.mock("../lib/supabaseClient", () => ({
-  supabase: {
-    from: jest.fn(),
-  },
+jest.mock("../lib/persistence/repositories/productoRepository", () => ({
+  actualizarProductoDb: jest.fn(),
+  consultarStockDb: jest.fn(),
+  crearProductoDb: jest.fn(),
+  eliminarProductoDb: jest.fn(),
+  listarProductosDb: jest.fn(),
+  listarProductosDestacadosDb: jest.fn(),
+  listarProductosPorArtesanoDb: jest.fn(),
+  listarProductosPorTipoArtesanoDb: jest.fn(),
+  obtenerImagenesProductoDb: jest.fn(),
+  obtenerProductoDetalleDb: jest.fn(),
 }));
 
 import {
@@ -16,26 +23,19 @@ import {
   listarProductosPorArtesano,
   listarProductosDestacados,
 } from "../lib/services/productoService";
-import { supabase } from "../lib/supabaseClient";
+import {
+  actualizarProductoDb,
+  consultarStockDb,
+  crearProductoDb,
+  eliminarProductoDb,
+  listarProductosDb,
+  listarProductosDestacadosDb,
+  listarProductosPorArtesanoDb,
+  listarProductosPorTipoArtesanoDb,
+  obtenerImagenesProductoDb,
+  obtenerProductoDetalleDb,
+} from "../lib/persistence/repositories/productoRepository";
 
-// Helper para construir el mock de query chain de supabase
-function mockChain(resolvedValue: { data: unknown; error: unknown }) {
-  const chain: Record<string, jest.Mock> = {};
-  const methods = ["select", "eq", "gt", "single", "update", "insert", "order"];
-  methods.forEach((m) => {
-    chain[m] = jest.fn().mockReturnValue(chain);
-  });
-  // La última llamada en el chain resuelve
-  chain["single"] = jest.fn().mockResolvedValue(resolvedValue);
-  // Para métodos que terminan sin .single()
-  Object.assign(chain, {
-    select: jest.fn().mockReturnValue({ ...chain, then: undefined }),
-    eq: jest.fn().mockReturnValue(chain),
-    gt: jest.fn().mockReturnValue(chain),
-    order: jest.fn().mockResolvedValue(resolvedValue),
-  });
-  return chain;
-}
 
 beforeEach(() => {
   jest.clearAllMocks();
@@ -44,11 +44,7 @@ beforeEach(() => {
 // ─── EXTRA01 ───────────────────────────────────────────────────────────────
 describe("EXTRA01 - Consultar stock", () => {
   test("Retorna el stock de un producto", async () => {
-    (supabase.from as jest.Mock).mockReturnValue({
-      select: jest.fn().mockReturnThis(),
-      eq: jest.fn().mockReturnThis(),
-      single: jest.fn().mockResolvedValue({ data: { stock: 10 }, error: null }),
-    });
+    (consultarStockDb as jest.Mock).mockResolvedValue({ stock: 10 });
     const stock = await consultarStock(1);
     expect(stock).toBe(10);
   });
@@ -57,11 +53,7 @@ describe("EXTRA01 - Consultar stock", () => {
 // ─── ADM02 ─────────────────────────────────────────────────────────────────
 describe("ADM02 - Crear producto", () => {
   test("Crea producto correctamente", async () => {
-    (supabase.from as jest.Mock).mockReturnValue({
-      insert: jest.fn().mockReturnThis(),
-      select: jest.fn().mockReturnThis(),
-      single: jest.fn().mockResolvedValue({ data: { id_producto: 1 }, error: null }),
-    });
+    (crearProductoDb as jest.Mock).mockResolvedValue({ id_producto: 1 });
     const producto = await crearProducto({ nombre: "Artesanía", precio: 200, stock: 5, id_categoria: 1 });
     expect(producto).toBeDefined();
   });
@@ -75,12 +67,7 @@ describe("ADM02 - Crear producto", () => {
 // ─── ADM03 ─────────────────────────────────────────────────────────────────
 describe("ADM03 - Actualizar producto", () => {
   test("Actualiza producto correctamente", async () => {
-    (supabase.from as jest.Mock).mockReturnValue({
-      update: jest.fn().mockReturnThis(),
-      eq: jest.fn().mockReturnThis(),
-      select: jest.fn().mockReturnThis(),
-      single: jest.fn().mockResolvedValue({ data: { id_producto: 1, precio: 250 }, error: null }),
-    });
+    (actualizarProductoDb as jest.Mock).mockResolvedValue({ id_producto: 1, precio: 250 });
     const producto = await actualizarProducto(1, { precio: 250 });
     expect(producto).toBeDefined();
   });
@@ -93,10 +80,7 @@ describe("ADM03 - Actualizar producto", () => {
 // ─── ADM04 ─────────────────────────────────────────────────────────────────
 describe("ADM04 - Eliminar producto (lógico)", () => {
   test("Elimina producto correctamente", async () => {
-    (supabase.from as jest.Mock).mockReturnValue({
-      update: jest.fn().mockReturnThis(),
-      eq: jest.fn().mockResolvedValue({ error: null }),
-    });
+    (eliminarProductoDb as jest.Mock).mockResolvedValue(true);
     const resultado = await eliminarProducto(1);
     expect(resultado).toBe(true);
   });
@@ -113,11 +97,7 @@ describe("USD03 - Listar productos disponibles", () => {
       { id_producto: 1, nombre: "Tapete", precio: 300, imagen: null, stock: 5 },
       { id_producto: 2, nombre: "Barro negro", precio: 500, imagen: null, stock: 2 },
     ];
-    (supabase.from as jest.Mock).mockReturnValue({
-      select: jest.fn().mockReturnThis(),
-      eq: jest.fn().mockReturnThis(),
-      gt: jest.fn().mockResolvedValue({ data: mockProductos, error: null }),
-    });
+    (listarProductosDb as jest.Mock).mockResolvedValue(mockProductos);
     const productos = await listarProductos();
     expect(productos).toHaveLength(2);
   });
@@ -132,11 +112,7 @@ describe("USD04/06/23/26 - Detalle completo de producto", () => {
       fragilidad: "alta", es_unico: true, descuento_pct: 0,
       artesanos: { nombre: "María", apellido: "López", comunidad: "Teotitlán" },
     };
-    (supabase.from as jest.Mock).mockReturnValue({
-      select: jest.fn().mockReturnThis(),
-      eq: jest.fn().mockReturnThis(),
-      single: jest.fn().mockResolvedValue({ data: mockProducto, error: null }),
-    });
+    (obtenerProductoDetalleDb as jest.Mock).mockResolvedValue(mockProducto);
     const producto = await obtenerProductoDetalle(1);
     expect(producto.materiales).toBe("Lana");
     expect(producto.tecnica).toBe("Telar");
@@ -156,11 +132,7 @@ describe("USD05 - Galería de imágenes del producto", () => {
       { id_imagen: 1, url: "img1.jpg", descripcion: "Vista frontal", orden: 0 },
       { id_imagen: 2, url: "img2.jpg", descripcion: "Vista lateral", orden: 1 },
     ];
-    (supabase.from as jest.Mock).mockReturnValue({
-      select: jest.fn().mockReturnThis(),
-      eq: jest.fn().mockReturnThis(),
-      order: jest.fn().mockResolvedValue({ data: mockImagenes, error: null }),
-    });
+    (obtenerImagenesProductoDb as jest.Mock).mockResolvedValue(mockImagenes);
     const imagenes = await obtenerImagenesProducto(1);
     expect(imagenes).toHaveLength(2);
     expect(imagenes[0].orden).toBe(0);
@@ -188,7 +160,7 @@ describe("USD21 - Filtro por tipo de artesano", () => {
     (chain as any).then = (resolve: Function) =>
       resolve({ data: mockProductos, error: null });
 
-    (supabase.from as jest.Mock).mockReturnValue(chain);
+    (listarProductosPorTipoArtesanoDb as jest.Mock).mockResolvedValue(mockProductos);
 
     const productos = await listarProductosPorTipoArtesano("Tejedor");
     expect(productos).toBeDefined();
@@ -213,7 +185,7 @@ describe("USD25 - Listar productos de un artesano", () => {
     (chain as any).then = (resolve: Function) =>
       resolve({ data: mockProductos, error: null });
 
-    (supabase.from as jest.Mock).mockReturnValue(chain);
+    (listarProductosPorArtesanoDb as jest.Mock).mockResolvedValue(mockProductos);
 
     const productos = await listarProductosPorArtesano(1);
     expect(productos).toHaveLength(1);
@@ -228,14 +200,12 @@ describe("USD25 - Listar productos de un artesano", () => {
 describe("USD27 - Productos destacados", () => {
   test("Retorna solo productos con es_destacado = true", async () => {
     const mockDestacados = [{ id_producto: 1, nombre: "Tapete destacado", es_destacado: true }];
-    (supabase.from as jest.Mock).mockReturnValue({
-      select: jest.fn().mockReturnThis(),
-      eq: jest.fn().mockReturnThis(),
-      gt: jest.fn().mockResolvedValue({ data: mockDestacados, error: null }),
-    });
+    (listarProductosDestacadosDb as jest.Mock).mockResolvedValue(mockDestacados);
     
     const destacados = await listarProductosDestacados() as any[];
     expect(destacados).toHaveLength(1);
     expect(destacados[0].es_destacado).toBe(true);
   });
 });
+
+

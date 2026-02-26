@@ -1,16 +1,21 @@
-import { supabase } from "../supabaseClient";
+import {
+  actualizarProductoDb,
+  consultarStockDb,
+  crearProductoDb,
+  eliminarProductoDb,
+  listarProductosDb,
+  listarProductosDestacadosDb,
+  listarProductosPorArtesanoDb,
+  listarProductosPorTipoArtesanoDb,
+  obtenerImagenesProductoDb,
+  obtenerProductoDetalleDb,
+} from "../persistence/repositories/productoRepository";
 
 /* ===============================
    EXTRA01 - Consultar stock de un producto
    =============================== */
 export async function consultarStock(id_producto: number) {
-  const { data, error } = await supabase
-    .from("productos")
-    .select("stock")
-    .eq("id_producto", id_producto)
-    .single();
-
-  if (error) throw error;
+  const data = await consultarStockDb(id_producto);
   return data.stock;
 }
 
@@ -35,15 +40,7 @@ export async function crearProducto(producto: {
   if (!producto.nombre || producto.precio == null || producto.stock == null) {
     throw new Error("Datos obligatorios del producto");
   }
-
-  const { data, error } = await supabase
-    .from("productos")
-    .insert(producto)
-    .select()
-    .single();
-
-  if (error) throw error;
-  return data;
+  return crearProductoDb(producto);
 }
 
 /* ===============================
@@ -70,16 +67,7 @@ export async function actualizarProducto(
   if (!idProducto) {
     throw new Error("ID de producto requerido");
   }
-
-  const { data, error } = await supabase
-    .from("productos")
-    .update(producto)
-    .eq("id_producto", idProducto)
-    .select()
-    .single();
-
-  if (error) throw error;
-  return data;
+  return actualizarProductoDb(idProducto, producto);
 }
 
 /* ===============================
@@ -89,32 +77,14 @@ export async function eliminarProducto(idProducto: number) {
   if (!idProducto) {
     throw new Error("ID de producto requerido");
   }
-
-  const { error } = await supabase
-    .from("productos")
-    .update({ estado: false })
-    .eq("id_producto", idProducto);
-
-  if (error) throw error;
-  return true;
+  return eliminarProductoDb(idProducto);
 }
 
 /* ===============================
    USD03 - Listar productos disponibles
    =============================== */
 export async function listarProductos() {
-  const { data, error } = await supabase
-    .from("productos")
-    .select(`
-      id_producto, nombre, precio, imagen, stock, es_unico, es_destacado, fragilidad, descuento_pct,
-      categorias(nombre),
-      artesanos(id_artesano, nombre, apellido, tipo, comunidad)
-    `)
-    .eq("estado", true)
-    .gt("stock", 0);
-
-  if (error) throw error;
-  return data;
+  return listarProductosDb();
 }
 
 /* ===============================
@@ -125,20 +95,7 @@ export async function listarProductos() {
    =============================== */
 export async function obtenerProductoDetalle(idProducto: number) {
   if (!idProducto) throw new Error("ID de producto requerido");
-
-  const { data, error } = await supabase
-    .from("productos")
-    .select(`
-      *,
-      categorias(nombre),
-      artesanos(id_artesano, nombre, apellido, tipo, comunidad, historia, ubicacion, foto_perfil)
-    `)
-    .eq("id_producto", idProducto)
-    .eq("estado", true)
-    .single();
-
-  if (error) throw error;
-  return data;
+  return obtenerProductoDetalleDb(idProducto);
 }
 
 /* ===============================
@@ -146,15 +103,7 @@ export async function obtenerProductoDetalle(idProducto: number) {
    =============================== */
 export async function obtenerImagenesProducto(idProducto: number) {
   if (!idProducto) throw new Error("ID de producto requerido");
-
-  const { data, error } = await supabase
-    .from("imagenes_producto")
-    .select("id_imagen, url, descripcion, orden")
-    .eq("id_producto", idProducto)
-    .order("orden", { ascending: true });
-
-  if (error) throw error;
-  return data;
+  return obtenerImagenesProductoDb(idProducto);
 }
 
 /* ===============================
@@ -162,18 +111,7 @@ export async function obtenerImagenesProducto(idProducto: number) {
    =============================== */
 export async function listarProductosPorTipoArtesano(tipo: string) {
   if (!tipo) throw new Error("Tipo de artesano requerido");
-
-  const { data, error } = await supabase
-    .from("productos")
-    .select(`
-      id_producto, nombre, precio, imagen, es_unico, fragilidad, descuento_pct,
-      artesanos!inner(id_artesano, nombre, apellido, tipo, comunidad)
-    `)
-    .eq("estado", true)
-    .eq("artesanos.tipo", tipo);
-
-  if (error) throw error;
-  return data;
+  return listarProductosPorTipoArtesanoDb(tipo);
 }
 
 /* ===============================
@@ -181,31 +119,12 @@ export async function listarProductosPorTipoArtesano(tipo: string) {
    =============================== */
 export async function listarProductosPorArtesano(idArtesano: number) {
   if (!idArtesano) throw new Error("ID de artesano requerido");
-
-  const { data, error } = await supabase
-    .from("productos")
-    .select("id_producto, nombre, precio, imagen, stock, es_unico, fragilidad, descuento_pct")
-    .eq("id_artesano", idArtesano)
-    .eq("estado", true);
-
-  if (error) throw error;
-  return data;
+  return listarProductosPorArtesanoDb(idArtesano);
 }
 
 /* ===============================
    USD27 - Productos destacados para página principal
    =============================== */
 export async function listarProductosDestacados() {
-  const { data, error } = await supabase
-    .from("productos")
-    .select(`
-      id_producto, nombre, precio, imagen, es_unico, fragilidad, descuento_pct,
-      artesanos(nombre, apellido, comunidad)
-    `)
-    .eq("estado", true)
-    .eq("es_destacado", true)
-    .gt("stock", 0);
-
-  if (error) throw error;
-  return data;
+  return listarProductosDestacadosDb();
 }

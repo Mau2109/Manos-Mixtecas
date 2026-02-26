@@ -1,4 +1,12 @@
-import { supabase } from "../supabaseClient";
+import {
+  actualizarArtesanoDb,
+  crearArtesanoDb,
+  eliminarArtesanoDb,
+  listarArtesanosDb,
+  listarTiposArtesanoDb,
+  obtenerGaleriaArtesanoDb,
+  obtenerPerfilArtesanoDb,
+} from "../persistence/repositories/artesanoRepository";
 
 /* ===============================
    USD16 - Visualizar perfil del artesano
@@ -8,52 +16,21 @@ import { supabase } from "../supabaseClient";
    =============================== */
 export async function obtenerPerfilArtesano(idArtesano: number) {
   if (!idArtesano) throw new Error("ID de artesano requerido");
-
-  const { data, error } = await supabase
-    .from("artesanos")
-    .select(`
-      id_artesano, nombre, apellido, biografia, tipo, comunidad,
-      historia, ubicacion, foto_perfil, telefono, email,
-      categorias(nombre)
-    `)
-    .eq("id_artesano", idArtesano)
-    .eq("estado", true)
-    .single();
-
-  if (error) throw error;
-  return data;
+  return obtenerPerfilArtesanoDb(idArtesano);
 }
 /* ===============================
    USD28 - Galería de imágenes del artesano
    (imágenes de sus productos como portafolio visual)
    =============================== */
-   export async function obtenerGaleriaArtesano(idArtesano: number) {
-    if (!idArtesano) throw new Error("ID de artesano requerido");
-  
-    const { data, error } = await supabase
-      .from("imagenes_producto")
-      .select(`
-        id_imagen, url, descripcion, orden,
-        productos!inner(id_producto, nombre, id_artesano)
-      `)
-      .eq("productos.id_artesano", idArtesano)
-      .order("orden", { ascending: true });
-  
-    if (error) throw error;
-    return data;
-  }
+export async function obtenerGaleriaArtesano(idArtesano: number) {
+  if (!idArtesano) throw new Error("ID de artesano requerido");
+  return obtenerGaleriaArtesanoDb(idArtesano);
+}
 /* ===============================
    USD21 - Listar tipos de artesano para filtros
    =============================== */
 export async function listarTiposArtesano(): Promise<string[]> {
-  const { data, error } = await supabase
-    .from("artesanos")
-    .select("tipo")
-    .eq("estado", true)
-    .not("tipo", "is", null);
-
-  if (error) throw error;
-
+  const data = await listarTiposArtesanoDb();
   const tipos = [...new Set((data ?? []).map((a) => a.tipo as string))];
   return tipos;
 }
@@ -62,11 +39,67 @@ export async function listarTiposArtesano(): Promise<string[]> {
    USD21 / USD25 - Listar todos los artesanos activos
    =============================== */
 export async function listarArtesanos() {
-  const { data, error } = await supabase
-    .from("artesanos")
-    .select("id_artesano, nombre, apellido, tipo, comunidad, ubicacion, foto_perfil")
-    .eq("estado", true);
+  return listarArtesanosDb();
+}
 
-  if (error) throw error;
-  return data;
+/* ===============================
+   ADM08 - Registrar artesano
+   =============================== */
+export async function crearArtesano(artesano: {
+  nombre: string;
+  apellido?: string;
+  biografia?: string;
+  tipo?: string;
+  comunidad?: string;
+  historia?: string;
+  ubicacion?: string;
+  foto_perfil?: string;
+  telefono?: string;
+  email?: string;
+  id_categoria?: number;
+  estado?: boolean;
+}) {
+  if (!artesano.nombre) {
+    throw new Error("El nombre del artesano es obligatorio");
+  }
+
+  return crearArtesanoDb(artesano);
+}
+
+/* ===============================
+   ADM10 - Actualizar artesano
+   =============================== */
+export async function actualizarArtesano(
+  idArtesano: number,
+  artesano: {
+    nombre?: string;
+    apellido?: string;
+    biografia?: string;
+    tipo?: string;
+    comunidad?: string;
+    historia?: string;
+    ubicacion?: string;
+    foto_perfil?: string;
+    telefono?: string;
+    email?: string;
+    id_categoria?: number;
+    estado?: boolean;
+  }
+) {
+  if (!idArtesano) {
+    throw new Error("ID de artesano requerido");
+  }
+
+  return actualizarArtesanoDb(idArtesano, artesano);
+}
+
+/* ===============================
+   ADM11 - Eliminar artesano
+   =============================== */
+export async function eliminarArtesano(idArtesano: number) {
+  if (!idArtesano) {
+    throw new Error("ID de artesano requerido");
+  }
+
+  return eliminarArtesanoDb(idArtesano);
 }

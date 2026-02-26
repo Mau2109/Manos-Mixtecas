@@ -1,4 +1,4 @@
-import { supabase } from "../supabaseClient";
+import { crearClienteDb } from "../persistence/repositories/clienteRepository";
 
 /* ===============================
    USD01 - Crear perfil de clientes
@@ -10,13 +10,5 @@ export async function crearCliente(cliente: {
   if (!cliente.nombre || !cliente.email) {
     throw new Error("Datos obligatorios");
   }
-
-  const { data, error } = await supabase
-    .from("clientes")
-    .insert(cliente)
-    .select()
-    .single();
-
-  if (error) throw error;
-  return data;
+  return crearClienteDb(cliente);
 }

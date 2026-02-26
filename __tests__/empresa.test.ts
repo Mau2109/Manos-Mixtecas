@@ -1,7 +1,9 @@
-jest.mock("../lib/supabaseClient", () => ({
-  supabase: {
-    from: jest.fn(),
-  },
+jest.mock("../lib/persistence/repositories/empresaRepository", () => ({
+  crearEmpresaDb: jest.fn(),
+  actualizarEmpresaDb: jest.fn(),
+  obtenerEmpresaDb: jest.fn(),
+  obtenerMisionYValoresDb: jest.fn(),
+  obtenerContactoYRedesDb: jest.fn(),
 }));
 
 import {
@@ -11,27 +13,22 @@ import {
   obtenerMisionYValores,
   obtenerContactoYRedes,
 } from "../lib/services/empresaService";
-import { supabase } from "../lib/supabaseClient";
+import {
+  actualizarEmpresaDb,
+  crearEmpresaDb,
+  obtenerContactoYRedesDb,
+  obtenerEmpresaDb,
+  obtenerMisionYValoresDb,
+} from "../lib/persistence/repositories/empresaRepository";
 
 beforeEach(() => {
   jest.clearAllMocks();
 });
 
-function mockSingle(data: unknown) {
-  (supabase.from as jest.Mock).mockReturnValue({
-    insert: jest.fn().mockReturnThis(),
-    update: jest.fn().mockReturnThis(),
-    select: jest.fn().mockReturnThis(),
-    eq: jest.fn().mockReturnThis(),
-    limit: jest.fn().mockReturnThis(),
-    single: jest.fn().mockResolvedValue({ data, error: null }),
-  });
-}
-
 // ─── ADM09 ─────────────────────────────────────────────────────────────────
 describe("ADM09 - Crear empresa", () => {
   test("Crea empresa correctamente", async () => {
-    mockSingle({ id_empresa: 1, nombre: "Manos Mixtecas" });
+    (crearEmpresaDb as jest.Mock).mockResolvedValue({ id_empresa: 1, nombre: "Manos Mixtecas" });
     const empresa = await crearEmpresa({ nombre: "Manos Mixtecas" });
     expect(empresa).toBeDefined();
   });
@@ -44,7 +41,7 @@ describe("ADM09 - Crear empresa", () => {
 // ─── ADM10 ─────────────────────────────────────────────────────────────────
 describe("ADM10 - Actualizar empresa", () => {
   test("Actualiza empresa correctamente", async () => {
-    mockSingle({ id_empresa: 1, nombre: "Manos Mixtecas Actualizada" });
+    (actualizarEmpresaDb as jest.Mock).mockResolvedValue({ id_empresa: 1, nombre: "Manos Mixtecas Actualizada" });
     const empresa = await actualizarEmpresa(1, { nombre: "Manos Mixtecas Actualizada" });
     expect(empresa).toBeDefined();
   });
@@ -57,7 +54,7 @@ describe("ADM10 - Actualizar empresa", () => {
 // ─── ADM11 ─────────────────────────────────────────────────────────────────
 describe("ADM11 - Obtener empresa completa", () => {
   test("Retorna todos los datos de la empresa", async () => {
-    mockSingle({ id_empresa: 1, nombre: "Manos Mixtecas", mision: "Preservar artesanías" });
+    (obtenerEmpresaDb as jest.Mock).mockResolvedValue({ id_empresa: 1, nombre: "Manos Mixtecas", mision: "Preservar artesanías" });
     const empresa = await obtenerEmpresa();
     expect(empresa).toBeDefined();
   });
@@ -70,7 +67,7 @@ describe("USD11 - Misión y valores", () => {
       mision: "Preservar y difundir las artesanías oaxaqueñas",
       valores: "Respeto, autenticidad, comunidad",
     };
-    mockSingle(mockData);
+    (obtenerMisionYValoresDb as jest.Mock).mockResolvedValue(mockData);
     const datos = await obtenerMisionYValores();
     expect(datos.mision).toBeDefined();
     expect(datos.valores).toBeDefined();
@@ -86,7 +83,7 @@ describe("USD19/20 - Contacto y redes sociales", () => {
       redes_sociales: { instagram: "@manosmixtecas", facebook: "ManosMinxtecas" },
       formulario_contacto_email: "contacto@manosmixtecas.com",
     };
-    mockSingle(mockData);
+    (obtenerContactoYRedesDb as jest.Mock).mockResolvedValue(mockData);
     const contacto = await obtenerContactoYRedes();
     expect(contacto.redes_sociales).toBeDefined();
     expect(contacto.email).toBe("contacto@manosmixtecas.com");
