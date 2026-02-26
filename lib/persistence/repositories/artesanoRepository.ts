@@ -56,3 +56,65 @@ export async function listarArtesanosDb() {
   if (error) throw error;
   return data;
 }
+
+export async function crearArtesanoDb(artesano: {
+  nombre: string;
+  apellido?: string;
+  biografia?: string;
+  tipo?: string;
+  comunidad?: string;
+  historia?: string;
+  ubicacion?: string;
+  foto_perfil?: string;
+  telefono?: string;
+  email?: string;
+  id_categoria?: number;
+  estado?: boolean;
+}) {
+  const { data, error } = await supabase
+    .from("artesanos")
+    .insert(artesano)
+    .select()
+    .single();
+
+  if (error) throw error;
+  return data;
+}
+
+export async function actualizarArtesanoDb(
+  idArtesano: number,
+  artesano: {
+    nombre?: string;
+    apellido?: string;
+    biografia?: string;
+    tipo?: string;
+    comunidad?: string;
+    historia?: string;
+    ubicacion?: string;
+    foto_perfil?: string;
+    telefono?: string;
+    email?: string;
+    id_categoria?: number;
+    estado?: boolean;
+  }
+) {
+  const { data, error } = await supabase
+    .from("artesanos")
+    .update(artesano)
+    .eq("id_artesano", idArtesano)
+    .select()
+    .single();
+
+  if (error) throw error;
+  return data;
+}
+
+export async function eliminarArtesanoDb(idArtesano: number) {
+  const { error } = await supabase
+    .from("artesanos")
+    .update({ estado: false })
+    .eq("id_artesano", idArtesano);
+
+  if (error) throw error;
+  return true;
+}
