@@ -1,4 +1,7 @@
-import { supabase } from "../supabaseClient";
+import {
+  crearUsuarioDb,
+  loginAdministradorDb,
+} from "../persistence/repositories/loginRepository";
 
 /* ===============================
    ADM01 - Iniciar sesión
@@ -7,20 +10,7 @@ export async function loginAdministrador(email: string, password: string) {
   if (!email || !password) {
     throw new Error("Credenciales obligatorias");
   }
-
-  const { data, error } = await supabase
-    .from("usuarios")
-    .select("*")
-    .eq("email", email)
-    .eq("password", password)
-    .eq("estado", true)
-    .single();
-
-  if (error || !data) {
-    throw new Error("Credenciales inválidas");
-  }
-
-  return data;
+  return loginAdministradorDb(email, password);
 }
 
 /* ===============================
@@ -35,18 +25,6 @@ export async function loginAdministrador(email: string, password: string) {
     if (!usuario.nombre || !usuario.email || !usuario.password || !usuario.id_rol) {
       throw new Error("Datos obligatorios del usuario");
     }
-  
-    const { data, error } = await supabase
-      .from("usuarios")
-      .insert({
-        nombre: usuario.nombre,
-        email: usuario.email,
-        password: usuario.password,
-        id_rol: usuario.id_rol,
-      })
-      .select()
-      .single();
-  
-    if (error) throw error;
-    return data;
+
+    return crearUsuarioDb(usuario);
   }

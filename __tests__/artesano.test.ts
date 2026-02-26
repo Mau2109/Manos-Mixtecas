@@ -1,15 +1,20 @@
-jest.mock("../lib/supabaseClient", () => ({
-    supabase: {
-      from: jest.fn(),
-    },
-  }));
-  
-  import {
-    obtenerPerfilArtesano,
-    listarTiposArtesano,
-    listarArtesanos,
-  } from "../lib/services/artesanoService";
-  import { supabase } from "../lib/supabaseClient";
+jest.mock("../lib/persistence/repositories/artesanoRepository", () => ({
+  obtenerPerfilArtesanoDb: jest.fn(),
+  obtenerGaleriaArtesanoDb: jest.fn(),
+  listarTiposArtesanoDb: jest.fn(),
+  listarArtesanosDb: jest.fn(),
+}));
+
+import {
+  obtenerPerfilArtesano,
+  listarTiposArtesano,
+  listarArtesanos,
+} from "../lib/services/artesanoService";
+import {
+  listarArtesanosDb,
+  listarTiposArtesanoDb,
+  obtenerPerfilArtesanoDb,
+} from "../lib/persistence/repositories/artesanoRepository";
   
   beforeEach(() => {
     jest.clearAllMocks();
@@ -32,11 +37,7 @@ jest.mock("../lib/supabaseClient", () => ({
         email: "maria@ejemplo.com",
         categorias: { nombre: "Textiles" },
       };
-      (supabase.from as jest.Mock).mockReturnValue({
-        select: jest.fn().mockReturnThis(),
-        eq: jest.fn().mockReturnThis(),
-        single: jest.fn().mockResolvedValue({ data: mockArtesano, error: null }),
-      });
+      (obtenerPerfilArtesanoDb as jest.Mock).mockResolvedValue(mockArtesano);
   
       const artesano = await obtenerPerfilArtesano(1);
       expect(artesano.nombre).toBe("María");
@@ -53,14 +54,11 @@ jest.mock("../lib/supabaseClient", () => ({
   // ─── USD21 - Tipos de artesano para filtros ───────────────────────────────
   describe("USD21 - Listar tipos de artesano", () => {
     test("Retorna lista de tipos únicos de artesano", async () => {
-      (supabase.from as jest.Mock).mockReturnValue({
-        select: jest.fn().mockReturnThis(),
-        eq: jest.fn().mockReturnThis(),
-        not: jest.fn().mockResolvedValue({
-          data: [{ tipo: "Tejedor" }, { tipo: "Alfarero" }, { tipo: "Tejedor" }],
-          error: null,
-        }),
-      });
+      (listarTiposArtesanoDb as jest.Mock).mockResolvedValue([
+        { tipo: "Tejedor" },
+        { tipo: "Alfarero" },
+        { tipo: "Tejedor" },
+      ]);
   
       const tipos = await listarTiposArtesano();
       expect(tipos).toContain("Tejedor");
@@ -77,10 +75,7 @@ jest.mock("../lib/supabaseClient", () => ({
         { id_artesano: 1, nombre: "María", tipo: "Tejedor", comunidad: "Teotitlán" },
         { id_artesano: 2, nombre: "Juan", tipo: "Alfarero", comunidad: "Coyotepec" },
       ];
-      (supabase.from as jest.Mock).mockReturnValue({
-        select: jest.fn().mockReturnThis(),
-        eq: jest.fn().mockResolvedValue({ data: mockArtesanos, error: null }),
-      });
+      (listarArtesanosDb as jest.Mock).mockResolvedValue(mockArtesanos);
   
       const artesanos = await listarArtesanos();
       expect(artesanos).toHaveLength(2);

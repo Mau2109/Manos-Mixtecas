@@ -1,16 +1,12 @@
-jest.mock("../lib/supabaseClient", () => ({
-  supabase: {
-    from: jest.fn(() => ({
-      insert: jest.fn().mockReturnThis(),
-      select: jest.fn().mockReturnThis(),
-      single: jest.fn().mockResolvedValue({ data: {}, error: null }),
-    })),
-  },
+jest.mock("../lib/persistence/repositories/clienteRepository", () => ({
+  crearClienteDb: jest.fn(),
 }));
 
 import { crearCliente } from "../lib/services/clienteService";
+import { crearClienteDb } from "../lib/persistence/repositories/clienteRepository";
 
 test("Crear cliente correctamente", async () => {
+  (crearClienteDb as jest.Mock).mockResolvedValue({});
   const cliente = await crearCliente({
     nombre: "Juan",
     email: "juan@mail.com",

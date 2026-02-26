@@ -1,4 +1,9 @@
-import { supabase } from "../supabaseClient";
+import {
+  confirmarPedidoDb,
+  crearVentaDb,
+  obtenerEstadoEnvioDb,
+  obtenerResumenVentaDb,
+} from "../persistence/repositories/ventaRepository";
 
 /* ===============================
    USD14 - Formulario de datos de envío
@@ -30,24 +35,7 @@ export async function crearVenta(venta: {
   ) {
     throw new Error("Datos de envío incompletos");
   }
-
-  const { data, error } = await supabase
-    .from("ventas")
-    .insert({
-      id_cliente: venta.id_cliente,
-      total: venta.total,
-      subtotal: venta.subtotal ?? venta.total,
-      id_metodo_pago: venta.id_metodo_pago,
-      descuento_pct: venta.descuento_pct ?? 0,
-      datos_envio: venta.datos_envio,
-      estado: "Pendiente",
-      confirmacion_pedido: false,
-    })
-    .select()
-    .single();
-
-  if (error) throw error;
-  return data;
+  return crearVentaDb(venta);
 }
 
 /* ===============================
@@ -55,16 +43,7 @@ export async function crearVenta(venta: {
    =============================== */
 export async function confirmarPedido(idVenta: number) {
   if (!idVenta) throw new Error("ID de venta requerido");
-
-  const { data, error } = await supabase
-    .from("ventas")
-    .update({ confirmacion_pedido: true, estado: "Confirmado" })
-    .eq("id_venta", idVenta)
-    .select()
-    .single();
-
-  if (error) throw error;
-  return data;
+  return confirmarPedidoDb(idVenta);
 }
 
 /* ===============================
@@ -72,24 +51,7 @@ export async function confirmarPedido(idVenta: number) {
    =============================== */
 export async function obtenerResumenVenta(idVenta: number) {
   if (!idVenta) throw new Error("ID de venta requerido");
-
-  const { data, error } = await supabase
-    .from("ventas")
-    .select(`
-      id_venta, total, subtotal, descuento_pct, estado,
-      confirmacion_pedido, datos_envio, fecha_venta,
-      metodos_pago(nombre),
-      clientes(nombre, apellido, email),
-      detalle_venta(
-        id_detalle, cantidad, precio_unitario,
-        productos(id_producto, nombre, imagen)
-      )
-    `)
-    .eq("id_venta", idVenta)
-    .single();
-
-  if (error) throw error;
-  return data;
+  return obtenerResumenVentaDb(idVenta);
 }
 
 /* ===============================
@@ -97,13 +59,5 @@ export async function obtenerResumenVenta(idVenta: number) {
    =============================== */
 export async function obtenerEstadoEnvio(idVenta: number) {
   if (!idVenta) throw new Error("ID de venta requerido");
-
-  const { data, error } = await supabase
-    .from("ventas")
-    .select("id_venta, estado, confirmacion_envio, fecha_envio, datos_envio")
-    .eq("id_venta", idVenta)
-    .single();
-
-  if (error) throw error;
-  return data;
+  return obtenerEstadoEnvioDb(idVenta);
 }
