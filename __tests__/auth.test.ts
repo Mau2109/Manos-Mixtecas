@@ -1,35 +1,25 @@
-jest.mock("../lib/supabaseClient", () => ({
-  supabase: {
-    from: jest.fn(() => ({
-      /* Login */
-      select: jest.fn().mockReturnThis(),
-      eq: jest.fn().mockReturnThis(),
-
-      /* Crear usuario */
-      insert: jest.fn().mockReturnThis(),
-
-      /* Común */
-      single: jest.fn().mockResolvedValue({
-        data: {
-          id_usuario: 1,
-          nombre: "Admin",
-          email: "admin@mail.com",
-          id_rol: 1,
-        },
-        error: null,
-      }),
-    })),
-  },
+jest.mock("../lib/persistence/repositories/loginRepository", () => ({
+  loginAdministradorDb: jest.fn(),
+  crearUsuarioDb: jest.fn(),
 }));
-
 
 import { loginAdministrador } from "../lib/services/loginServices";
 import { crearUsuario } from "../lib/services/loginServices";
+import {
+  crearUsuarioDb,
+  loginAdministradorDb,
+} from "../lib/persistence/repositories/loginRepository";
 
   /* ===============================
       AMD01-Login administrador
        =============================== */
 test("Login administrador correcto", async () => {
+  (loginAdministradorDb as jest.Mock).mockResolvedValue({
+    id_usuario: 1,
+    nombre: "Admin",
+    email: "admin@mail.com",
+    id_rol: 1,
+  });
   const usuario = await loginAdministrador(
     "admin@mail.com",
     "1234"
@@ -49,6 +39,12 @@ test("Error si faltan credenciales", async () => {
  AMD08-Crear usuario con rol
  =============================== */
  test("Crear usuario con rol correctamente", async () => {
+  (crearUsuarioDb as jest.Mock).mockResolvedValue({
+    id_usuario: 1,
+    nombre: "Administrador",
+    email: "admin@mail.com",
+    id_rol: 1,
+  });
   const usuario = await crearUsuario({
     nombre: "Administrador",
     email: "admin@mail.com",

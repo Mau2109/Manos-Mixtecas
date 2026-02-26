@@ -1,21 +1,16 @@
-import { supabase } from "../supabaseClient";
+import {
+  agregarProductoCarritoDb,
+  eliminarProductoCarritoDb,
+  listarMetodosPagoDb,
+  obtenerCarritoDb,
+} from "../persistence/repositories/carritoRepository";
 
 /* ===============================
    USD01 - Visualizar productos del carrito
    =============================== */
 export async function obtenerCarrito(idCarrito: number) {
   if (!idCarrito) throw new Error("ID de carrito requerido");
-
-  const { data, error } = await supabase
-    .from("detalle_carrito")
-    .select(`
-      id_detalle, cantidad, precio_unitario,
-      productos(id_producto, nombre, imagen, stock, fragilidad, es_unico)
-    `)
-    .eq("id_carrito", idCarrito);
-
-  if (error) throw error;
-  return data;
+  return obtenerCarritoDb(idCarrito);
 }
 
 /* ===============================
@@ -44,16 +39,7 @@ export async function agregarProductoCarrito(
   if (cantidad <= 0) {
     throw new Error("Cantidad inválida");
   }
-
-  const { error } = await supabase.from("detalle_carrito").insert({
-    id_carrito,
-    id_producto,
-    cantidad,
-    precio_unitario: precio,
-  });
-
-  if (error) throw error;
-  return true;
+  return agregarProductoCarritoDb(id_carrito, id_producto, cantidad, precio);
 }
 
 /* ===============================
@@ -61,25 +47,12 @@ export async function agregarProductoCarrito(
    =============================== */
 export async function eliminarProductoCarrito(idDetalle: number) {
   if (!idDetalle) throw new Error("ID de detalle requerido");
-
-  const { error } = await supabase
-    .from("detalle_carrito")
-    .delete()
-    .eq("id_detalle", idDetalle);
-
-  if (error) throw new Error(error.message);
-  return true;
+  return eliminarProductoCarritoDb(idDetalle);
 }
 
 /* ===============================
    USD12 - Selección de método de pago
    =============================== */
 export async function listarMetodosPago() {
-  const { data, error } = await supabase
-    .from("metodos_pago")
-    .select("id_metodo_pago, nombre, descripcion")
-    .eq("estado", true);
-
-  if (error) throw error;
-  return data;
+  return listarMetodosPagoDb();
 }

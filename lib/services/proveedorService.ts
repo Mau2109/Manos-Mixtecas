@@ -1,4 +1,10 @@
-import { supabase } from "../supabaseClient";
+import {
+  actualizarProveedorDb,
+  crearProveedorDb,
+  eliminarProveedorDb,
+  limpiarDatosProveedorDb,
+  obtenerProveedoresDb,
+} from "../persistence/repositories/proveedorRepository";
 
 /* ===============================
    ADM05 - Registrar proveedor
@@ -12,15 +18,7 @@ export async function crearProveedor(proveedor: {
   if (!proveedor.nombre) {
     throw new Error("El nombre del proveedor es obligatorio");
   }
-
-  const { data, error } = await supabase
-    .from("proveedores")
-    .insert(proveedor)
-    .select()
-    .single();
-
-  if (error) throw error;
-  return data;
+  return crearProveedorDb(proveedor);
 }
 
 
@@ -39,16 +37,7 @@ export async function actualizarProveedor(
     if (!idProveedor) {
       throw new Error("ID de proveedor requerido");
     }
-  
-    const { data, error } = await supabase
-      .from("proveedores")
-      .update(proveedor)
-      .eq("id_proveedor", idProveedor)
-      .select()
-      .single();
-  
-    if (error) throw error;
-    return data;
+    return actualizarProveedorDb(idProveedor, proveedor);
 }
   
 /* ===============================
@@ -58,43 +47,19 @@ export async function eliminarProveedor(idProveedor: number) {
     if (!idProveedor) {
       throw new Error("ID de proveedor requerido");
     }
-  
-    const { error } = await supabase
-      .from("proveedores")
-      .delete()
-      .eq("id_proveedor", idProveedor);
-  
-    if (error) throw error;
-    return true;
+    return eliminarProveedorDb(idProveedor);
 }
 
 /* ===============================
  Consultar proveedores- es por si se ocupa, no venia en la historia de usuario
    =============================== */
 export async function obtenerProveedores() {
-    const { data, error } = await supabase
-      .from("proveedores")
-      .select("*")
-      .order("nombre", { ascending: true });
-  
-    if (error) throw error;
-    return data;
+    return obtenerProveedoresDb();
 }
   
 export async function limpiarDatosProveedor(idProveedor: number) {
   if (!idProveedor) {
     throw new Error("ID de proveedor requerido");
   }
-
-  const { error } = await supabase
-    .from("proveedores")
-    .update({
-      telefono: null,
-      email: null,
-      direccion: null,
-    })
-    .eq("id_proveedor", idProveedor);
-
-  if (error) throw error;
-  return true;
+  return limpiarDatosProveedorDb(idProveedor);
 }

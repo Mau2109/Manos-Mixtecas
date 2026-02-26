@@ -1,8 +1,9 @@
-jest.mock("../lib/supabaseClient", () => ({
-    supabase: {
-      from: jest.fn(),
-    },
-  }));
+jest.mock("../lib/persistence/repositories/ventaRepository", () => ({
+  crearVentaDb: jest.fn(),
+  confirmarPedidoDb: jest.fn(),
+  obtenerResumenVentaDb: jest.fn(),
+  obtenerEstadoEnvioDb: jest.fn(),
+}));
   
   import {
     crearVenta,
@@ -10,7 +11,12 @@ jest.mock("../lib/supabaseClient", () => ({
     obtenerResumenVenta,
     obtenerEstadoEnvio,
   } from "../lib/services/ventaService";
-  import { supabase } from "../lib/supabaseClient";
+  import {
+    confirmarPedidoDb,
+    crearVentaDb,
+    obtenerEstadoEnvioDb,
+    obtenerResumenVentaDb,
+  } from "../lib/persistence/repositories/ventaRepository";
   
   beforeEach(() => {
     jest.clearAllMocks();
@@ -28,11 +34,7 @@ jest.mock("../lib/supabaseClient", () => ({
   describe("USD13/14 - Crear venta con datos de envío", () => {
     test("Crea venta correctamente con todos los datos", async () => {
       const mockVenta = { id_venta: 1, total: 500, estado: "Pendiente" };
-      (supabase.from as jest.Mock).mockReturnValue({
-        insert: jest.fn().mockReturnThis(),
-        select: jest.fn().mockReturnThis(),
-        single: jest.fn().mockResolvedValue({ data: mockVenta, error: null }),
-      });
+      (crearVentaDb as jest.Mock).mockResolvedValue(mockVenta);
   
       const venta = await crearVenta({
         id_cliente: 1,
@@ -76,12 +78,7 @@ jest.mock("../lib/supabaseClient", () => ({
   describe("USD13 - Confirmar pedido", () => {
     test("Confirma el pedido correctamente", async () => {
       const mockVenta = { id_venta: 1, confirmacion_pedido: true, estado: "Confirmado" };
-      (supabase.from as jest.Mock).mockReturnValue({
-        update: jest.fn().mockReturnThis(),
-        eq: jest.fn().mockReturnThis(),
-        select: jest.fn().mockReturnThis(),
-        single: jest.fn().mockResolvedValue({ data: mockVenta, error: null }),
-      });
+      (confirmarPedidoDb as jest.Mock).mockResolvedValue(mockVenta);
   
       const venta = await confirmarPedido(1);
       expect(venta.confirmacion_pedido).toBe(true);
@@ -107,11 +104,7 @@ jest.mock("../lib/supabaseClient", () => ({
             clientes: { nombre: "Ana", apellido: "López" },
             detalle_venta: [{ id_detalle: 1, cantidad: 2, precio_unitario: 250 }],
           } as any;  
-      (supabase.from as jest.Mock).mockReturnValue({
-        select: jest.fn().mockReturnThis(),
-        eq: jest.fn().mockReturnThis(),
-        single: jest.fn().mockResolvedValue({ data: mockResumen, error: null }),
-      });
+      (obtenerResumenVentaDb as jest.Mock).mockResolvedValue(mockResumen);
 
       const resumen = await obtenerResumenVenta(1) as any;  // <-- cast aquí
         expect(resumen.total).toBe(500);
@@ -135,11 +128,7 @@ jest.mock("../lib/supabaseClient", () => ({
         fecha_envio: "2025-01-15T10:00:00",
         datos_envio: datosEnvioValidos,
       };
-      (supabase.from as jest.Mock).mockReturnValue({
-        select: jest.fn().mockReturnThis(),
-        eq: jest.fn().mockReturnThis(),
-        single: jest.fn().mockResolvedValue({ data: mockEstado, error: null }),
-      });
+      (obtenerEstadoEnvioDb as jest.Mock).mockResolvedValue(mockEstado);
   
       const estado = await obtenerEstadoEnvio(1);
       expect(estado.confirmacion_envio).toBe(true);

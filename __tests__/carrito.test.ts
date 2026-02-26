@@ -1,7 +1,8 @@
-jest.mock("../lib/supabaseClient", () => ({
-  supabase: {
-    from: jest.fn(),
-  },
+jest.mock("../lib/persistence/repositories/carritoRepository", () => ({
+  agregarProductoCarritoDb: jest.fn(),
+  eliminarProductoCarritoDb: jest.fn(),
+  listarMetodosPagoDb: jest.fn(),
+  obtenerCarritoDb: jest.fn(),
 }));
 
 import {
@@ -11,7 +12,12 @@ import {
   calcularTotalCarrito,
   listarMetodosPago,
 } from "../lib/services/carritoService";
-import { supabase } from "../lib/supabaseClient";
+import {
+  agregarProductoCarritoDb,
+  eliminarProductoCarritoDb,
+  listarMetodosPagoDb,
+  obtenerCarritoDb,
+} from "../lib/persistence/repositories/carritoRepository";
 
 beforeEach(() => {
   jest.clearAllMocks();
@@ -26,10 +32,7 @@ describe("USD01 - Visualizar productos del carrito", () => {
         productos: { id_producto: 1, nombre: "Tapete", imagen: null, fragilidad: "alta" },
       },
     ];
-    (supabase.from as jest.Mock).mockReturnValue({
-      select: jest.fn().mockReturnThis(),
-      eq: jest.fn().mockResolvedValue({ data: mockItems, error: null }),
-    });
+    (obtenerCarritoDb as jest.Mock).mockResolvedValue(mockItems);
     const items = await obtenerCarrito(1);
     expect(items).toHaveLength(1);
     expect(items[0].cantidad).toBe(2);
@@ -47,19 +50,13 @@ describe("USD02 - Cálculo total del carrito", () => {
       { id_detalle: 1, cantidad: 2, precio_unitario: 150 },
       { id_detalle: 2, cantidad: 1, precio_unitario: 300 },
     ];
-    (supabase.from as jest.Mock).mockReturnValue({
-      select: jest.fn().mockReturnThis(),
-      eq: jest.fn().mockResolvedValue({ data: mockItems, error: null }),
-    });
+    (obtenerCarritoDb as jest.Mock).mockResolvedValue(mockItems);
     const total = await calcularTotalCarrito(1);
     expect(total).toBe(600); // (2*150) + (1*300)
   });
 
   test("Retorna 0 si el carrito está vacío", async () => {
-    (supabase.from as jest.Mock).mockReturnValue({
-      select: jest.fn().mockReturnThis(),
-      eq: jest.fn().mockResolvedValue({ data: [], error: null }),
-    });
+    (obtenerCarritoDb as jest.Mock).mockResolvedValue([]);
     const total = await calcularTotalCarrito(1);
     expect(total).toBe(0);
   });
@@ -68,9 +65,7 @@ describe("USD02 - Cálculo total del carrito", () => {
 // ─── USD02 (original) - Agregar producto al carrito ───────────────────────
 describe("USD02 - Agregar producto al carrito", () => {
   test("Agrega producto correctamente", async () => {
-    (supabase.from as jest.Mock).mockReturnValue({
-      insert: jest.fn().mockResolvedValue({ error: null }),
-    });
+    (agregarProductoCarritoDb as jest.Mock).mockResolvedValue(true);
     const resultado = await agregarProductoCarrito(1, 1, 2, 100);
     expect(resultado).toBe(true);
   });
@@ -84,10 +79,7 @@ describe("USD02 - Agregar producto al carrito", () => {
 // ─── USD01 - Eliminar producto del carrito ────────────────────────────────
 describe("USD01 - Eliminar producto del carrito", () => {
   test("Elimina un detalle del carrito por ID", async () => {
-    (supabase.from as jest.Mock).mockReturnValue({
-      delete: jest.fn().mockReturnThis(),
-      eq: jest.fn().mockResolvedValue({ error: null }),
-    });
+    (eliminarProductoCarritoDb as jest.Mock).mockResolvedValue(true);
     const resultado = await eliminarProductoCarrito(1);
     expect(resultado).toBe(true);
   });
@@ -104,10 +96,7 @@ describe("USD12 - Selección método de pago", () => {
       { id_metodo_pago: 1, nombre: "Transferencia bancaria", descripcion: null },
       { id_metodo_pago: 2, nombre: "Efectivo en entrega", descripcion: null },
     ];
-    (supabase.from as jest.Mock).mockReturnValue({
-      select: jest.fn().mockReturnThis(),
-      eq: jest.fn().mockResolvedValue({ data: mockMetodos, error: null }),
-    });
+    (listarMetodosPagoDb as jest.Mock).mockResolvedValue(mockMetodos);
     const metodos = await listarMetodosPago();
     expect(metodos).toHaveLength(2);
     expect(metodos[0].nombre).toBe("Transferencia bancaria");
