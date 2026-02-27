@@ -90,8 +90,8 @@ describe("ADM04 - Eliminar producto (lógico)", () => {
   });
 });
 
-// ─── USD03 ─────────────────────────────────────────────────────────────────
-describe("USD03 - Listar productos disponibles", () => {
+// ─── USD06 ─────────────────────────────────────────────────────────────────
+describe("USD06 - Listar productos", () => {
   test("Retorna lista de productos con estado true y stock > 0", async () => {
     const mockProductos = [
       { id_producto: 1, nombre: "Tapete", precio: 300, imagen: null, stock: 5 },
@@ -103,8 +103,8 @@ describe("USD03 - Listar productos disponibles", () => {
   });
 });
 
-// ─── USD04 / USD06 / USD23 / USD26 ─────────────────────────────────────────
-describe("USD04/06/23/26 - Detalle completo de producto", () => {
+// ─── USD07 / USD09 / USD22 / USD25 ─────────────────────────────────────────
+describe("USD07/09/22/25 - Detalle completo de producto", () => {
   test("Retorna producto con descripción, materiales, técnica y fragilidad", async () => {
     const mockProducto = {
       id_producto: 1, nombre: "Tapete", precio: 300,
@@ -125,8 +125,8 @@ describe("USD04/06/23/26 - Detalle completo de producto", () => {
   });
 });
 
-// ─── USD05 ─────────────────────────────────────────────────────────────────
-describe("USD05 - Galería de imágenes del producto", () => {
+// ─── USD08 ─────────────────────────────────────────────────────────────────
+describe("USD08 - Galería de imágenes", () => {
   test("Retorna imágenes ordenadas por campo 'orden'", async () => {
     const mockImagenes = [
       { id_imagen: 1, url: "img1.jpg", descripcion: "Vista frontal", orden: 0 },
@@ -143,8 +143,8 @@ describe("USD05 - Galería de imágenes del producto", () => {
   });
 });
 
-// ─── USD21 ─────────────────────────────────────────────────────────────────
-describe("USD21 - Filtro por tipo de artesano", () => {
+// ─── USD20 ─────────────────────────────────────────────────────────────────
+describe("USD20 - Filtro por tipo de artesano", () => {
   test("Lista productos filtrados por tipo de artesano", async () => {
     const mockProductos = [{ id_producto: 1, nombre: "Tapete" }];
 
@@ -171,8 +171,8 @@ describe("USD21 - Filtro por tipo de artesano", () => {
   });
 });
 
-// ─── USD25 ─────────────────────────────────────────────────────────────────
-describe("USD25 - Listar productos de un artesano", () => {
+// ─── USD24 ─────────────────────────────────────────────────────────────────
+describe("USD24 - Listar productos del artesano", () => {
   test("Retorna productos del artesano especificado", async () => {
     const mockProductos = [{ id_producto: 3, nombre: "Barro negro" }];
 
@@ -196,8 +196,8 @@ describe("USD25 - Listar productos de un artesano", () => {
   });
 });
 
-// ─── USD27 ─────────────────────────────────────────────────────────────────
-describe("USD27 - Productos destacados", () => {
+// ─── USD26 ─────────────────────────────────────────────────────────────────
+describe("USD26 - Implementar productos destacados", () => {
   test("Retorna solo productos con es_destacado = true", async () => {
     const mockDestacados = [{ id_producto: 1, nombre: "Tapete destacado", es_destacado: true }];
     (listarProductosDestacadosDb as jest.Mock).mockResolvedValue(mockDestacados);
