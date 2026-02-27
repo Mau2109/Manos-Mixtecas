@@ -6,7 +6,7 @@ import {
 } from "../persistence/repositories/carritoRepository";
 
 /* ===============================
-   USD01 - Visualizar productos del carrito
+   USD04 - Visualizar producto del carrito
    =============================== */
 export async function obtenerCarrito(idCarrito: number) {
   if (!idCarrito) throw new Error("ID de carrito requerido");
@@ -14,7 +14,7 @@ export async function obtenerCarrito(idCarrito: number) {
 }
 
 /* ===============================
-   USD02 - Cálculo total del carrito
+   USD05 - Cálculo total de compras
    =============================== */
 export async function calcularTotalCarrito(idCarrito: number): Promise<number> {
   const items = await obtenerCarrito(idCarrito);
@@ -28,7 +28,7 @@ export async function calcularTotalCarrito(idCarrito: number): Promise<number> {
 }
 
 /* ===============================
-   USD02 (original) - Agregar producto al carrito
+   USD02 - Agregar producto al carrito
    =============================== */
 export async function agregarProductoCarrito(
   id_carrito: number,
@@ -43,7 +43,7 @@ export async function agregarProductoCarrito(
 }
 
 /* ===============================
-   USD01 - Eliminar producto del carrito
+   USD03 - Eliminar producto del carrito
    =============================== */
 export async function eliminarProductoCarrito(idDetalle: number) {
   if (!idDetalle) throw new Error("ID de detalle requerido");

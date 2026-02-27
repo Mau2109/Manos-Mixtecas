@@ -12,6 +12,7 @@ import {
   crearArtesano,
   actualizarArtesano,
   eliminarArtesano,
+  obtenerGaleriaArtesano,
   obtenerPerfilArtesano,
   listarTiposArtesano,
   listarArtesanos,
@@ -20,6 +21,7 @@ import {
   crearArtesanoDb,
   actualizarArtesanoDb,
   eliminarArtesanoDb,
+  obtenerGaleriaArtesanoDb,
   listarArtesanosDb,
   listarTiposArtesanoDb,
   obtenerPerfilArtesanoDb,
@@ -29,8 +31,8 @@ beforeEach(() => {
   jest.clearAllMocks();
 });
 
-// ─── USD16 / USD22 / USD24 / USD28 / USD29 ────────────────────────────────
-describe("USD16/22/24/28/29 - Perfil del artesano", () => {
+// ─── USD16 / USD21 / USD23 / USD28 ─────────────────────────────
+describe("USD16/21/23/28 - Perfil del artesano", () => {
   test("Retorna perfil completo del artesano (bio, comunidad, historia, ubicación)", async () => {
     const mockArtesano = {
       id_artesano: 1,
@@ -60,8 +62,8 @@ describe("USD16/22/24/28/29 - Perfil del artesano", () => {
   });
 });
 
-// ─── USD21 - Tipos de artesano para filtros ───────────────────────────────
-describe("USD21 - Listar tipos de artesano", () => {
+// ─── USD20 - Filtro por tipo de artesano ───────────────────────────────
+describe("USD20 - Filtro por tipo de artesano", () => {
   test("Retorna lista de tipos únicos de artesano", async () => {
     (listarTiposArtesanoDb as jest.Mock).mockResolvedValue([
       { tipo: "Tejedor" },
@@ -77,8 +79,8 @@ describe("USD21 - Listar tipos de artesano", () => {
   });
 });
 
-// ─── USD21 / USD25 - Listar artesanos ─────────────────────────────────────
-describe("USD21/25 - Listar todos los artesanos", () => {
+// ─── Sin HU en hoja Usuario - Listar artesanos ────────────────────────────────
+describe("Sin HU - Listar todos los artesanos", () => {
   test("Retorna lista de artesanos activos", async () => {
     const mockArtesanos = [
       { id_artesano: 1, nombre: "María", tipo: "Tejedor", comunidad: "Teotitlán" },
@@ -88,6 +90,24 @@ describe("USD21/25 - Listar todos los artesanos", () => {
 
     const artesanos = await listarArtesanos();
     expect(artesanos).toHaveLength(2);
+  });
+});
+
+// ─── USD27 - Galería de imágenes del artesano ───────────────────────────────
+describe("USD27 - Galería de imágenes del artesano", () => {
+  test("Retorna la galería de imágenes del artesano", async () => {
+    const mockGaleria = [
+      { id_imagen: 1, url: "img1.jpg", descripcion: "Foto 1", orden: 0 },
+      { id_imagen: 2, url: "img2.jpg", descripcion: "Foto 2", orden: 1 },
+    ];
+    (obtenerGaleriaArtesanoDb as jest.Mock).mockResolvedValue(mockGaleria);
+
+    const galeria = await obtenerGaleriaArtesano(1);
+    expect(galeria).toHaveLength(2);
+  });
+
+  test("Error si no se envía ID de artesano", async () => {
+    await expect(obtenerGaleriaArtesano(0)).rejects.toThrow("ID de artesano requerido");
   });
 });
 
