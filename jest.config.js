@@ -2,7 +2,7 @@
 module.exports = {
   preset: "ts-jest",
 
-  // Integración = Node real
+  // Unit tests only. Integration tests run with jest.integration.config.js
   testEnvironment: "node",
 
   moduleNameMapper: {
@@ -10,6 +10,7 @@ module.exports = {
   },
 
   testMatch: ["**/__tests__/**/*.test.ts"],
+  testPathIgnorePatterns: ["/node_modules/", "__tests__/integration/"],
 
   setupFiles: ["<rootDir>/jest.integration.setup.ts"],
 

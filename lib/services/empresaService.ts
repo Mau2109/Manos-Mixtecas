@@ -4,10 +4,11 @@ import {
   obtenerContactoYRedesDb,
   obtenerEmpresaDb,
   obtenerMisionYValoresDb,
+  obtenerUbicacionEmpresaDb,
 } from "../persistence/repositories/empresaRepository";
 
 /* ===============================
-   ADM09 - Agregar información de la empresa
+   ADM16 - Agregar perfil empresa
    =============================== */
 export async function crearEmpresa(empresa: {
   nombre: string;
@@ -27,7 +28,7 @@ export async function crearEmpresa(empresa: {
 }
 
 /* ===============================
-   ADM10 - Editar información de la empresa
+   ADM17 - Editar perfil empresa
    =============================== */
 export async function actualizarEmpresa(
   idEmpresa: number,
@@ -50,7 +51,7 @@ export async function actualizarEmpresa(
 }
 
 /* ===============================
-   ADM11 / USD11 - Visualizar información de la empresa
+   ADM18 / USD11 - Visualizar perfil empresa de AMD18
    Incluye: misión, valores, redes sociales y contacto (USD11, USD19, USD20)
    =============================== */
 export async function obtenerEmpresa() {
@@ -69,4 +70,12 @@ export async function obtenerMisionYValores() {
    =============================== */
 export async function obtenerContactoYRedes() {
   return obtenerContactoYRedesDb();
+}
+
+/* ===============================
+   USD28 - Mostrar ubicación (parcial)
+   Retorna la dirección de la empresa para capa de presentación.
+   =============================== */
+export async function obtenerUbicacionEmpresa() {
+  return obtenerUbicacionEmpresaDb();
 }
