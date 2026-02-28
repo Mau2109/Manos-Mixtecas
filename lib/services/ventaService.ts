@@ -1,4 +1,4 @@
-import {
+ï»¿import {
   confirmarPedidoDb,
   crearVentaDb,
   obtenerEstadoEnvioDb,
@@ -105,15 +105,15 @@ export async function obtenerTopProductos() {
    ADM20 - Generar ticket de venta en PDF
    Retorna un Buffer con el contenido del PDF (empleado por el admin).
    Actualmente el PDF es un texto simple que incluye algunos datos de la
-   venta; en un entorno real se podría usar pdfkit/u otro generador.
+   venta; en un entorno real se podrÃ­a usar pdfkit/u otro generador.
    =============================== */
 export async function generarTicketVenta(idVenta: number) {
   if (!idVenta) throw new Error("ID de venta requerido");
 
-  // obtener información de la venta
+  // obtener informaciÃ³n de la venta
   const resumen = await obtenerResumenVentaDb(idVenta);
 
-  // construir contenido PDF básico
+  // construir contenido PDF bÃ¡sico
   const lines = [];
   lines.push("%PDF-1.4");
   lines.push(`Venta #${idVenta}`);
