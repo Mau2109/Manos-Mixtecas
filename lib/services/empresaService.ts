@@ -4,6 +4,7 @@ import {
   obtenerContactoYRedesDb,
   obtenerEmpresaDb,
   obtenerMisionYValoresDb,
+  obtenerUbicacionEmpresaDb,
 } from "../persistence/repositories/empresaRepository";
 
 /* ===============================
@@ -69,4 +70,12 @@ export async function obtenerMisionYValores() {
    =============================== */
 export async function obtenerContactoYRedes() {
   return obtenerContactoYRedesDb();
+}
+
+/* ===============================
+   USD28 - Mostrar ubicación (parcial)
+   Retorna la dirección de la empresa para capa de presentación.
+   =============================== */
+export async function obtenerUbicacionEmpresa() {
+  return obtenerUbicacionEmpresaDb();
 }

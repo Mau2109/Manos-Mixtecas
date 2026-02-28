@@ -11,6 +11,7 @@ import {
   obtenerProductoDetalleDb,
 } from "../persistence/repositories/productoRepository";
 
+
 /* ===============================
    ADM02 - Registrar producto
    =============================== */
