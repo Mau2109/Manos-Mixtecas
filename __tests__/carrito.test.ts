@@ -23,8 +23,8 @@ beforeEach(() => {
   jest.clearAllMocks();
 });
 
-// ─── USD01 - Visualizar productos del carrito ──────────────────────────────
-describe("USD01 - Visualizar productos del carrito", () => {
+// ─── USD04 - Visualizar producto del carrito ──────────────────────────────
+describe("USD04 - Visualizar producto del carrito", () => {
   test("Retorna los items del carrito con datos del producto", async () => {
     const mockItems = [
       {
@@ -43,8 +43,8 @@ describe("USD01 - Visualizar productos del carrito", () => {
   });
 });
 
-// ─── USD02 - Cálculo total del carrito ────────────────────────────────────
-describe("USD02 - Cálculo total del carrito", () => {
+// ─── USD05 - Cálculo total de compras ─────────────────────────────────────
+describe("USD05 - Cálculo total de compras", () => {
   test("Calcula correctamente el total sumando cantidad × precio_unitario", async () => {
     const mockItems = [
       { id_detalle: 1, cantidad: 2, precio_unitario: 150 },
@@ -62,7 +62,7 @@ describe("USD02 - Cálculo total del carrito", () => {
   });
 });
 
-// ─── USD02 (original) - Agregar producto al carrito ───────────────────────
+// ─── USD02 - Agregar producto al carrito ──────────────────────────────────
 describe("USD02 - Agregar producto al carrito", () => {
   test("Agrega producto correctamente", async () => {
     (agregarProductoCarritoDb as jest.Mock).mockResolvedValue(true);
@@ -76,8 +76,8 @@ describe("USD02 - Agregar producto al carrito", () => {
   });
 });
 
-// ─── USD01 - Eliminar producto del carrito ────────────────────────────────
-describe("USD01 - Eliminar producto del carrito", () => {
+// ─── USD03 - Eliminar producto del carrito ────────────────────────────────
+describe("USD03 - Eliminar producto del carrito", () => {
   test("Elimina un detalle del carrito por ID", async () => {
     (eliminarProductoCarritoDb as jest.Mock).mockResolvedValue(true);
     const resultado = await eliminarProductoCarrito(1);

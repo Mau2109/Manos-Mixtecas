@@ -168,7 +168,7 @@ export async function obtenerResumenVenta(idVenta: number) {
 }
 
 /* ===============================
-   USD18 - Confirmación de envío
+   USD17 - Mensaje de confirmación de envío
    =============================== */
 export async function obtenerEstadoEnvio(idVenta: number) {
   if (!idVenta) throw new Error("ID de venta requerido");
