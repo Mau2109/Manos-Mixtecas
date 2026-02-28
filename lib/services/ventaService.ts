@@ -1,4 +1,4 @@
-import {
+ï»¿import {
   confirmarPedidoDb,
   crearVentaDb,
   obtenerEstadoEnvioDb,
@@ -14,7 +14,7 @@ import {
 } from "../persistence/repositories/ventaRepository";
 
 /* ===============================
-   USD14 - Formulario de datos de envÃ­o
+   USD14 - Formulario de datos de envío
    USD13 - Crear venta (confirmar pedido)
    =============================== */
 export async function crearVenta(venta: {
@@ -34,14 +34,14 @@ export async function crearVenta(venta: {
   };
 }) {
   if (!venta.id_cliente) throw new Error("ID de cliente requerido");
-  if (!venta.total || venta.total <= 0) throw new Error("Total invÃ¡lido");
-  if (!venta.id_metodo_pago) throw new Error("MÃ©todo de pago requerido");
+  if (!venta.total || venta.total <= 0) throw new Error("Total inválido");
+  if (!venta.id_metodo_pago) throw new Error("Método de pago requerido");
   if (
     !venta.datos_envio?.nombre ||
     !venta.datos_envio?.direccion ||
     !venta.datos_envio?.telefono
   ) {
-    throw new Error("Datos de envÃ­o incompletos");
+    throw new Error("Datos de envío incompletos");
   }
   return crearVentaDb(venta);
 }
@@ -93,7 +93,6 @@ export async function generarReporteVentas(filtros?: {
   return await generarReporteVentasDb(filtros);
 }
 
-
 /* ===============================
    Generar top productos vendidos
    =============================== */
@@ -105,15 +104,15 @@ export async function obtenerTopProductos() {
    Generar ticket de venta en PDF
    Retorna un Buffer con el contenido del PDF (empleado por el admin).
    Actualmente el PDF es un texto simple que incluye algunos datos de la
-   venta; en un entorno real se podrÃ­a usar pdfkit/u otro generador.
+   venta; en un entorno real se podría usar pdfkit/u otro generador.
    =============================== */
 export async function generarTicketVenta(idVenta: number) {
   if (!idVenta) throw new Error("ID de venta requerido");
 
-  // obtener informaciÃ³n de la venta
+  // obtener información de la venta
   const resumen = await obtenerResumenVentaDb(idVenta);
 
-  // construir contenido PDF bÃ¡sico
+  // construir contenido PDF básico
   const lines = [];
   lines.push("%PDF-1.4");
   lines.push(`Venta #${idVenta}`);
@@ -158,9 +157,8 @@ export async function confirmarYActualizarStock(idVenta: number) {
   return await confirmarPedidoDb(idVenta);
 }
 
-
 /* ===============================
-   USD15 - Resumen de compra (obtener venta con detalles)
+   Sin HU en hoja Usuario - Resumen de compra (obtener venta con detalles)
    =============================== */
 export async function obtenerResumenVenta(idVenta: number) {
   if (!idVenta) throw new Error("ID de venta requerido");
@@ -168,7 +166,7 @@ export async function obtenerResumenVenta(idVenta: number) {
 }
 
 /* ===============================
-   USD17 - Mensaje de confirmaciÃ³n de envÃ­o
+   USD17 - Mensaje de confirmación de envío
    =============================== */
 export async function obtenerEstadoEnvio(idVenta: number) {
   if (!idVenta) throw new Error("ID de venta requerido");
