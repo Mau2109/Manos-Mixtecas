@@ -11,6 +11,17 @@ import {
   obtenerProductoDetalleDb,
 } from "../persistence/repositories/productoRepository";
 
+/* ===============================
+   EXTRA01 - Consultar stock
+   =============================== */
+export async function consultarStock(idProducto: number) {
+  if (!idProducto) {
+    throw new Error("ID de producto requerido");
+  }
+  const data = await consultarStockDb(idProducto);
+  return data?.stock ?? 0;
+}
+
 
 /* ===============================
    ADM02 - Registrar producto
