@@ -9,7 +9,12 @@ import {
   listarProductosPorTipoArtesanoDb,
   obtenerImagenesProductoDb,
   obtenerProductoDetalleDb,
+  getAllProducts, 
+  actualizarCategoria,
 } from "../persistence/repositories/productoRepository";
+export const runtime = "nodejs";
+
+import PDFDocument from "pdfkit";
 
 /* ===============================
    EXTRA01 - Consultar stock
@@ -132,3 +137,58 @@ export async function listarProductosPorArtesano(idArtesano: number) {
 export async function listarProductosDestacados() {
   return listarProductosDestacadosDb();
 }
+
+
+/* ===============================
+   USD1 - Consultar productos
+   =============================== */
+export const consultarProductos = async () => {
+  const productos = await getAllProducts();
+
+  if (!productos || productos.length === 0) {
+    return { mensaje: "No hay productos disponibles", data: [] };
+  }
+
+  return { data: productos };
+};
+
+/* ===============================
+   USD1 - Imprimir listado de productos
+   =============================== */
+
+export const generarListadoProductosPDF = async (productos: any[]) => {
+  const doc = new PDFDocument();
+
+  productos.forEach((producto) => {
+    doc.text(
+      `${producto.codigo} - ${producto.nombre} - ${producto.categoria} - $${producto.precio}`
+    );
+  });
+
+  doc.end();
+  return doc;
+};
+
+/* ===============================
+   USD1 - CONTROL DE STOCK
+   =============================== */
+
+
+export const evaluarStock = (stock: number) => {
+  if (stock <= 0) return "rojo";
+  if (stock <= 5) return "amarillo";
+  return "verde";
+};
+
+/* ===============================
+   USD1 - CLASIFICAR PRODUCTOS
+   =============================== */
+
+
+export const clasificarProducto = async (id: string, categoria: string) => {
+  if (!categoria) {
+    throw new Error("Debe seleccionar una categoría");
+  }
+
+  return await actualizarCategoria(id, categoria);
+};
