@@ -177,22 +177,22 @@ export async function obtenerEstadoEnvio(idVenta: number) {
   return obtenerEstadoEnvioDb(idVenta);
 }
 
+
+
 /* ===============================
-   Cancelar venta y restaurar stock
+   USD18 - Aplicar descuetos
    =============================== */
-export async function cancelarVenta(idVenta: number) {
-  if (!idVenta) throw new Error("ID de venta requerido");
 
-  // Obtener productos de la venta.
-  const productos = await obtenerProductosVentaDb(idVenta);
-
-  if (productos && productos.length > 0) {
-    // Restaurar stock para cada producto.
-    for (const producto of productos) {
-      await restaurarStockProductoDb(producto.id_producto, producto.cantidad);
-    }
+export const aplicarDescuento = (
+  total: number,
+  porcentaje: number
+) => {
+  if (porcentaje <= 0) {
+    throw new Error("El descuento debe ser un valor positivo");
   }
 
-  // Cancelar la venta.
-  return await cancelarVentaDb(idVenta);
-}
+  const descuento = total * (porcentaje / 100);
+  const totalFinal = total - descuento;
+
+  return totalFinal;
+};
