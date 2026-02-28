@@ -4,7 +4,7 @@ import {
 } from "../persistence/repositories/loginRepository";
 
 /* ===============================
-   ADM01 - Iniciar sesión
+   ADM01 - Inicio de sesión administrador
    =============================== */
 export async function loginAdministrador(email: string, password: string) {
   if (!email || !password) {

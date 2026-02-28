@@ -4,6 +4,7 @@ jest.mock("../lib/persistence/repositories/empresaRepository", () => ({
   obtenerEmpresaDb: jest.fn(),
   obtenerMisionYValoresDb: jest.fn(),
   obtenerContactoYRedesDb: jest.fn(),
+  obtenerUbicacionEmpresaDb: jest.fn(),
 }));
 
 import {
@@ -12,6 +13,7 @@ import {
   obtenerEmpresa,
   obtenerMisionYValores,
   obtenerContactoYRedes,
+  obtenerUbicacionEmpresa,
 } from "../lib/services/empresaService";
 import {
   actualizarEmpresaDb,
@@ -19,6 +21,7 @@ import {
   obtenerContactoYRedesDb,
   obtenerEmpresaDb,
   obtenerMisionYValoresDb,
+  obtenerUbicacionEmpresaDb,
 } from "../lib/persistence/repositories/empresaRepository";
 
 beforeEach(() => {
@@ -87,5 +90,17 @@ describe("USD19/20 - Contacto y redes sociales", () => {
     const contacto = await obtenerContactoYRedes();
     expect(contacto.redes_sociales).toBeDefined();
     expect(contacto.email).toBe("contacto@manosmixtecas.com");
+  });
+});
+
+// ─── USD28 ─────────────────────────────────────────────────────────────────
+describe("USD28 - Mostrar ubicacion", () => {
+  test("Retorna direccion de la empresa (implementacion parcial)", async () => {
+    (obtenerUbicacionEmpresaDb as jest.Mock).mockResolvedValue({
+      direccion: "Av. Juarez 123, Oaxaca",
+    });
+
+    const ubicacion = await obtenerUbicacionEmpresa();
+    expect(ubicacion.direccion).toBe("Av. Juarez 123, Oaxaca");
   });
 });

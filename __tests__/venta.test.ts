@@ -17,6 +17,7 @@ jest.mock("../lib/persistence/repositories/ventaRepository", () => ({
   import {
     crearVenta,
     confirmarPedido,
+    obtenerResumenCompra,
     obtenerResumenVenta,
     obtenerEstadoEnvio,
     agregarProductoVenta,
@@ -79,13 +80,13 @@ jest.mock("../lib/persistence/repositories/ventaRepository", () => ({
     test("Error si el total es inválido", async () => {
       await expect(
         crearVenta({ id_cliente: 1, total: 0, id_metodo_pago: 1, datos_envio: datosEnvioValidos })
-      ).rejects.toThrow("Total inválido");
+      ).rejects.toThrow("Total invalido");
     });
   
     test("Error si falta método de pago", async () => {
       await expect(
         crearVenta({ id_cliente: 1, total: 500, id_metodo_pago: 0, datos_envio: datosEnvioValidos })
-      ).rejects.toThrow("Método de pago requerido");
+      ).rejects.toThrow("Metodo de pago requerido");
     });
   
     test("Error si los datos de envío están incompletos", async () => {
@@ -94,7 +95,7 @@ jest.mock("../lib/persistence/repositories/ventaRepository", () => ({
           id_cliente: 1, total: 500, id_metodo_pago: 1,
           datos_envio: { nombre: "", apellido: "", direccion: "", ciudad: "", telefono: "" },
         })
-      ).rejects.toThrow("Datos de envío incompletos");
+      ).rejects.toThrow("Datos de envio incompletos");
     });
   });
   
@@ -139,6 +140,23 @@ jest.mock("../lib/persistence/repositories/ventaRepository", () => ({
   
     test("Error si no se envía ID de venta", async () => {
       await expect(obtenerResumenVenta(0)).rejects.toThrow("ID de venta requerido");
+    });
+  });
+
+  // ─── USD15 (UCD15) - Resumen de compra ───────────────────────────────────
+  describe("USD15 - Resumen de compra", () => {
+    test("Retorna resumen de compra antes de pago", async () => {
+      const mockResumen = {
+        id_venta: 99,
+        total: 800,
+        detalle_venta: [{ id_detalle: 1, cantidad: 2, precio_unitario: 400 }],
+      };
+      (obtenerResumenVentaDb as jest.Mock).mockResolvedValue(mockResumen);
+
+      const resumen = await obtenerResumenCompra(99);
+      expect(resumen.id_venta).toBe(99);
+      expect(resumen.total).toBe(800);
+      expect(resumen.detalle_venta).toHaveLength(1);
     });
   });
   

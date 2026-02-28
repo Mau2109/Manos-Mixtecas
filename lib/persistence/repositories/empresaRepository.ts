@@ -74,3 +74,14 @@ export async function obtenerContactoYRedesDb() {
   if (error) throw error;
   return data;
 }
+
+export async function obtenerUbicacionEmpresaDb() {
+  const { data, error } = await supabase
+    .from("empresa")
+    .select("direccion")
+    .limit(1)
+    .single();
+
+  if (error) throw error;
+  return data;
+}

@@ -12,12 +12,16 @@ import {
 } from "../persistence/repositories/productoRepository";
 
 /* ===============================
-   EXTRA01 - Consultar stock de un producto
+   EXTRA01 - Consultar stock
    =============================== */
-export async function consultarStock(id_producto: number) {
-  const data = await consultarStockDb(id_producto);
-  return data.stock;
+export async function consultarStock(idProducto: number) {
+  if (!idProducto) {
+    throw new Error("ID de producto requerido");
+  }
+  const data = await consultarStockDb(idProducto);
+  return data?.stock ?? 0;
 }
+
 
 /* ===============================
    ADM02 - Registrar producto
@@ -44,7 +48,7 @@ export async function crearProducto(producto: {
 }
 
 /* ===============================
-   ADM03 - Actualizar producto
+   ADM04 - Actualizar producto
    =============================== */
 export async function actualizarProducto(
   idProducto: number,
@@ -71,7 +75,7 @@ export async function actualizarProducto(
 }
 
 /* ===============================
-   ADM04 - Eliminar producto (lógico)
+   ADM05 - Eliminar producto 
    =============================== */
 export async function eliminarProducto(idProducto: number) {
   if (!idProducto) {
