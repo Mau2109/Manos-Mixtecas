@@ -73,7 +73,7 @@ export async function agregarProductoVenta(detalleVenta: {
 }
 
 /* ===============================
-   Listar ventas con filtros (estado, fecha)
+   ADM08 - ADM13 - Listar ventas con filtros (estado, fecha)
    =============================== */
 export async function listarVentas(filtros?: {
   estado?: string;
@@ -84,7 +84,7 @@ export async function listarVentas(filtros?: {
 }
 
 /* ===============================
-   Generar reporte de ventas
+   ADM17 - Generar reporte de ventas
    =============================== */
 export async function generarReporteVentas(filtros?: {
   fechaInicio?: string;
@@ -95,14 +95,14 @@ export async function generarReporteVentas(filtros?: {
 
 
 /* ===============================
-   Generar top productos vendidos
+   ADM18 - Generar top productos vendidos
    =============================== */
 export async function obtenerTopProductos() {
   return await obtenerTopProductosDb();
 }
 
 /* ===============================
-   Generar ticket de venta en PDF
+   ADM20 - Generar ticket de venta en PDF
    Retorna un Buffer con el contenido del PDF (empleado por el admin).
    Actualmente el PDF es un texto simple que incluye algunos datos de la
    venta; en un entorno real se podría usar pdfkit/u otro generador.
@@ -137,7 +137,7 @@ export async function generarTicketVenta(idVenta: number) {
 }
 
 /* ===============================
-   Confirmar pedido y actualizar stock
+   ADM07 - Confirmar pedido y actualizar stock
    =============================== */
 export async function confirmarYActualizarStock(idVenta: number) {
   if (!idVenta) throw new Error("ID de venta requerido");
