@@ -90,8 +90,8 @@ jest.mock("../lib/persistence/repositories/ventaRepository", () => ({
     });
   });
   
-  // ─── USD15 - Resumen de compra ────────────────────────────────────────────
-  describe("USD15 - Resumen de compra", () => {
+  // ─── Sin HU - Resumen de compra ───────────────────────────────────────────
+  describe("Sin HU - Resumen de compra", () => {
     test("Retorna venta completa con detalles, cliente y método de pago", async () => {
         const mockResumen = {
             id_venta: 1,
@@ -118,8 +118,8 @@ jest.mock("../lib/persistence/repositories/ventaRepository", () => ({
     });
   });
   
-  // ─── USD18 - Estado de envío ──────────────────────────────────────────────
-  describe("USD18 - Confirmación de envío", () => {
+  // ─── USD17 - Estado de envío ──────────────────────────────────────────────
+  describe("USD17 - Confirmación de envío", () => {
     test("Retorna el estado de envío del pedido", async () => {
       const mockEstado = {
         id_venta: 1,

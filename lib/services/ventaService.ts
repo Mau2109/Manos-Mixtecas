@@ -47,7 +47,7 @@ export async function confirmarPedido(idVenta: number) {
 }
 
 /* ===============================
-   USD15 - Resumen de compra (obtener venta con detalles)
+   Sin HU en hoja Usuario - Resumen de compra (obtener venta con detalles)
    =============================== */
 export async function obtenerResumenVenta(idVenta: number) {
   if (!idVenta) throw new Error("ID de venta requerido");
@@ -55,7 +55,7 @@ export async function obtenerResumenVenta(idVenta: number) {
 }
 
 /* ===============================
-   USD18 - Confirmación de envío
+   USD17 - Mensaje de confirmación de envío
    =============================== */
 export async function obtenerEstadoEnvio(idVenta: number) {
   if (!idVenta) throw new Error("ID de venta requerido");
