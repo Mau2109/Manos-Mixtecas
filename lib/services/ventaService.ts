@@ -61,3 +61,23 @@ export async function obtenerEstadoEnvio(idVenta: number) {
   if (!idVenta) throw new Error("ID de venta requerido");
   return obtenerEstadoEnvioDb(idVenta);
 }
+
+
+
+/* ===============================
+   USD18 - Aplicar descuetos
+   =============================== */
+
+export const aplicarDescuento = (
+  total: number,
+  porcentaje: number
+) => {
+  if (porcentaje <= 0) {
+    throw new Error("El descuento debe ser un valor positivo");
+  }
+
+  const descuento = total * (porcentaje / 100);
+  const totalFinal = total - descuento;
+
+  return totalFinal;
+};
