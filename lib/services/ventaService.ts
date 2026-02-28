@@ -1,4 +1,4 @@
-ï»¿import {
+Ã¯Â»Â¿import {
   confirmarPedidoDb,
   crearVentaDb,
   obtenerEstadoEnvioDb,
@@ -14,7 +14,7 @@
 } from "../persistence/repositories/ventaRepository";
 
 /* ===============================
-   USD14 - Formulario de datos de envío
+   USD14 - Formulario de datos de envÃ­o
    USD13 - Crear venta (confirmar pedido)
    =============================== */
 export async function crearVenta(venta: {
@@ -34,14 +34,14 @@ export async function crearVenta(venta: {
   };
 }) {
   if (!venta.id_cliente) throw new Error("ID de cliente requerido");
-  if (!venta.total || venta.total <= 0) throw new Error("Total inválido");
-  if (!venta.id_metodo_pago) throw new Error("Método de pago requerido");
+  if (!venta.total || venta.total <= 0) throw new Error("Total invÃ¡lido");
+  if (!venta.id_metodo_pago) throw new Error("MÃ©todo de pago requerido");
   if (
     !venta.datos_envio?.nombre ||
     !venta.datos_envio?.direccion ||
     !venta.datos_envio?.telefono
   ) {
-    throw new Error("Datos de envío incompletos");
+    throw new Error("Datos de envÃ­o incompletos");
   }
   return crearVentaDb(venta);
 }
@@ -73,7 +73,7 @@ export async function agregarProductoVenta(detalleVenta: {
 }
 
 /* ===============================
-   Listar ventas con filtros (estado, fecha)
+   ADM08 - ADM13 - Listar ventas con filtros (estado, fecha)
    =============================== */
 export async function listarVentas(filtros?: {
   estado?: string;
@@ -84,7 +84,7 @@ export async function listarVentas(filtros?: {
 }
 
 /* ===============================
-   Generar reporte de ventas
+   ADM17 - Generar reporte de ventas
    =============================== */
 export async function generarReporteVentas(filtros?: {
   fechaInicio?: string;
@@ -93,26 +93,27 @@ export async function generarReporteVentas(filtros?: {
   return await generarReporteVentasDb(filtros);
 }
 
+
 /* ===============================
-   Generar top productos vendidos
+   ADM18 - Generar top productos vendidos
    =============================== */
 export async function obtenerTopProductos() {
   return await obtenerTopProductosDb();
 }
 
 /* ===============================
-   Generar ticket de venta en PDF
+   ADM20 - Generar ticket de venta en PDF
    Retorna un Buffer con el contenido del PDF (empleado por el admin).
    Actualmente el PDF es un texto simple que incluye algunos datos de la
-   venta; en un entorno real se podría usar pdfkit/u otro generador.
+   venta; en un entorno real se podrÃƒÂ­a usar pdfkit/u otro generador.
    =============================== */
 export async function generarTicketVenta(idVenta: number) {
   if (!idVenta) throw new Error("ID de venta requerido");
 
-  // obtener información de la venta
+  // obtener informaciÃƒÂ³n de la venta
   const resumen = await obtenerResumenVentaDb(idVenta);
 
-  // construir contenido PDF básico
+  // construir contenido PDF bÃƒÂ¡sico
   const lines = [];
   lines.push("%PDF-1.4");
   lines.push(`Venta #${idVenta}`);
@@ -136,7 +137,7 @@ export async function generarTicketVenta(idVenta: number) {
 }
 
 /* ===============================
-   Confirmar pedido y actualizar stock
+   ADM07 - Confirmar pedido y actualizar stock
    =============================== */
 export async function confirmarYActualizarStock(idVenta: number) {
   if (!idVenta) throw new Error("ID de venta requerido");
@@ -157,8 +158,9 @@ export async function confirmarYActualizarStock(idVenta: number) {
   return await confirmarPedidoDb(idVenta);
 }
 
+
 /* ===============================
-   Sin HU en hoja Usuario - Resumen de compra (obtener venta con detalles)
+   USD15 - Resumen de compra (obtener venta con detalles)
    =============================== */
 export async function obtenerResumenVenta(idVenta: number) {
   if (!idVenta) throw new Error("ID de venta requerido");
@@ -166,7 +168,7 @@ export async function obtenerResumenVenta(idVenta: number) {
 }
 
 /* ===============================
-   USD17 - Mensaje de confirmación de envío
+   USD17 - Mensaje de confirmaciÃ³n de envÃ­o
    =============================== */
 export async function obtenerEstadoEnvio(idVenta: number) {
   if (!idVenta) throw new Error("ID de venta requerido");

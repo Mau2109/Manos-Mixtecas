@@ -1,3 +1,4 @@
+
 import { supabase } from "../../supabaseClient";
 
 /* ===============================
@@ -7,7 +8,7 @@ export async function crearComprobanteDb(comprobante: {
   id_compra: number;
   url_archivo: string;
   tipo?: string;
-  descripcion?: string;
+  descripcion?: string; 
 }) {
   const { data, error } = await supabase
     .from("comprobantes_compra")
