@@ -1,4 +1,4 @@
-import {
+﻿import {
   confirmarPedidoDb,
   crearVentaDb,
   obtenerEstadoEnvioDb,
@@ -170,11 +170,27 @@ export async function obtenerResumenVenta(idVenta: number) {
 }
 
 /* ===============================
-   USD17 - Mensaje de confirmacion de envio
+   USD17 - Mensaje de confirmación de envio
    =============================== */
 export async function obtenerEstadoEnvio(idVenta: number) {
   if (!idVenta) throw new Error("ID de venta requerido");
   return obtenerEstadoEnvioDb(idVenta);
+}
+
+/* ===============================
+   Cancelar venta y restaurar stock
+   =============================== */
+export async function cancelarVenta(idVenta: number) {
+  if (!idVenta) throw new Error("ID de venta requerido");
+
+  const productos = await obtenerProductosVentaDb(idVenta);
+  if (productos && productos.length > 0) {
+    for (const producto of productos) {
+      await restaurarStockProductoDb(producto.id_producto, producto.cantidad);
+    }
+  }
+
+  return await cancelarVentaDb(idVenta);
 }
 
 
