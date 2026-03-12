@@ -12,9 +12,6 @@ import {
   getAllProducts, 
   actualizarCategoria,
 } from "../persistence/repositories/productoRepository";
-export const runtime = "nodejs";
-
-import PDFDocument from "pdfkit";
 
 /* ===============================
    EXTRA01 - Consultar stock
@@ -157,16 +154,13 @@ export const consultarProductos = async () => {
    =============================== */
 
 export const generarListadoProductosPDF = async (productos: any[]) => {
-  const doc = new PDFDocument();
-
-  productos.forEach((producto) => {
-    doc.text(
+  const lines = productos.map(
+    (producto) =>
       `${producto.codigo} - ${producto.nombre} - ${producto.categoria} - $${producto.precio}`
-    );
-  });
+  );
 
-  doc.end();
-  return doc;
+  // Devuelve un Buffer simple para evitar dependencia de pdfkit en servicios compartidos.
+  return Buffer.from(lines.join("\n"), "utf-8");
 };
 
 /* ===============================
