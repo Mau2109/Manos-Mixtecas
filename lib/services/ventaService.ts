@@ -157,7 +157,7 @@ export async function confirmarYActualizarStock(idVenta: number) {
 }
 
 /* ===============================
-   USD15 (UCD15) - Resumen de compra
+   Sin HU en hoja Usuario - Resumen de compra (obtener venta con detalles)
    =============================== */
 export async function obtenerResumenCompra(idVenta: number) {
   if (!idVenta) throw new Error("ID de venta requerido");
