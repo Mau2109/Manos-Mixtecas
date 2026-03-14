@@ -9,99 +9,147 @@ import {
   listarProductosPorTipoArtesanoDb,
   obtenerImagenesProductoDb,
   obtenerProductoDetalleDb,
-  getAllProducts, 
   actualizarCategoria,
 } from "../persistence/repositories/productoRepository";
 export const runtime = "nodejs";
 
 import PDFDocument from "pdfkit";
 
-/* ===============================
-   EXTRA01 - Consultar stock
-   =============================== */
-export async function consultarStock(idProducto: number) {
-  if (!idProducto) {
-    throw new Error("ID de producto requerido");
+/* ==========================================
+   VALIDACIONES DE PRODUCTO (REGLAS NEGOCIO)
+   ========================================== */
+  function validarProducto(producto: any) {
+
+    if (!producto.nombre || producto.nombre.trim() === "") {
+      throw new Error("El nombre del producto es obligatorio");
+    }
+
+    if (producto.precio == null || producto.precio < 0) {
+      throw new Error("El precio del producto es inválido");
+    }
+
+    if (producto.stock == null || producto.stock < 0) {
+      throw new Error("El stock del producto es inválido");
+    }
+
+    if (!producto.id_categoria) {
+      throw new Error("La categoría es obligatoria");
+    }
+
   }
-  const data = await consultarStockDb(idProducto);
-  return data?.stock ?? 0;
-}
 
+  function validarActualizacionProducto(producto: any) {
 
-/* ===============================
-   ADM02 - Registrar producto
-   =============================== */
-export async function crearProducto(producto: {
-  nombre: string;
-  descripcion?: string;
-  precio: number;
-  stock: number;
-  imagen?: string;
-  id_categoria: number;
-  materiales?: string;
-  tecnica?: string;
-  es_unico?: boolean;
-  es_destacado?: boolean;
-  fragilidad?: string;
-  id_artesano?: number;
-  descuento_pct?: number;
-}) {
-  if (!producto.nombre || producto.precio == null || producto.stock == null) {
-    throw new Error("Datos obligatorios del producto");
+    if ("nombre" in producto && producto.nombre.trim() === "") {
+      throw new Error("El nombre del producto no puede quedar vacío");
+    }
+
+    if ("precio" in producto && producto.precio < 0) {
+      throw new Error("El precio no puede ser negativo");
+    }
+
+    if ("stock" in producto && producto.stock < 0) {
+      throw new Error("El stock no puede ser negativo");
+    }
+
+    if ("id_categoria" in producto && !producto.id_categoria) {
+      throw new Error("La categoría es obligatoria");
+    }
+
   }
-  return crearProductoDb(producto);
-}
 
-/* ===============================
-   ADM04 - Actualizar producto
-   =============================== */
-export async function actualizarProducto(
-  idProducto: number,
-  producto: {
-    nombre?: string;
-    descripcion?: string;
-    precio?: number;
-    stock?: number;
-    imagen?: string;
-    id_categoria?: number;
-    estado?: boolean;
-    materiales?: string;
-    tecnica?: string;
-    es_unico?: boolean;
-    es_destacado?: boolean;
-    fragilidad?: string;
-    descuento_pct?: number;
+
+  /* ==========================================
+   ADM02 - Dar de alta producto
+   ========================================== */
+  export async function crearProducto(producto: any) {
+
+    validarProducto(producto);
+
+    return await crearProductoDb(producto);
   }
-) {
-  if (!idProducto) {
-    throw new Error("ID de producto requerido");
+
+
+  /* ==========================================
+    ADM03 - Consultar productos
+    ========================================== */
+  export async function consultarProductos() {
+
+    const productos = await listarProductosDb();
+
+    return productos;
   }
-  return actualizarProductoDb(idProducto, producto);
-}
 
-/* ===============================
-   ADM05 - Eliminar producto 
-   =============================== */
-export async function eliminarProducto(idProducto: number) {
-  if (!idProducto) {
-    throw new Error("ID de producto requerido");
+
+  /* ==========================================
+    ADM04 - Actualizar producto
+    ========================================== */
+  export async function actualizarProducto(idProducto: number, datos: any) {
+
+    if (!idProducto) {
+      throw new Error("El id del producto es obligatorio");
+    }
+
+    validarActualizacionProducto(datos);
+
+    return await actualizarProductoDb(idProducto, datos);
   }
-  return eliminarProductoDb(idProducto);
-}
 
-/* ===============================
-   USD06 - Listar productos
-   =============================== */
-export async function listarProductos() {
-  return listarProductosDb();
-}
 
-/* ===============================
-   USD07 - Mostrar precio e imagen del producto
-   USD09 - Mostrar descripción, materiales y técnica
-   USD22 - Indicador de fragilidad
-   USD25 - Etiqueta producto único
-   =============================== */
+  /* ==========================================
+    ADM05 - Eliminar producto
+    ========================================== */
+  export async function eliminarProducto(id: number) {
+
+    if (!id) {
+      throw new Error("El id del producto es obligatorio");
+    }
+
+    return await eliminarProductoDb(id);
+  }
+
+
+  /* ==========================================
+    ADM06 - Imprimir listado productos
+    ========================================== */
+  export async function imprimirListadoProductos() {
+
+    const productos = await listarProductosDb();
+
+    if (!productos || productos.length === 0) {
+      throw new Error("No hay productos registrados");
+    }
+
+    return productos;
+  }
+
+
+  
+/* ==========================================
+   ADM07 - Control de stock
+   ========================================== */
+  export async function controlarStock(idProducto: number, cantidad: number) {
+
+    if (cantidad <= 0) {
+      throw new Error("La cantidad debe ser mayor que cero");
+    }
+
+    const producto = await consultarStockDb(idProducto);
+
+    if (!producto) {
+      throw new Error("Producto no encontrado");
+    }
+
+    if (producto.stock < cantidad) {
+      throw new Error("Stock insuficiente");
+    }
+
+    return producto.stock - cantidad;
+  }
+
+
+
+
 export async function obtenerProductoDetalle(idProducto: number) {
   if (!idProducto) throw new Error("ID de producto requerido");
   return obtenerProductoDetalleDb(idProducto);
@@ -139,18 +187,7 @@ export async function listarProductosDestacados() {
 }
 
 
-/* ===============================
-   USD1 - Consultar productos
-   =============================== */
-export const consultarProductos = async () => {
-  const productos = await getAllProducts();
 
-  if (!productos || productos.length === 0) {
-    return { mensaje: "No hay productos disponibles", data: [] };
-  }
-
-  return { data: productos };
-};
 
 /* ===============================
    USD1 - Imprimir listado de productos

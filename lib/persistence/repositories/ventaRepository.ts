@@ -39,35 +39,87 @@ export async function crearVentaDb(venta: {
 /* ===============================
    Repository - Generar reporte de ventas
    =============================== */
-export async function generarReporteVentasDb(filtros?: {
-  fechaInicio?: string;
-  fechaFin?: string;
-}) {
-  let query = supabase
-    .from("ventas")
-    .select("id_venta, total, fecha_venta")
-    .order("fecha_venta", { ascending: false });
+   /* ===============================
+   Repository - Generar reporte de ventas
+   ADM29
+   =============================== */
+  export async function generarReporteVentasDb(filtros?: {
+    fechaInicio?: string;
+    fechaFin?: string;
+  }) {
 
-  if (filtros?.fechaInicio) {
-    query = query.gte("fecha_venta", filtros.fechaInicio);
+    let query = supabase
+      .from("ventas")
+      .select(`
+        id_venta,
+        fecha_venta,
+        total,
+        detalle_venta(
+          cantidad,
+          precio_unitario,
+          productos(nombre)
+        )
+      `)
+      .order("fecha_venta", { ascending: false });
+
+    if (filtros?.fechaInicio) {
+      query = query.gte("fecha_venta", filtros.fechaInicio);
+    }
+
+    if (filtros?.fechaFin) {
+      query = query.lte("fecha_venta", filtros.fechaFin);
+    }
+
+    const { data, error } = await query;
+
+    if (error) throw error;
+
+    const ventas = data ?? [];
+
+    const totalIngresos = ventas.reduce(
+      (acc, v) => acc + Number(v.total),
+      0
+    );
+
+    return {
+      ventas,
+      resumen: {
+        totalIngresos,
+        cantidad: ventas.length
+      }
+    };
   }
-  if (filtros?.fechaFin) {
-    query = query.lte("fecha_venta", filtros.fechaFin);
-  }
 
-  const { data, error } = await query;
-  if (error) throw error;
 
-  const ventas = data ?? [];
-  const totalIngresos = ventas.reduce((acc, v) => acc + Number(v.total), 0);
-  return {
-    ventas,
-    resumen: {
-      totalIngresos,
-      cantidad: ventas.length,
-    },
-  };
-}
+// export async function generarReporteVentasDb(filtros?: {
+//   fechaInicio?: string;
+//   fechaFin?: string;
+// }) {
+//   let query = supabase
+//     .from("ventas")
+//     .select("id_venta, total, fecha_venta")
+//     .order("fecha_venta", { ascending: false });
+
+//   if (filtros?.fechaInicio) {
+//     query = query.gte("fecha_venta", filtros.fechaInicio);
+//   }
+//   if (filtros?.fechaFin) {
+//     query = query.lte("fecha_venta", filtros.fechaFin);
+//   }
+
+//   const { data, error } = await query;
+//   if (error) throw error;
+
+//   const ventas = data ?? [];
+//   const totalIngresos = ventas.reduce((acc, v) => acc + Number(v.total), 0);
+//   return {
+//     ventas,
+//     resumen: {
+//       totalIngresos,
+//       cantidad: ventas.length,
+//     },
+//   };
+// }
 
 /* ===============================
    Repository - Top 5 productos más vendidos

@@ -183,11 +183,11 @@ export const getAllProducts = async () => {
 };
 
 //CONTROL DE STOCK
-export const getStockByProductId = async (id: string) => {
+export const getStockByProductId = async (id_producto: string) => {
   const { data, error } = await supabase
     .from("productos")
     .select("stock")
-    .eq("id", id)
+    .eq("id_producto", id_producto)
     .single();
 
   if (error) throw error;
@@ -197,11 +197,11 @@ export const getStockByProductId = async (id: string) => {
 
 //CLASIFICAR PRODUCTOS
 
-export const actualizarCategoria = async (id: string, categoria: string) => {
+export const actualizarCategoria = async (id_producto: string, categoria: string) => {
   const { data, error } = await supabase
     .from("productos")
     .update({ categoria })
-    .eq("id", id);
+    .eq("id_producto", id_producto)
 
   if (error) throw error;
 
