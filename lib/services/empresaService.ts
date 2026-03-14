@@ -51,8 +51,8 @@ export async function actualizarEmpresa(
 }
 
 /* ===============================
-   ADM18 / USD11 - Visualizar perfil empresa de AMD18
-   Incluye: misión, valores, redes sociales y contacto (USD11, USD19, USD20)
+   ADM18 - Visualizar perfil empresa
+   Incluye: misión y valores (USD11) y redes/contacto (USD19)
    =============================== */
 export async function obtenerEmpresa() {
   return obtenerEmpresaDb();
@@ -66,7 +66,7 @@ export async function obtenerMisionYValores() {
 }
 
 /* ===============================
-   USD19 / USD20 - Obtener datos de contacto y redes sociales
+   USD19 - Mostrar redes y contacto
    =============================== */
 export async function obtenerContactoYRedes() {
   return obtenerContactoYRedesDb();

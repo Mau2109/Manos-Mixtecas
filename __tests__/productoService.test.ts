@@ -1,5 +1,6 @@
 import {
   consultarProductos,
+  generarListadoProductosPDF,
   evaluarStock,
   clasificarProducto
 } from "@/lib/services/productoService";
@@ -8,7 +9,7 @@ import * as repo from "@/lib/persistence/repositories/productoRepository";
 
 jest.mock("@/lib/persistence/repositories/productoRepository");
 
-describe("Consultar Productos", () => {
+describe("ADM03 - Consultar productos", () => {
 
   afterEach(() => {
     jest.clearAllMocks();
@@ -47,7 +48,7 @@ describe("Consultar Productos", () => {
 
 
 
-describe("Evaluar Stock", () => {
+describe("ADM07 - Control de stock", () => {
 
   it("debe retornar rojo cuando stock es 0", () => {
     expect(evaluarStock(0)).toBe("rojo");
@@ -65,7 +66,7 @@ describe("Evaluar Stock", () => {
 
 
 
-describe("Clasificar Producto", () => {
+describe("ADM19 - Clasificar productos", () => {
 
   afterEach(() => {
     jest.clearAllMocks();
@@ -85,4 +86,18 @@ describe("Clasificar Producto", () => {
     expect(repo.actualizarCategoria).toHaveBeenCalledWith("1", "textil");
   });
 
+});
+
+describe("ADM06 - Imprimir listado productos", () => {
+  it("genera un Buffer con listado simple", async () => {
+    const buffer = await generarListadoProductosPDF([
+      { codigo: "P-001", nombre: "Tapete", categoria: "textil", precio: 300 },
+      { codigo: "P-002", nombre: "Barro negro", categoria: "barro", precio: 500 },
+    ]);
+
+    expect(buffer).toBeInstanceOf(Buffer);
+    const txt = buffer.toString("utf-8");
+    expect(txt).toContain("P-001 - Tapete - textil - $300");
+    expect(txt).toContain("P-002 - Barro negro - barro - $500");
+  });
 });

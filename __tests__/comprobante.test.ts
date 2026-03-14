@@ -28,7 +28,7 @@ beforeEach(() => {
 /* ===============================
    Adjuntar comprobante
    =============================== */
-describe("Adjuntar comprobante", () => {
+describe("ADM26 - Adjuntar comprobante de pago", () => {
   test("Adjunta comprobante correctamente", async () => {
     const mockComprobante = {
       id_comprobante: 1,
@@ -73,7 +73,7 @@ describe("Adjuntar comprobante", () => {
 /* ===============================
    Obtener comprobantes de una compra
    =============================== */
-describe("Obtener comprobantes", () => {
+describe("ADM26 - Consultar comprobantes por compra", () => {
   test("Obtiene comprobantes de una compra", async () => {
     const mockComprobantes = [
       {
@@ -105,7 +105,7 @@ describe("Obtener comprobantes", () => {
 /* ===============================
    Obtener comprobante por ID
    =============================== */
-describe("Obtener comprobante por ID", () => {
+describe("ADM26 - Consultar comprobante por ID", () => {
   test("Obtiene comprobante correctamente", async () => {
     const mockComprobante = {
       id_comprobante: 1,
@@ -132,7 +132,7 @@ describe("Obtener comprobante por ID", () => {
 /* ===============================
    Actualizar comprobante
    =============================== */
-describe("Actualizar comprobante", () => {
+describe("ADM26 - Actualizar metadatos de comprobante", () => {
   test("Actualiza comprobante correctamente", async () => {
     const mockActualizado = {
       id_comprobante: 1,
@@ -159,7 +159,7 @@ describe("Actualizar comprobante", () => {
 /* ===============================
    Eliminar comprobante
    =============================== */
-describe("Eliminar comprobante", () => {
+describe("ADM26 - Eliminar comprobante", () => {
   test("Elimina comprobante correctamente", async () => {
     (eliminarComprobanteDb as jest.Mock).mockResolvedValue(true);
 

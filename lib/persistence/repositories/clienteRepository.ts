@@ -1,5 +1,8 @@
 import { supabase } from "../../supabaseClient";
 
+/* ===============================
+   USD01 - Crear perfil cliente (persistencia)
+   =============================== */
 export async function crearClienteDb(cliente: { nombre: string; email: string }) {
   const { data, error } = await supabase
     .from("clientes")

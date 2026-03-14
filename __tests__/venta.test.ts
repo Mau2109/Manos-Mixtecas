@@ -55,8 +55,8 @@ jest.mock("../lib/persistence/repositories/ventaRepository", () => ({
     telefono: "9510000001",
   };
   
-  // ─── USD13 / USD14 - Crear venta ──────────────────────────────────────────
-  describe("USD13/14 - Crear venta con datos de envío", () => {
+  // ─── USD13 / USD14 / ADM14 - Crear/registrar venta ────────────────────────
+  describe("USD13/USD14/ADM14 - Crear venta con datos de envío", () => {
     test("Crea venta correctamente con todos los datos", async () => {
       const mockVenta = { id_venta: 1, total: 500, estado: "Pendiente" };
       (crearVentaDb as jest.Mock).mockResolvedValue(mockVenta);
@@ -143,8 +143,8 @@ jest.mock("../lib/persistence/repositories/ventaRepository", () => ({
     });
   });
 
-  // ─── USD15 (UCD15) - Resumen de compra ───────────────────────────────────
-  describe("USD15 - Resumen de compra", () => {
+  // ─── UCD15 - Resumen de compra ───────────────────────────────────
+  describe("UCD15 - Resumen de compra", () => {
     test("Retorna resumen de compra antes de pago", async () => {
       const mockResumen = {
         id_venta: 99,
@@ -160,8 +160,8 @@ jest.mock("../lib/persistence/repositories/ventaRepository", () => ({
     });
   });
   
-  // ─── USD17 - Estado de envío ──────────────────────────────────────────────
-  describe("USD17 - Confirmación de envío", () => {
+  // ─── ADM25 - Logística (estado de envío) ──────────────────────────────────
+  describe("ADM25 - Estado de envío del pedido", () => {
     test("Retorna el estado de envío del pedido", async () => {
       const mockEstado = {
         id_venta: 1,
@@ -228,8 +228,8 @@ jest.mock("../lib/persistence/repositories/ventaRepository", () => ({
     });
   });
 
-  // ─── Listar ventas ──────────────────────────────────────────────────────────
-  describe("Listar ventas", () => {
+  // ─── ADM15 / ADM25 - Consultar y filtrar ventas ───────────────────────────
+  describe("ADM15/ADM25 - Consultar y filtrar ventas", () => {
     test("Listar todas las ventas", async () => {
       const mockVentas = [
         { id_venta: 1, total: 500, estado: "Pendiente" },
@@ -341,8 +341,8 @@ jest.mock("../lib/persistence/repositories/ventaRepository", () => ({
     });
   });
 
-  // ─── Generar reporte de ventas ──────────────────────────────────────────────
-  describe("Generar reporte de ventas", () => {
+  // ─── ADM29 - Generar reporte de ventas ────────────────────────────────────
+  describe("ADM29 - Generar reporte de ventas", () => {
     test("Reporte básico sin filtros", async () => {
       const mockReporte = {
         ventas: [
@@ -378,8 +378,8 @@ jest.mock("../lib/persistence/repositories/ventaRepository", () => ({
       });
     });
 
-    // ─── Top sellers report ─────────────────────────────────────────────
-    describe("Reporte top productos", () => {
+    // ─── ADM30 - Reporte de productos \"Top Sellers\" ─────────────────────
+    describe("ADM30 - Reporte de productos \"Top Sellers\"", () => {
       test("Obtiene top 5 productos por cantidad vendida", async () => {
         const mockTop = [
           { id_producto: 1, nombre: "Producto A", total_vendido: 10 },
@@ -396,8 +396,8 @@ jest.mock("../lib/persistence/repositories/ventaRepository", () => ({
     });
   });
 
-  // ─── Reporte top products ────────────────────────────────────────────
-  describe("Top 5 productos más vendidos", () => {
+  // ─── ADM30 - Top 5 productos más vendidos ────────────────────────────
+  describe("ADM30 - Top 5 productos más vendidos", () => {
     test("Devuelve ranking de productos", async () => {
       const mockTop = [
         { id_producto: 1, nombre: "Alhaja", total_vendido: 10 },
@@ -411,8 +411,8 @@ jest.mock("../lib/persistence/repositories/ventaRepository", () => ({
     });
   });
 
-  // ─── Generar ticket de venta en PDF ────────────────────────────────────
-  describe("Generar ticket de venta en PDF", () => {
+  // ─── ADM32 - Generar ticket de venta en PDF ───────────────────────────
+  describe("ADM32 - Generar ticket de venta en PDF", () => {
     test("Genera buffer con contenido y encabezado PDF", async () => {
       const mockResumen = {
         id_venta: 1,
