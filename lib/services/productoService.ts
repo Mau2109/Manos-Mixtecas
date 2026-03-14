@@ -14,7 +14,7 @@ import {
 } from "../persistence/repositories/productoRepository";
 
 /* ===============================
-   EXTRA01 - Consultar stock
+   ADM07 - Control de stock
    =============================== */
 export async function consultarStock(idProducto: number) {
   if (!idProducto) {
@@ -137,7 +137,7 @@ export async function listarProductosDestacados() {
 
 
 /* ===============================
-   USD1 - Consultar productos
+   ADM03 - Consultar productos
    =============================== */
 export const consultarProductos = async () => {
   const productos = await getAllProducts();
@@ -150,7 +150,7 @@ export const consultarProductos = async () => {
 };
 
 /* ===============================
-   USD1 - Imprimir listado de productos
+   ADM06 - Imprimir listado productos
    =============================== */
 
 export const generarListadoProductosPDF = async (productos: any[]) => {
@@ -164,7 +164,7 @@ export const generarListadoProductosPDF = async (productos: any[]) => {
 };
 
 /* ===============================
-   USD1 - CONTROL DE STOCK
+   ADM07 - Control de stock (semáforo)
    =============================== */
 
 
@@ -175,7 +175,7 @@ export const evaluarStock = (stock: number) => {
 };
 
 /* ===============================
-   USD1 - CLASIFICAR PRODUCTOS
+   ADM19 - Clasificar productos
    =============================== */
 
 

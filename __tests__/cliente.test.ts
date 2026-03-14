@@ -5,18 +5,20 @@ jest.mock("../lib/persistence/repositories/clienteRepository", () => ({
 import { crearCliente } from "../lib/services/clienteService";
 import { crearClienteDb } from "../lib/persistence/repositories/clienteRepository";
 
-test("Crear cliente correctamente", async () => {
-  (crearClienteDb as jest.Mock).mockResolvedValue({});
-  const cliente = await crearCliente({
-    nombre: "Juan",
-    email: "juan@mail.com",
+describe("USD01 - Crear perfil cliente", () => {
+  test("Crear cliente correctamente", async () => {
+    (crearClienteDb as jest.Mock).mockResolvedValue({});
+    const cliente = await crearCliente({
+      nombre: "Juan",
+      email: "juan@mail.com",
+    });
+
+    expect(cliente).toBeDefined();
   });
 
-  expect(cliente).toBeDefined();
-});
-
-test("Error si faltan datos", async () => {
-  await expect(
-    crearCliente({ nombre: "", email: "" })
-  ).rejects.toThrow("Datos obligatorios");
+  test("Error si faltan datos", async () => {
+    await expect(crearCliente({ nombre: "", email: "" })).rejects.toThrow(
+      "Datos obligatorios"
+    );
+  });
 });

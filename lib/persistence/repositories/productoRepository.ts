@@ -1,6 +1,9 @@
 import { supabase } from "../../supabaseClient";
 
 
+/* ===============================
+   ADM07 - Control de stock (persistencia)
+   =============================== */
 export async function consultarStockDb(id_producto: number) {
   const { data, error } = await supabase
     .from("productos")
@@ -12,6 +15,9 @@ export async function consultarStockDb(id_producto: number) {
   return data;
 }
 
+/* ===============================
+   ADM02 - Dar de alta producto (persistencia)
+   =============================== */
 export async function crearProductoDb(producto: {
   nombre: string;
   descripcion?: string;
@@ -37,6 +43,9 @@ export async function crearProductoDb(producto: {
   return data;
 }
 
+/* ===============================
+   ADM04 - Actualizar producto (persistencia)
+   =============================== */
 export async function actualizarProductoDb(
   idProducto: number,
   producto: {
@@ -66,6 +75,9 @@ export async function actualizarProductoDb(
   return data;
 }
 
+/* ===============================
+   ADM05 - Eliminar producto (lógico) (persistencia)
+   =============================== */
 export async function eliminarProductoDb(idProducto: number) {
   const { error } = await supabase
     .from("productos")
@@ -76,6 +88,9 @@ export async function eliminarProductoDb(idProducto: number) {
   return true;
 }
 
+/* ===============================
+   USD06 - Listar productos (persistencia)
+   =============================== */
 export async function listarProductosDb() {
   const { data, error } = await supabase
     .from("productos")
@@ -93,6 +108,13 @@ export async function listarProductosDb() {
   return data;
 }
 
+/* ===============================
+   USD07 - Mostrar precio e imagen
+   USD09 - Mostrar descripción, material y técnica
+   USD21 - Información del artesano (en detalle)
+   USD22 - Indicador de fragilidad
+   USD25 - Etiqueta producto único
+   =============================== */
 export async function obtenerProductoDetalleDb(idProducto: number) {
   const { data, error } = await supabase
     .from("productos")
@@ -111,6 +133,9 @@ export async function obtenerProductoDetalleDb(idProducto: number) {
   return data;
 }
 
+/* ===============================
+   USD08 - Galería de imágenes (persistencia)
+   =============================== */
 export async function obtenerImagenesProductoDb(idProducto: number) {
   const { data, error } = await supabase
     .from("imagenes_producto")
@@ -122,6 +147,9 @@ export async function obtenerImagenesProductoDb(idProducto: number) {
   return data;
 }
 
+/* ===============================
+   USD20 - Filtro por tipo de artesanía (persistencia)
+   =============================== */
 export async function listarProductosPorTipoArtesanoDb(tipo: string) {
   const { data, error } = await supabase
     .from("productos")
@@ -138,6 +166,9 @@ export async function listarProductosPorTipoArtesanoDb(tipo: string) {
   return data;
 }
 
+/* ===============================
+   USD24 - Listar productos del artesano (persistencia)
+   =============================== */
 export async function listarProductosPorArtesanoDb(idArtesano: number) {
   const { data, error } = await supabase
     .from("productos")
@@ -151,6 +182,9 @@ export async function listarProductosPorArtesanoDb(idArtesano: number) {
   return data;
 }
 
+/* ===============================
+   USD26 - Implementar productos destacados (persistencia)
+   =============================== */
 export async function listarProductosDestacadosDb() {
   const { data, error } = await supabase
     .from("productos")
@@ -168,10 +202,9 @@ export async function listarProductosDestacadosDb() {
   return data;
 }
 
-//CONSULTAR PRODUCTOS
-
-
-
+/* ===============================
+   ADM03 - Consultar productos (persistencia)
+   =============================== */
 export const getAllProducts = async () => {
   const { data, error } = await supabase
     .from("productos")
@@ -182,26 +215,22 @@ export const getAllProducts = async () => {
   return data;
 };
 
-//CONTROL DE STOCK
-export const getStockByProductId = async (id: string) => {
-  const { data, error } = await supabase
-    .from("productos")
-    .select("stock")
-    .eq("id", id)
-    .single();
+/* ===============================
+   ADM19 - Clasificar productos (persistencia)
+   =============================== */
+export const actualizarCategoria = async (
+  id: string | number,
+  categoria: string
+) => {
+  const idProducto = typeof id === "string" ? Number(id) : id;
+  if (!Number.isFinite(idProducto) || idProducto <= 0) {
+    throw new Error("ID de producto requerido");
+  }
 
-  if (error) throw error;
-
-  return data;
-};
-
-//CLASIFICAR PRODUCTOS
-
-export const actualizarCategoria = async (id: string, categoria: string) => {
   const { data, error } = await supabase
     .from("productos")
     .update({ categoria })
-    .eq("id", id);
+    .eq("id_producto", idProducto);
 
   if (error) throw error;
 

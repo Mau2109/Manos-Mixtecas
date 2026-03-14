@@ -1,5 +1,9 @@
 import { supabase } from "../../supabaseClient";
 
+/* ===============================
+   USD16 - Visualizar perfil del artesano (persistencia)
+   USD23 - Historia y comunidad del artesano (en perfil)
+   =============================== */
 export async function obtenerPerfilArtesanoDb(idArtesano: number) {
   const { data, error } = await supabase
     .from("artesanos")
@@ -18,6 +22,9 @@ export async function obtenerPerfilArtesanoDb(idArtesano: number) {
   return data;
 }
 
+/* ===============================
+   USD27 - Galería imágenes del artesano (persistencia)
+   =============================== */
 export async function obtenerGaleriaArtesanoDb(idArtesano: number) {
   const { data, error } = await supabase
     .from("imagenes_producto")
@@ -34,6 +41,9 @@ export async function obtenerGaleriaArtesanoDb(idArtesano: number) {
   return data;
 }
 
+/* ===============================
+   Soporte a USD20 - Tipos de artesano (persistencia)
+   =============================== */
 export async function listarTiposArtesanoDb() {
   const { data, error } = await supabase
     .from("artesanos")
@@ -45,6 +55,9 @@ export async function listarTiposArtesanoDb() {
   return data;
 }
 
+/* ===============================
+   ADM24 - Directorio de artesanos/proveedores (persistencia)
+   =============================== */
 export async function listarArtesanosDb() {
   const { data, error } = await supabase
     .from("artesanos")
@@ -57,6 +70,9 @@ export async function listarArtesanosDb() {
   return data;
 }
 
+/* ===============================
+   ADM08 - Registrar proveedor/artesano (persistencia)
+   =============================== */
 export async function crearArtesanoDb(artesano: {
   nombre: string;
   apellido?: string;
@@ -81,6 +97,11 @@ export async function crearArtesanoDb(artesano: {
   return data;
 }
 
+/* ===============================
+   ADM10 - Actualizar proveedor/artesano (persistencia)
+   ADM27 - Categorización de proveedores (usa id_categoria)
+   ADM33 - Asignar estatus proveedor (usa estado)
+   =============================== */
 export async function actualizarArtesanoDb(
   idArtesano: number,
   artesano: {
@@ -109,6 +130,9 @@ export async function actualizarArtesanoDb(
   return data;
 }
 
+/* ===============================
+   ADM11 - Eliminar proveedor/artesano (lógico) (persistencia)
+   =============================== */
 export async function eliminarArtesanoDb(idArtesano: number) {
   const { error } = await supabase
     .from("artesanos")

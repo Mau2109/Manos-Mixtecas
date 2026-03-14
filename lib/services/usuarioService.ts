@@ -6,7 +6,7 @@ import{
 
 
 /* ===============================
-   AMD10 - Consultar lista de usuarios
+   ADM21 - Consultar usuario(s)
    =============================== */
 
 export async function listarUsuarios() {
@@ -19,7 +19,7 @@ export async function listarUsuarios() {
 }
 
 /* ===============================
-   AMD11 - Eliminar usuario
+   ADM22 - Eliminar usuario
    =============================== */
 
 export async function eliminarUsuario(nombre: string) {
@@ -29,7 +29,7 @@ export async function eliminarUsuario(nombre: string) {
 }
 
 /* ===============================
-   AMD16 - Interfaz limitada para vendedores
+   ADM28 - Interfaz limitada para Vendedor
    =============================== */
 
 export async function obtenerAccesoVendedor(nombre: string) {
@@ -41,4 +41,3 @@ export async function obtenerAccesoVendedor(nombre: string) {
     
     return getVendedorAccess(nombre);
 }
-

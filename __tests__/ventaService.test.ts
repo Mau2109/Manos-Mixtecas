@@ -2,7 +2,7 @@ import { aplicarDescuento } from "../lib/services/ventaService";
 //Prueba de Aplicar Descuento
 
 
-describe("Aplicar Descuento", () => {
+describe("ADM31 - Aplicar descuentos", () => {
 
   it("debe calcular descuento correctamente", () => {
     const resultado = aplicarDescuento(100, 10);
