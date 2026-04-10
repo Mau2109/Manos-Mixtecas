@@ -103,3 +103,34 @@ export async function eliminarArtesano(idArtesano: number) {
 
   return eliminarArtesanoDb(idArtesano);
 }
+
+/* ===============================
+   ADM27 - Categorización de proveedores
+   =============================== */
+export async function categorizarProveedor(
+  idArtesano: number,
+  idCategoria: number
+) {
+  if (!idArtesano) {
+    throw new Error("ID de artesano requerido");
+  }
+  if (!idCategoria) {
+    throw new Error("ID de categoría requerido");
+  }
+
+  return actualizarArtesanoDb(idArtesano, { id_categoria: idCategoria });
+}
+
+/* ===============================
+   ADM33 - Asignar estatus proveedor (activo/inactivo)
+   =============================== */
+export async function asignarEstatusProveedor(
+  idArtesano: number,
+  estado: boolean
+) {
+  if (!idArtesano) {
+    throw new Error("ID de artesano requerido");
+  }
+
+  return actualizarArtesanoDb(idArtesano, { estado });
+}

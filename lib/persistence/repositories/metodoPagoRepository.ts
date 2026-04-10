@@ -1,7 +1,7 @@
 import { supabase } from "../../supabaseClient";
 
 /* ===============================
-   Repository - Crear método de pago
+   ADM13 - Registrar método de pago (persistencia)
    =============================== */
 export async function crearMetodoPagoDb(metodoPago: {
   nombre: string;
@@ -22,7 +22,7 @@ export async function crearMetodoPagoDb(metodoPago: {
 }
 
 /* ===============================
-   Repository - Listar métodos activos
+   USD12 - Selección método de pago (listar activos - persistencia)
    =============================== */
 export async function listarMetodosPagoDb() {
   const { data, error } = await supabase
@@ -36,7 +36,7 @@ export async function listarMetodosPagoDb() {
 }
 
 /* ===============================
-   Repository - Listar todos los métodos (admin)
+   ADM13 - Consultar métodos de pago (incluye inactivos - persistencia)
    =============================== */
 export async function listarTodosMetodosPagoDb() {
   const { data, error } = await supabase
@@ -49,7 +49,7 @@ export async function listarTodosMetodosPagoDb() {
 }
 
 /* ===============================
-   Repository - Obtener método por ID
+   ADM13 - Consultar método de pago por ID (persistencia)
    =============================== */
 export async function obtenerMetodoPagoDb(idMetodoPago: number) {
   const { data, error } = await supabase
@@ -63,7 +63,7 @@ export async function obtenerMetodoPagoDb(idMetodoPago: number) {
 }
 
 /* ===============================
-   Repository - Actualizar método de pago
+   ADM13 - Actualizar método de pago (persistencia)
    =============================== */
 export async function actualizarMetodoPagoDb(
   idMetodoPago: number,
@@ -87,7 +87,7 @@ export async function actualizarMetodoPagoDb(
 }
 
 /* ===============================
-   Repository - Desactivar método de pago
+   ADM13 - Desactivar método de pago (persistencia)
    =============================== */
 export async function desactivarMetodoPagoDb(idMetodoPago: number) {
   const { data, error } = await supabase
@@ -102,7 +102,7 @@ export async function desactivarMetodoPagoDb(idMetodoPago: number) {
 }
 
 /* ===============================
-   Repository - Reactivar método de pago
+   ADM13 - Reactivar método de pago (persistencia)
    =============================== */
 export async function reactivarMetodoPagoDb(idMetodoPago: number) {
   const { data, error } = await supabase

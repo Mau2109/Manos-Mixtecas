@@ -29,7 +29,7 @@ beforeEach(() => {
 /* ===============================
    Registrar compra
    =============================== */
-describe("Registrar compra", () => {
+describe("ADM12/ADM13 - Registrar compra (artículo, cantidad, costo y método de pago)", () => {
   const detalles = [
     { id_producto: 1, cantidad: 2, costo_unitario: 100 },
     { id_producto: 2, cantidad: 1, costo_unitario: 200 },
@@ -82,7 +82,7 @@ describe("Registrar compra", () => {
 /* ===============================
    Obtener compra
    =============================== */
-describe("Obtener compra", () => {
+describe("ADM12 - Consultar detalle de compra", () => {
   test("Obtiene compra correctamente", async () => {
     const mockCompra = { id_compra: 1, total: 400 };
     (obtenerCompraDb as jest.Mock).mockResolvedValue(mockCompra);
@@ -99,7 +99,7 @@ describe("Obtener compra", () => {
 /* ===============================
    Listar compras
    =============================== */
-describe("Listar compras", () => {
+describe("ADM12 - Consultar historial de compras", () => {
   test("Lista todas las compras", async () => {
     const mockList = [{ id_compra: 1 }, { id_compra: 2 }];
     (listarComprasDb as jest.Mock).mockResolvedValue(mockList);

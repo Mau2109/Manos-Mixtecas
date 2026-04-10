@@ -4,6 +4,7 @@ jest.mock("../lib/persistence/repositories/empresaRepository", () => ({
   obtenerEmpresaDb: jest.fn(),
   obtenerMisionYValoresDb: jest.fn(),
   obtenerContactoYRedesDb: jest.fn(),
+  obtenerUbicacionEmpresaDb: jest.fn(),
 }));
 
 import {
@@ -12,6 +13,7 @@ import {
   obtenerEmpresa,
   obtenerMisionYValores,
   obtenerContactoYRedes,
+  obtenerUbicacionEmpresa,
 } from "../lib/services/empresaService";
 import {
   actualizarEmpresaDb,
@@ -19,6 +21,7 @@ import {
   obtenerContactoYRedesDb,
   obtenerEmpresaDb,
   obtenerMisionYValoresDb,
+  obtenerUbicacionEmpresaDb,
 } from "../lib/persistence/repositories/empresaRepository";
 
 beforeEach(() => {
@@ -26,7 +29,7 @@ beforeEach(() => {
 });
 
 // ─── ADM09 ─────────────────────────────────────────────────────────────────
-describe("ADM09 - Crear empresa", () => {
+describe("ADM16 - Agregar perfil empresa", () => {
   test("Crea empresa correctamente", async () => {
     (crearEmpresaDb as jest.Mock).mockResolvedValue({ id_empresa: 1, nombre: "Manos Mixtecas" });
     const empresa = await crearEmpresa({ nombre: "Manos Mixtecas" });
@@ -39,7 +42,7 @@ describe("ADM09 - Crear empresa", () => {
 });
 
 // ─── ADM10 ─────────────────────────────────────────────────────────────────
-describe("ADM10 - Actualizar empresa", () => {
+describe("ADM17 - Editar perfil empresa", () => {
   test("Actualiza empresa correctamente", async () => {
     (actualizarEmpresaDb as jest.Mock).mockResolvedValue({ id_empresa: 1, nombre: "Manos Mixtecas Actualizada" });
     const empresa = await actualizarEmpresa(1, { nombre: "Manos Mixtecas Actualizada" });
@@ -52,7 +55,7 @@ describe("ADM10 - Actualizar empresa", () => {
 });
 
 // ─── ADM11 ─────────────────────────────────────────────────────────────────
-describe("ADM11 - Obtener empresa completa", () => {
+describe("ADM18 - Visualizar perfil empresa", () => {
   test("Retorna todos los datos de la empresa", async () => {
     (obtenerEmpresaDb as jest.Mock).mockResolvedValue({ id_empresa: 1, nombre: "Manos Mixtecas", mision: "Preservar artesanías" });
     const empresa = await obtenerEmpresa();
@@ -75,7 +78,7 @@ describe("USD11 - Misión y valores", () => {
 });
 
 // ─── USD19 / USD20 ─────────────────────────────────────────────────────────
-describe("USD19/20 - Contacto y redes sociales", () => {
+describe("USD19 - Mostrar redes y contacto", () => {
   test("Retorna teléfono, email y redes sociales", async () => {
     const mockData = {
       telefono: "9510000000",
@@ -87,5 +90,17 @@ describe("USD19/20 - Contacto y redes sociales", () => {
     const contacto = await obtenerContactoYRedes();
     expect(contacto.redes_sociales).toBeDefined();
     expect(contacto.email).toBe("contacto@manosmixtecas.com");
+  });
+});
+
+// ─── USD28 ─────────────────────────────────────────────────────────────────
+describe("USD28 - Mostrar ubicación", () => {
+  test("Retorna dirección de la empresa", async () => {
+    (obtenerUbicacionEmpresaDb as jest.Mock).mockResolvedValue({
+      direccion: "Av. Juarez 123, Oaxaca",
+    });
+
+    const ubicacion = await obtenerUbicacionEmpresa();
+    expect(ubicacion.direccion).toBe("Av. Juarez 123, Oaxaca");
   });
 });

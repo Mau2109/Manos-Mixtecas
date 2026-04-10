@@ -42,7 +42,7 @@ beforeEach(() => {
 });
 
 // ─── EXTRA01 ───────────────────────────────────────────────────────────────
-describe("EXTRA01 - Consultar stock", () => {
+describe("ADM07 - Control de stock", () => {
   test("Retorna el stock de un producto", async () => {
     (consultarStockDb as jest.Mock).mockResolvedValue({ stock: 10 });
     const stock = await consultarStock(1);
@@ -65,7 +65,7 @@ describe("ADM02 - Crear producto", () => {
 });
 
 // ─── ADM03 ─────────────────────────────────────────────────────────────────
-describe("ADM03 - Actualizar producto", () => {
+describe("ADM04 - Actualizar producto", () => {
   test("Actualiza producto correctamente", async () => {
     (actualizarProductoDb as jest.Mock).mockResolvedValue({ id_producto: 1, precio: 250 });
     const producto = await actualizarProducto(1, { precio: 250 });
@@ -78,7 +78,7 @@ describe("ADM03 - Actualizar producto", () => {
 });
 
 // ─── ADM04 ─────────────────────────────────────────────────────────────────
-describe("ADM04 - Eliminar producto (lógico)", () => {
+describe("ADM05 - Eliminar producto", () => {
   test("Elimina producto correctamente", async () => {
     (eliminarProductoDb as jest.Mock).mockResolvedValue(true);
     const resultado = await eliminarProducto(1);
@@ -104,7 +104,7 @@ describe("USD06 - Listar productos", () => {
 });
 
 // ─── USD07 / USD09 / USD22 / USD25 ─────────────────────────────────────────
-describe("USD07/09/22/25 - Detalle completo de producto", () => {
+describe("USD07/USD09/USD21/USD22/USD25 - Detalle completo de producto", () => {
   test("Retorna producto con descripción, materiales, técnica y fragilidad", async () => {
     const mockProducto = {
       id_producto: 1, nombre: "Tapete", precio: 300,
@@ -118,6 +118,7 @@ describe("USD07/09/22/25 - Detalle completo de producto", () => {
     expect(producto.tecnica).toBe("Telar");
     expect(producto.fragilidad).toBe("alta");
     expect(producto.es_unico).toBe(true);
+    expect(producto.artesanos).toBeDefined();
   });
 
   test("Error si no se proporciona ID", async () => {
@@ -144,8 +145,8 @@ describe("USD08 - Galería de imágenes", () => {
 });
 
 // ─── USD20 ─────────────────────────────────────────────────────────────────
-describe("USD20 - Filtro por tipo de artesano", () => {
-  test("Lista productos filtrados por tipo de artesano", async () => {
+describe("USD20 - Filtro por tipo de artesanía", () => {
+  test("Lista productos filtrados por tipo de artesanía", async () => {
     const mockProductos = [{ id_producto: 1, nombre: "Tapete" }];
 
     // Necesitamos un chain donde .eq() siempre devuelve el mismo objeto
@@ -207,5 +208,3 @@ describe("USD26 - Implementar productos destacados", () => {
     expect(destacados[0].es_destacado).toBe(true);
   });
 });
-
-
