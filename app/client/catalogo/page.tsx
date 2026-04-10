@@ -1,12 +1,12 @@
 import Link from "next/link";
-import { listarProductos } from "@/lib/services/productoService";
+import { imprimirListadoProductos } from "@/lib/services/productoService";
 
 export default async function CatalogoPage({
   searchParams,
 }: {
   searchParams: { categoria?: string; q?: string; pagina?: string };
 }) {
-  const productos = (await listarProductos()) ?? [];
+  const productos = (await imprimirListadoProductos()) ?? [];
 
   // Filtrar por categoría o búsqueda en el servidor
   const q = searchParams.q?.toLowerCase() ?? "";
