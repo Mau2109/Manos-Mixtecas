@@ -13,6 +13,10 @@ jest.mock("../lib/persistence/repositories/ventaRepository", () => ({
   generarReporteVentasDb: jest.fn(),
   obtenerTopProductosDb: jest.fn(),
 }));
+
+
+import * as repo from "../lib/persistence/repositories/ventaRepository";
+
   
   import {
     crearVenta,
@@ -343,61 +347,120 @@ jest.mock("../lib/persistence/repositories/ventaRepository", () => ({
 
   // ─── ADM29 - Generar reporte de ventas ────────────────────────────────────
   describe("ADM29 - Generar reporte de ventas", () => {
+
+    afterEach(() => {
+      jest.clearAllMocks();
+    });
+
     test("Reporte básico sin filtros", async () => {
+
       const mockReporte = {
         ventas: [
-          { id_venta: 1, total: 100 },
-          { id_venta: 2, total: 200 },
+          { id_venta: 1, total: 100, fecha_venta: "2025-01-01" },
+          { id_venta: 2, total: 200, fecha_venta: "2025-01-02" }
         ],
-        resumen: { totalIngresos: 300, cantidad: 2 },
+        resumen: {
+          totalIngresos: 300,
+          cantidad: 2
+        }
       };
-      const { generarReporteVentasDb } = require("../lib/persistence/repositories/ventaRepository");
-      generarReporteVentasDb.mockResolvedValue(mockReporte);
+
+      (repo.generarReporteVentasDb as jest.Mock)
+        .mockResolvedValue(mockReporte);
 
       const rpt = await generarReporteVentas();
+
       expect(rpt.resumen.totalIngresos).toBe(300);
       expect(rpt.ventas.length).toBe(2);
+
     });
 
     test("Reporte con rango de fechas", async () => {
+
       const mockReporte = {
-        ventas: [{ id_venta: 3, total: 150 }],
-        resumen: { totalIngresos: 150, cantidad: 1 },
+        ventas: [
+          { id_venta: 3, total: 150, fecha_venta: "2025-06-01" }
+        ],
+        resumen: {
+          totalIngresos: 150,
+          cantidad: 1
+        }
       };
-      const { generarReporteVentasDb } = require("../lib/persistence/repositories/ventaRepository");
-      generarReporteVentasDb.mockResolvedValue(mockReporte);
+
+      (repo.generarReporteVentasDb as jest.Mock)
+        .mockResolvedValue(mockReporte);
 
       const rpt = await generarReporteVentas({
         fechaInicio: "2025-01-01",
-        fechaFin: "2025-12-31",
+        fechaFin: "2025-12-31"
       });
+
       expect(rpt.resumen.cantidad).toBe(1);
-      expect(generarReporteVentasDb).toHaveBeenCalledWith({
+
+      expect(repo.generarReporteVentasDb).toHaveBeenCalledWith({
         fechaInicio: "2025-01-01",
         fechaFin: "2025-12-31",
-      });
-    });
-
-    // ─── ADM30 - Reporte de productos \"Top Sellers\" ─────────────────────
-    describe("ADM30 - Reporte de productos \"Top Sellers\"", () => {
-      test("Obtiene top 5 productos por cantidad vendida", async () => {
-        const mockTop = [
-          { id_producto: 1, nombre: "Producto A", total_vendido: 10 },
-          { id_producto: 2, nombre: "Producto B", total_vendido: 8 },
-        ];
-        const { obtenerTopProductosDb } = require("../lib/persistence/repositories/ventaRepository");
-        obtenerTopProductosDb.mockResolvedValue(mockTop);
-
-        const resultado = await obtenerTopProductos();
-        expect(Array.isArray(resultado)).toBe(true);
-        expect(resultado[0].total_vendido).toBe(10);
-        expect(obtenerTopProductosDb).toHaveBeenCalled();
       });
     });
   });
 
-  // ─── ADM30 - Top 5 productos más vendidos ────────────────────────────
-  describe("ADM30 - Top 5 productos más vendidos", () => {
+  // // ─── Generar reporte de ventas ──────────────────────────────────────────────
+  // describe("Generar reporte de ventas", () => {
+  //   test("Reporte básico sin filtros", async () => {
+  //     const mockReporte = {
+  //       ventas: [
+  //         { id_venta: 1, total: 100 },
+  //         { id_venta: 2, total: 200 },
+  //       ],
+  //       resumen: { totalIngresos: 300, cantidad: 2 },
+  //     };
+  //     const { generarReporteVentasDb } = require("../lib/persistence/repositories/ventaRepository");
+  //     generarReporteVentasDb.mockResolvedValue(mockReporte);
+
+  //     const rpt = await generarReporteVentas();
+  //     expect(rpt.resumen.totalIngresos).toBe(300);
+  //     expect(rpt.ventas.length).toBe(2);
+  //   });
+
+  //   test("Reporte con rango de fechas", async () => {
+  //     const mockReporte = {
+  //       ventas: [{ id_venta: 3, total: 150 }],
+  //       resumen: { totalIngresos: 150, cantidad: 1 },
+  //     };
+  //     const { generarReporteVentasDb } = require("../lib/persistence/repositories/ventaRepository");
+  //     generarReporteVentasDb.mockResolvedValue(mockReporte);
+
+  //     const rpt = await generarReporteVentas({
+  //       fechaInicio: "2025-01-01",
+  //       fechaFin: "2025-12-31",
+  //     });
+  //     expect(rpt.resumen.cantidad).toBe(1);
+  //     expect(generarReporteVentasDb).toHaveBeenCalledWith({
+  //       fechaInicio: "2025-01-01",
+  //       fechaFin: "2025-12-31",
+  //     });
+  //   });
+
+      // ─── ADM30 - Reporte de productos \"Top Sellers\" ─────────────────────
+  // describe("ADM30 - Reporte de productos \"Top Sellers\"", () => {
+  //   test("Obtiene top 5 productos por cantidad vendida", async () => {
+  //     const mockTop = [
+  //       { id_producto: 1, nombre: "Producto A", total_vendido: 10 },
+  //       { id_producto: 2, nombre: "Producto B", total_vendido: 8 },
+  //     ];
+  //     const { obtenerTopProductosDb } = require("../lib/persistence/repositories/ventaRepository");
+  //     obtenerTopProductosDb.mockResolvedValue(mockTop);
+
+  //       const resultado = await obtenerTopProductos();
+  //       expect(Array.isArray(resultado)).toBe(true);
+  //       expect(resultado[0].total_vendido).toBe(10);
+  //       expect(obtenerTopProductosDb).toHaveBeenCalled();
+  //     });
+  //   });
+  // });
+
+    // ─── ADM30 - Top 5 productos más vendidos ────────────────────────────
+  describe("ADM30 - Reporte de productos Top Sellers", () => {
     test("Devuelve ranking de productos", async () => {
       const mockTop = [
         { id_producto: 1, nombre: "Alhaja", total_vendido: 10 },

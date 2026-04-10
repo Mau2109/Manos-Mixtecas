@@ -16,7 +16,7 @@ import {
   crearProducto,
   actualizarProducto,
   eliminarProducto,
-  listarProductos,
+  imprimirListadoProductos,
   obtenerProductoDetalle,
   obtenerImagenesProducto,
   listarProductosPorTipoArtesano,
@@ -98,7 +98,7 @@ describe("USD06 - Listar productos", () => {
       { id_producto: 2, nombre: "Barro negro", precio: 500, imagen: null, stock: 2 },
     ];
     (listarProductosDb as jest.Mock).mockResolvedValue(mockProductos);
-    const productos = await listarProductos();
+    const productos = await imprimirListadoProductos();
     expect(productos).toHaveLength(2);
   });
 });
