@@ -1,5 +1,10 @@
 import { supabase } from "../../supabaseClient";
+import { listarMetodosPagoDb as listarMetodosPagoDbBase } from "./metodoPagoRepository";
 
+/* ===============================
+   USD04 - Visualizar producto del carrito (persistencia)
+   USD05 - Cálculo total de compras (datos base)
+   =============================== */
 export async function obtenerCarritoDb(idCarrito: number) {
   const { data, error } = await supabase
     .from("detalle_carrito")
@@ -15,6 +20,9 @@ export async function obtenerCarritoDb(idCarrito: number) {
   return data;
 }
 
+/* ===============================
+   USD02 - Agregar producto al carrito (persistencia)
+   =============================== */
 export async function agregarProductoCarritoDb(
   id_carrito: number,
   id_producto: number,
@@ -32,6 +40,9 @@ export async function agregarProductoCarritoDb(
   return true;
 }
 
+/* ===============================
+   USD03 - Eliminar producto del carrito (persistencia)
+   =============================== */
 export async function eliminarProductoCarritoDb(idDetalle: number) {
   const { error } = await supabase
     .from("detalle_carrito")
@@ -42,12 +53,14 @@ export async function eliminarProductoCarritoDb(idDetalle: number) {
   return true;
 }
 
+/* ===============================
+   USD12 - Selección método de pago (listar activos - persistencia)
+   =============================== */
 export async function listarMetodosPagoDb() {
-  const { data, error } = await supabase
-    .from("metodos_pago")
-    .select("id_metodo_pago, nombre, descripcion")
-    .eq("estado", true);
-
-  if (error) throw error;
-  return data;
+  const data = await listarMetodosPagoDbBase();
+  return (data ?? []).map((m: any) => ({
+    id_metodo_pago: m.id_metodo_pago,
+    nombre: m.nombre,
+    descripcion: m.descripcion ?? null,
+  }));
 }

@@ -2,7 +2,7 @@
 import { supabase } from "../../supabaseClient";
 
 /* ===============================
-   Repository - Crear comprobante de compra
+   ADM26 - Adjuntar comprobante de pago (persistencia)
    =============================== */
 export async function crearComprobanteDb(comprobante: {
   id_compra: number;
@@ -26,7 +26,7 @@ export async function crearComprobanteDb(comprobante: {
 }
 
 /* ===============================
-   Repository - Obtener comprobantes de una compra
+   ADM26 - Consultar comprobantes por compra (persistencia)
    =============================== */
 export async function obtenerComprobantesDb(idCompra: number) {
   const { data, error } = await supabase
@@ -40,7 +40,7 @@ export async function obtenerComprobantesDb(idCompra: number) {
 }
 
 /* ===============================
-   Repository - Obtener comprobante por ID
+   ADM26 - Consultar comprobante por ID (persistencia)
    =============================== */
 export async function obtenerComprobanteDb(idComprobante: number) {
   const { data, error } = await supabase
@@ -54,7 +54,7 @@ export async function obtenerComprobanteDb(idComprobante: number) {
 }
 
 /* ===============================
-   Repository - Eliminar comprobante
+   ADM26 - Eliminar comprobante (persistencia)
    =============================== */
 export async function eliminarComprobanteDb(idComprobante: number) {
   const { error } = await supabase
@@ -67,7 +67,7 @@ export async function eliminarComprobanteDb(idComprobante: number) {
 }
 
 /* ===============================
-   Repository - Actualizar comprobante
+   ADM26 - Actualizar metadatos de comprobante (persistencia)
    =============================== */
 export async function actualizarComprobanteDb(
   idComprobante: number,

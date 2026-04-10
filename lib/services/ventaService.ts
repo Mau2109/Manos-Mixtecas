@@ -14,8 +14,9 @@
 } from "../persistence/repositories/ventaRepository";
 
 /* ===============================
-   USD14 - Formulario de datos de envio
-   USD13 - Crear venta (confirmar pedido)
+   USD14 - Formulario de datos de envío
+   ADM14 - Registrar venta (impacta inventario)
+   USD13 - Confirmación de pedido (creación de venta)
    =============================== */
 export async function crearVenta(venta: {
   id_cliente: number;
@@ -55,7 +56,7 @@ export async function confirmarPedido(idVenta: number) {
 }
 
 /* ===============================
-   Agregar producto a venta
+   ADM14 - Agregar productos a venta (detalle)
    =============================== */
 export async function agregarProductoVenta(detalleVenta: {
   id_venta: number;
@@ -73,7 +74,8 @@ export async function agregarProductoVenta(detalleVenta: {
 }
 
 /* ===============================
-   ADM08 - ADM13 - Listar ventas con filtros (estado, fecha)
+   ADM15 - Consultar ventas (dashboard)
+   ADM25 - Filtrar ventas (fecha/estado)
    =============================== */
 export async function listarVentas(filtros?: {
   estado?: string;
@@ -84,24 +86,32 @@ export async function listarVentas(filtros?: {
 }
 
 /* ===============================
-   ADM17 - Generar reporte de ventas
+   ADM29 - Generar reporte de ventas
    =============================== */
-export async function generarReporteVentas(filtros?: {
-  fechaInicio?: string;
-  fechaFin?: string;
-}) {
-  return await generarReporteVentasDb(filtros);
-}
+
+  export async function generarReporteVentas(filtros?: {
+    fechaInicio?: string;
+    fechaFin?: string;
+  }) {
+
+    const reporte = await generarReporteVentasDb(filtros);
+
+    if (!reporte || reporte.ventas.length === 0) {
+      throw new Error("No hay ventas registradas para el reporte");
+    }
+
+    return reporte;
+  }
 
 /* ===============================
-   ADM18 - Generar top productos vendidos
+   ADM30 - Reporte de productos "Top Sellers"
    =============================== */
 export async function obtenerTopProductos() {
   return await obtenerTopProductosDb();
 }
 
 /* ===============================
-   ADM20 - Generar ticket de venta en PDF
+   ADM32 - Generar ticket de venta en PDF
    Retorna un Buffer con el contenido del PDF (empleado por el admin).
    Actualmente el PDF es un texto simple que incluye algunos datos de la
    venta; en un entorno real se podria usar pdfkit/u otro generador.
@@ -135,6 +145,7 @@ export async function generarTicketVenta(idVenta: number) {
 }
 
 /* ===============================
+   ADM14 - Registrar venta (actualizar stock al confirmar)
    ADM07 - Confirmar pedido y actualizar stock
    =============================== */
 export async function confirmarYActualizarStock(idVenta: number) {
@@ -157,7 +168,7 @@ export async function confirmarYActualizarStock(idVenta: number) {
 }
 
 /* ===============================
-   Sin HU en hoja Usuario - Resumen de compra (obtener venta con detalles)
+   UCD15 - Resumen de compra (antes de pagar)
    =============================== */
 export async function obtenerResumenCompra(idVenta: number) {
   if (!idVenta) throw new Error("ID de venta requerido");
@@ -170,7 +181,7 @@ export async function obtenerResumenVenta(idVenta: number) {
 }
 
 /* ===============================
-   USD17 - Mensaje de confirmación de envio
+   ADM25 - Estado/confirmación de envío
    =============================== */
 export async function obtenerEstadoEnvio(idVenta: number) {
   if (!idVenta) throw new Error("ID de venta requerido");
@@ -178,28 +189,9 @@ export async function obtenerEstadoEnvio(idVenta: number) {
 }
 
 /* ===============================
-   Cancelar venta y restaurar stock
-   =============================== */
-export async function cancelarVenta(idVenta: number) {
-  if (!idVenta) throw new Error("ID de venta requerido");
-
-  const productos = await obtenerProductosVentaDb(idVenta);
-  if (productos && productos.length > 0) {
-    for (const producto of productos) {
-      await restaurarStockProductoDb(producto.id_producto, producto.cantidad);
-    }
-  }
-
-  return await cancelarVentaDb(idVenta);
-}
-
-
-
-/* ===============================
    USD18 - Aplicar descuetos
    =============================== */
-
-export const aplicarDescuento = (
+   export const aplicarDescuento = (
   total: number,
   porcentaje: number
 ) => {
@@ -212,3 +204,20 @@ export const aplicarDescuento = (
 
   return totalFinal;
 };
+
+export async function cancelarVenta(idVenta: number) {
+  if (!idVenta) throw new Error("ID de venta requerido");
+
+  // Obtener productos de la venta.
+  const productos = await obtenerProductosVentaDb(idVenta);
+
+  if (productos && productos.length > 0) {
+    // Restaurar stock para cada producto.
+    for (const producto of productos) {
+      await restaurarStockProductoDb(producto.id_producto, producto.cantidad);
+    }
+  }
+
+  // Cancelar la venta.
+  return await cancelarVentaDb(idVenta);
+}
