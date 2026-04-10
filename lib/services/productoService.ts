@@ -9,15 +9,21 @@ import {
   listarProductosPorTipoArtesanoDb,
   obtenerImagenesProductoDb,
   obtenerProductoDetalleDb,
+  getAllProducts, 
+  actualizarCategoria,
 } from "../persistence/repositories/productoRepository";
 
 /* ===============================
-   EXTRA01 - Consultar stock de un producto
+   ADM07 - Control de stock
    =============================== */
-export async function consultarStock(id_producto: number) {
-  const data = await consultarStockDb(id_producto);
-  return data.stock;
+export async function consultarStock(idProducto: number) {
+  if (!idProducto) {
+    throw new Error("ID de producto requerido");
+  }
+  const data = await consultarStockDb(idProducto);
+  return data?.stock ?? 0;
 }
+
 
 /* ===============================
    ADM02 - Registrar producto
@@ -44,7 +50,7 @@ export async function crearProducto(producto: {
 }
 
 /* ===============================
-   ADM03 - Actualizar producto
+   ADM04 - Actualizar producto
    =============================== */
 export async function actualizarProducto(
   idProducto: number,
@@ -71,7 +77,7 @@ export async function actualizarProducto(
 }
 
 /* ===============================
-   ADM04 - Eliminar producto (lógico)
+   ADM05 - Eliminar producto 
    =============================== */
 export async function eliminarProducto(idProducto: number) {
   if (!idProducto) {
@@ -128,3 +134,55 @@ export async function listarProductosPorArtesano(idArtesano: number) {
 export async function listarProductosDestacados() {
   return listarProductosDestacadosDb();
 }
+
+
+/* ===============================
+   ADM03 - Consultar productos
+   =============================== */
+export const consultarProductos = async () => {
+  const productos = await getAllProducts();
+
+  if (!productos || productos.length === 0) {
+    return { mensaje: "No hay productos disponibles", data: [] };
+  }
+
+  return { data: productos };
+};
+
+/* ===============================
+   ADM06 - Imprimir listado productos
+   =============================== */
+
+export const generarListadoProductosPDF = async (productos: any[]) => {
+  const lines = productos.map(
+    (producto) =>
+      `${producto.codigo} - ${producto.nombre} - ${producto.categoria} - $${producto.precio}`
+  );
+
+  // Devuelve un Buffer simple para evitar dependencia de pdfkit en servicios compartidos.
+  return Buffer.from(lines.join("\n"), "utf-8");
+};
+
+/* ===============================
+   ADM07 - Control de stock (semáforo)
+   =============================== */
+
+
+export const evaluarStock = (stock: number) => {
+  if (stock <= 0) return "rojo";
+  if (stock <= 5) return "amarillo";
+  return "verde";
+};
+
+/* ===============================
+   ADM19 - Clasificar productos
+   =============================== */
+
+
+export const clasificarProducto = async (id: string, categoria: string) => {
+  if (!categoria) {
+    throw new Error("Debe seleccionar una categoría");
+  }
+
+  return await actualizarCategoria(id, categoria);
+};

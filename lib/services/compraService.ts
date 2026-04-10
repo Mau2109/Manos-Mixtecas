@@ -7,7 +7,7 @@ import {
 import { restaurarStockProductoDb } from "../persistence/repositories/ventaRepository";
 
 /* ===============================
-   Registrar compra
+   ADM05 - Registrar compra
    =============================== */
 export async function registrarCompra(compra: {
   id_artesano: number;

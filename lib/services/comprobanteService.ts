@@ -7,7 +7,7 @@ import {
 } from "../persistence/repositories/comprobanteRepository";
 
 /* ===============================
-   Adjuntar comprobante a compra
+   ADM14 - Adjuntar comprobante a compra
    =============================== */
 export async function adjuntarComprobante(comprobante: {
   id_compra: number;

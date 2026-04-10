@@ -15,7 +15,8 @@
 
 /* ===============================
    USD14 - Formulario de datos de envío
-   USD13 - Crear venta (confirmar pedido)
+   ADM14 - Registrar venta (impacta inventario)
+   USD13 - Confirmación de pedido (creación de venta)
    =============================== */
 export async function crearVenta(venta: {
   id_cliente: number;
@@ -34,14 +35,14 @@ export async function crearVenta(venta: {
   };
 }) {
   if (!venta.id_cliente) throw new Error("ID de cliente requerido");
-  if (!venta.total || venta.total <= 0) throw new Error("Total inválido");
-  if (!venta.id_metodo_pago) throw new Error("Método de pago requerido");
+  if (!venta.total || venta.total <= 0) throw new Error("Total invalido");
+  if (!venta.id_metodo_pago) throw new Error("Metodo de pago requerido");
   if (
     !venta.datos_envio?.nombre ||
     !venta.datos_envio?.direccion ||
     !venta.datos_envio?.telefono
   ) {
-    throw new Error("Datos de envío incompletos");
+    throw new Error("Datos de envio incompletos");
   }
   return crearVentaDb(venta);
 }
@@ -55,7 +56,7 @@ export async function confirmarPedido(idVenta: number) {
 }
 
 /* ===============================
-   Agregar producto a venta
+   ADM14 - Agregar productos a venta (detalle)
    =============================== */
 export async function agregarProductoVenta(detalleVenta: {
   id_venta: number;
@@ -73,7 +74,8 @@ export async function agregarProductoVenta(detalleVenta: {
 }
 
 /* ===============================
-   Listar ventas con filtros (estado, fecha)
+   ADM15 - Consultar ventas (dashboard)
+   ADM25 - Filtrar ventas (fecha/estado)
    =============================== */
 export async function listarVentas(filtros?: {
   estado?: string;
@@ -84,7 +86,7 @@ export async function listarVentas(filtros?: {
 }
 
 /* ===============================
-   Generar reporte de ventas
+   ADM29 - Generar reporte de ventas
    =============================== */
 export async function generarReporteVentas(filtros?: {
   fechaInicio?: string;
@@ -94,25 +96,25 @@ export async function generarReporteVentas(filtros?: {
 }
 
 /* ===============================
-   Generar top productos vendidos
+   ADM30 - Reporte de productos "Top Sellers"
    =============================== */
 export async function obtenerTopProductos() {
   return await obtenerTopProductosDb();
 }
 
 /* ===============================
-   Generar ticket de venta en PDF
+   ADM32 - Generar ticket de venta en PDF
    Retorna un Buffer con el contenido del PDF (empleado por el admin).
    Actualmente el PDF es un texto simple que incluye algunos datos de la
-   venta; en un entorno real se podría usar pdfkit/u otro generador.
+   venta; en un entorno real se podria usar pdfkit/u otro generador.
    =============================== */
 export async function generarTicketVenta(idVenta: number) {
   if (!idVenta) throw new Error("ID de venta requerido");
 
-  // obtener información de la venta
+  // Obtener informacion de la venta.
   const resumen = await obtenerResumenVentaDb(idVenta);
 
-  // construir contenido PDF básico
+  // Construir contenido PDF basico.
   const lines = [];
   lines.push("%PDF-1.4");
   lines.push(`Venta #${idVenta}`);
@@ -121,8 +123,7 @@ export async function generarTicketVenta(idVenta: number) {
       lines.push(`Total: ${resumen.total}`);
     }
     if (resumen.clientes) {
-      // Supabase may return related rows as an array (e.g. clientes: [{...}])
-      // or as an object depending on the query/context. Handle both.
+      // Supabase can return related rows as array or object.
       const cliente = Array.isArray(resumen.clientes)
         ? resumen.clientes[0]
         : resumen.clientes;
@@ -136,37 +137,42 @@ export async function generarTicketVenta(idVenta: number) {
 }
 
 /* ===============================
-   Confirmar pedido y actualizar stock
+   ADM14 - Registrar venta (actualizar stock al confirmar)
    =============================== */
 export async function confirmarYActualizarStock(idVenta: number) {
   if (!idVenta) throw new Error("ID de venta requerido");
 
-  // Obtener productos de la venta
+  // Obtener productos de la venta.
   const productos = await obtenerProductosVentaDb(idVenta);
 
   if (!productos || productos.length === 0) {
     throw new Error("La venta no tiene productos para confirmar");
   }
 
-  // Actualizar stock para cada producto
+  // Actualizar stock para cada producto.
   for (const producto of productos) {
     await actualizarStockProductoDb(producto.id_producto, producto.cantidad);
   }
 
-  // Confirmar la venta
+  // Confirmar la venta.
   return await confirmarPedidoDb(idVenta);
 }
 
 /* ===============================
-   Sin HU en hoja Usuario - Resumen de compra (obtener venta con detalles)
+   UCD15 - Resumen de compra (antes de pagar)
    =============================== */
-export async function obtenerResumenVenta(idVenta: number) {
+export async function obtenerResumenCompra(idVenta: number) {
   if (!idVenta) throw new Error("ID de venta requerido");
   return obtenerResumenVentaDb(idVenta);
 }
 
+// Alias para mantener compatibilidad con codigo existente.
+export async function obtenerResumenVenta(idVenta: number) {
+  return obtenerResumenCompra(idVenta);
+}
+
 /* ===============================
-   USD17 - Mensaje de confirmación de envío
+   ADM25 - Estado/confirmación de envío
    =============================== */
 export async function obtenerEstadoEnvio(idVenta: number) {
   if (!idVenta) throw new Error("ID de venta requerido");
@@ -179,16 +185,32 @@ export async function obtenerEstadoEnvio(idVenta: number) {
 export async function cancelarVenta(idVenta: number) {
   if (!idVenta) throw new Error("ID de venta requerido");
 
-  // Obtener productos de la venta
   const productos = await obtenerProductosVentaDb(idVenta);
-
   if (productos && productos.length > 0) {
-    // Restaurar stock para cada producto
     for (const producto of productos) {
       await restaurarStockProductoDb(producto.id_producto, producto.cantidad);
     }
   }
 
-  // Cancelar la venta
   return await cancelarVentaDb(idVenta);
 }
+
+
+
+/* ===============================
+   ADM31 - Aplicar descuentos
+   =============================== */
+
+export const aplicarDescuento = (
+  total: number,
+  porcentaje: number
+) => {
+  if (porcentaje <= 0) {
+    throw new Error("El descuento debe ser un valor positivo");
+  }
+
+  const descuento = total * (porcentaje / 100);
+  const totalFinal = total - descuento;
+
+  return totalFinal;
+};

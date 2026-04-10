@@ -11,7 +11,9 @@ jest.mock("../lib/persistence/repositories/artesanoRepository", () => ({
 import {
   crearArtesano,
   actualizarArtesano,
+  categorizarProveedor,
   eliminarArtesano,
+  asignarEstatusProveedor,
   obtenerGaleriaArtesano,
   obtenerPerfilArtesano,
   listarTiposArtesano,
@@ -31,8 +33,8 @@ beforeEach(() => {
   jest.clearAllMocks();
 });
 
-// ─── USD16 / USD21 / USD23 / USD28 ─────────────────────────────
-describe("USD16/21/23/28 - Perfil del artesano", () => {
+// ─── USD16 / USD23 ─────────────────────────────────────────────
+describe("USD16/USD23 - Visualizar perfil del artesano (historia y comunidad)", () => {
   test("Retorna perfil completo del artesano (bio, comunidad, historia, ubicación)", async () => {
     const mockArtesano = {
       id_artesano: 1,
@@ -62,8 +64,8 @@ describe("USD16/21/23/28 - Perfil del artesano", () => {
   });
 });
 
-// ─── USD20 - Filtro por tipo de artesano ───────────────────────────────
-describe("USD20 - Filtro por tipo de artesano", () => {
+// ─── Soporte - Listar tipos de artesano ───────────────────────────────
+describe("Soporte - Listar tipos de artesano", () => {
   test("Retorna lista de tipos únicos de artesano", async () => {
     (listarTiposArtesanoDb as jest.Mock).mockResolvedValue([
       { tipo: "Tejedor" },
@@ -79,8 +81,8 @@ describe("USD20 - Filtro por tipo de artesano", () => {
   });
 });
 
-// ─── Sin HU en hoja Usuario - Listar artesanos ────────────────────────────────
-describe("Sin HU - Listar todos los artesanos", () => {
+// ─── ADM24 - Directorio de artesanos/proveedores ────────────────────────────────
+describe("ADM24 - Directorio de artesanos/proveedores", () => {
   test("Retorna lista de artesanos activos", async () => {
     const mockArtesanos = [
       { id_artesano: 1, nombre: "María", tipo: "Tejedor", comunidad: "Teotitlán" },
@@ -151,5 +153,31 @@ describe("ADM11 - Eliminar artesano", () => {
 
   test("Error si no se envía el id del artesano al eliminar", async () => {
     await expect(eliminarArtesano(0)).rejects.toThrow("ID de artesano requerido");
+  });
+});
+
+// ─── ADM27 - Categorización de proveedores ────────────────────────────────
+describe("ADM27 - Categorización de proveedores", () => {
+  test("Actualiza la categoría del proveedor/artesano", async () => {
+    (actualizarArtesanoDb as jest.Mock).mockResolvedValue({ id_artesano: 1, id_categoria: 2 });
+
+    const resultado = await categorizarProveedor(1, 2);
+    expect(actualizarArtesanoDb).toHaveBeenCalledWith(1, { id_categoria: 2 });
+    expect(resultado).toBeDefined();
+  });
+
+  test("Error si falta ID de categoría", async () => {
+    await expect(categorizarProveedor(1, 0)).rejects.toThrow("ID de categoría requerido");
+  });
+});
+
+// ─── ADM33 - Asignar estatus proveedor ────────────────────────────────────
+describe("ADM33 - Asignar estatus proveedor (activo/inactivo)", () => {
+  test("Marca proveedor como inactivo (estado=false)", async () => {
+    (actualizarArtesanoDb as jest.Mock).mockResolvedValue({ id_artesano: 1, estado: false });
+
+    const resultado = await asignarEstatusProveedor(1, false);
+    expect(actualizarArtesanoDb).toHaveBeenCalledWith(1, { estado: false });
+    expect(resultado).toBeDefined();
   });
 });

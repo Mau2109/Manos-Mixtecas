@@ -1,5 +1,8 @@
 import { supabase } from "../../supabaseClient";
 
+/* ===============================
+   ADM16 - Agregar perfil empresa (persistencia)
+   =============================== */
 export async function crearEmpresaDb(empresa: {
   nombre: string;
   direccion?: string;
@@ -21,6 +24,9 @@ export async function crearEmpresaDb(empresa: {
   return data;
 }
 
+/* ===============================
+   ADM17 - Editar perfil empresa (persistencia)
+   =============================== */
 export async function actualizarEmpresaDb(
   idEmpresa: number,
   empresa: {
@@ -46,6 +52,9 @@ export async function actualizarEmpresaDb(
   return data;
 }
 
+/* ===============================
+   ADM18 - Visualizar perfil empresa (persistencia)
+   =============================== */
 export async function obtenerEmpresaDb() {
   const { data, error } = await supabase.from("empresa").select("*").limit(1).single();
 
@@ -53,6 +62,9 @@ export async function obtenerEmpresaDb() {
   return data;
 }
 
+/* ===============================
+   USD11 - Mostrar misión y valores (persistencia)
+   =============================== */
 export async function obtenerMisionYValoresDb() {
   const { data, error } = await supabase
     .from("empresa")
@@ -64,10 +76,27 @@ export async function obtenerMisionYValoresDb() {
   return data;
 }
 
+/* ===============================
+   USD19 - Mostrar redes y contacto (persistencia)
+   =============================== */
 export async function obtenerContactoYRedesDb() {
   const { data, error } = await supabase
     .from("empresa")
     .select("telefono, email, redes_sociales, formulario_contacto_email")
+    .limit(1)
+    .single();
+
+  if (error) throw error;
+  return data;
+}
+
+/* ===============================
+   USD28 - Mostrar ubicación (persistencia)
+   =============================== */
+export async function obtenerUbicacionEmpresaDb() {
+  const { data, error } = await supabase
+    .from("empresa")
+    .select("direccion")
     .limit(1)
     .single();
 
