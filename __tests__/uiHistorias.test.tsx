@@ -20,8 +20,8 @@ jest.mock("next/link", () => ({
   ),
 }));
 
-import Home from "../app/page";
-import ContactoPage from "../app/contacto/page";
+import Home from "../app/client/page";
+import ContactoPage from "../app/client/contacto/page";
 
 describe("USD10 - Diseño acceso a catalogo", () => {
   test("Muestra acceso al catálogo desde la página de inicio", () => {
