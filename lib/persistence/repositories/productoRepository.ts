@@ -1,6 +1,5 @@
 import { supabase } from "../../supabaseClient";
 
-
 /* ===============================
    ADM07 - Control de stock (persistencia)
    =============================== */
@@ -231,6 +230,19 @@ export const actualizarCategoria = async (
     .from("productos")
     .update({ categoria })
     .eq("id_producto", idProducto);
+
+  if (error) throw error;
+
+  return data;
+};
+
+//CONTROL DE STOCK
+export const getStockByProductId = async (id_producto: string) => {
+  const { data, error } = await supabase
+    .from("productos")
+    .select("stock")
+    .eq("id_producto", id_producto)
+    .single();
 
   if (error) throw error;
 

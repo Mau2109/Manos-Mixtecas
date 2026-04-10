@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { listarMetodosPago } from "@/lib/services/carritoService";
-import { useCart } from "@/app/lib/context/_CardContext";
+import { useCart } from "@/app/lib/context/ CardContext";
 
 const IVA = 0.16;
 

@@ -1,73 +1,47 @@
 import Link from "next/link";
-import { listarProductos } from "@/lib/services/productoService";
-
-export const dynamic = "force-dynamic";
-
-type CatalogoSearchParams = {
-  categoria?: string;
-  q?: string;
-  pagina?: string;
-};
+import { imprimirListadoProductos } from "@/lib/services/productoService";
 
 export default async function CatalogoPage({
   searchParams,
 }: {
-  searchParams: Promise<CatalogoSearchParams>;
+  searchParams: { categoria?: string; q?: string; pagina?: string };
 }) {
-  const params = await searchParams;
-  let productos: any[] = [];
+  const productos = (await imprimirListadoProductos()) ?? [];
 
-  try {
-    productos = (await listarProductos()) ?? [];
-  } catch {
-    productos = [];
-  }
+  // Filtrar por categoría o búsqueda en el servidor
+  const q = searchParams.q?.toLowerCase() ?? "";
+  const cat = searchParams.categoria ?? "";
+  const pagina = Number(searchParams.pagina ?? 1);
+  const POR_PAGINA = 12;
 
-  const q = params.q?.toLowerCase() ?? "";
-  const cat = params.categoria ?? "";
-  const pagina = Number(params.pagina ?? 1);
-  const porPagina = 12;
-
-  const filtrados = productos.filter((producto: any) => {
-    const nombre = producto.nombre?.toLowerCase() ?? "";
-    const descripcion = producto.descripcion?.toLowerCase() ?? "";
-    const matchBusqueda = q ? nombre.includes(q) || descripcion.includes(q) : true;
-    const matchCategoria = cat ? String(producto.id_categoria) === cat : true;
-    return matchBusqueda && matchCategoria && producto.estado !== false;
+  const filtrados = productos.filter((p: any) => {
+    const matchQ = q ? p.nombre?.toLowerCase().includes(q) || p.descripcion?.toLowerCase().includes(q) : true;
+    const matchCat = cat ? String(p.id_categoria) === cat : true;
+    return matchQ && matchCat && p.estado !== false;
   });
 
-  const totalPaginas = Math.ceil(filtrados.length / porPagina);
-  const paginados = filtrados.slice((pagina - 1) * porPagina, pagina * porPagina);
+  const totalPaginas = Math.ceil(filtrados.length / POR_PAGINA);
+  const paginados = filtrados.slice((pagina - 1) * POR_PAGINA, pagina * POR_PAGINA);
 
-  const categorias = [
-    ...new Map(
-      productos
-        .filter((producto: any) => producto.id_categoria != null)
-        .map((producto: any) => [
-          producto.id_categoria,
-          {
-            id: producto.id_categoria,
-            nombre: producto.categorias?.nombre ?? `Cat. ${producto.id_categoria}`,
-          },
-        ])
-    ).values(),
-  ];
+  // Categorías únicas
+  const categorias = [...new Map(productos.map((p: any) => [p.id_categoria, { id: p.id_categoria, nombre: p.categoria_nombre ?? `Cat. ${p.id_categoria}` }])).values()];
 
   return (
     <div className="max-w-7xl mx-auto px-6 py-10">
+      {/* Breadcrumb */}
       <nav className="text-xs text-[#A08070] mb-8 flex gap-2">
-        <Link href="/client" className="hover:text-[#6B3A2A]">
-          Inicio
-        </Link>
+        <Link href="/client" className="hover:text-[#6B3A2A]">Inicio</Link>
         <span>/</span>
-        <span className="text-[#2C1810]">Catalogo</span>
+        <span className="text-[#2C1810]">Catálogo</span>
       </nav>
 
       <div className="flex gap-10">
+        {/* ── Sidebar filtros ──────────────────────────────── */}
         <aside className="hidden md:block w-56 shrink-0">
           <div className="sticky top-24">
             <h3 className="text-xs tracking-widest uppercase text-[#A08070] mb-4">Filtrar por</h3>
 
+            {/* Search */}
             <form className="mb-6">
               <input
                 name="q"
@@ -76,36 +50,28 @@ export default async function CatalogoPage({
                 className="w-full border border-[#D4C4B0] rounded-lg px-3 py-2 text-sm bg-white focus:outline-none focus:border-[#6B3A2A] text-[#2C1810] placeholder:text-[#A08070]"
               />
               {cat && <input type="hidden" name="categoria" value={cat} />}
-              <button
-                type="submit"
-                className="mt-2 w-full bg-[#2C1810] text-white text-xs py-2 rounded-lg hover:bg-[#6B3A2A] transition-colors"
-              >
+              <button type="submit" className="mt-2 w-full bg-[#2C1810] text-white text-xs py-2 rounded-lg hover:bg-[#6B3A2A] transition-colors">
                 Buscar
               </button>
             </form>
 
+            {/* Categorías */}
             <div>
-              <p className="text-xs font-semibold text-[#5C4A3A] mb-3">Categorias</p>
+              <p className="text-xs font-semibold text-[#5C4A3A] mb-3">Categorías</p>
               <div className="flex flex-col gap-1">
                 <Link
                   href="/client/catalogo"
-                  className={`text-sm py-1.5 px-3 rounded-lg transition-colors ${
-                    !cat ? "bg-[#2C1810] text-white" : "text-[#5C4A3A] hover:bg-[#F0E8DC]"
-                  }`}
+                  className={`text-sm py-1.5 px-3 rounded-lg transition-colors ${!cat ? "bg-[#2C1810] text-white" : "text-[#5C4A3A] hover:bg-[#F0E8DC]"}`}
                 >
                   Todos
                 </Link>
-                {categorias.map((categoria: any, index: number) => (
+                {categorias.map((c: any) => (
                   <Link
-                    key={`${categoria.id}-${index}`}
-                    href={`/client/catalogo?categoria=${categoria.id}`}
-                    className={`text-sm py-1.5 px-3 rounded-lg transition-colors ${
-                      cat === String(categoria.id)
-                        ? "bg-[#2C1810] text-white"
-                        : "text-[#5C4A3A] hover:bg-[#F0E8DC]"
-                    }`}
+                    key={c.id}
+                    href={`/client/catalogo?categoria=${c.id}`}
+                    className={`text-sm py-1.5 px-3 rounded-lg transition-colors ${cat === String(c.id) ? "bg-[#2C1810] text-white" : "text-[#5C4A3A] hover:bg-[#F0E8DC]"}`}
                   >
-                    {categoria.nombre}
+                    {c.nombre}
                   </Link>
                 ))}
               </div>
@@ -113,39 +79,38 @@ export default async function CatalogoPage({
           </div>
         </aside>
 
+        {/* ── Grid de productos ────────────────────────────── */}
         <div className="flex-1">
           <div className="flex items-center justify-between mb-6">
             <h1 className="text-2xl font-bold text-[#2C1810]">
-              {cat ? "Coleccion filtrada" : "Toda la coleccion"}
+              {cat ? "Colección filtrada" : "Toda la colección"}
             </h1>
             <p className="text-sm text-[#A08070]">{filtrados.length} piezas</p>
           </div>
 
           {paginados.length === 0 ? (
             <div className="text-center py-24">
-              <p className="text-5xl mb-4">Pieza</p>
+              <p className="text-5xl mb-4">🏺</p>
               <p className="text-[#A08070]">No se encontraron piezas con esos criterios.</p>
-              <Link
-                href="/client/catalogo"
-                className="mt-4 inline-block text-sm text-[#6B3A2A] hover:underline"
-              >
-                Ver todo el catalogo
+              <Link href="/client/catalogo" className="mt-4 inline-block text-sm text-[#6B3A2A] hover:underline">
+                Ver todo el catálogo
               </Link>
             </div>
           ) : (
             <>
               <div className="grid grid-cols-2 md:grid-cols-3 gap-5">
-                {paginados.map((producto: any, index: number) => (
+                {paginados.map((p: any) => (
                   <Link
-                    key={`${producto.id_producto ?? "producto"}-${index}`}
-                    href={`/client/producto/${producto.id_producto}`}
+                    key={p.id_producto}
+                    href={`/client/producto/${p.id_producto}`}
                     className="group bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-lg transition-shadow"
                   >
+                    {/* Imagen (USD07) */}
                     <div className="aspect-square overflow-hidden relative">
-                      {producto.imagen ? (
+                      {p.imagen ? (
                         <img
-                          src={producto.imagen}
-                          alt={producto.nombre}
+                          src={p.imagen}
+                          alt={p.nombre}
                           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                         />
                       ) : (
@@ -153,41 +118,35 @@ export default async function CatalogoPage({
                           <span className="text-white/60 text-sm">Sin imagen</span>
                         </div>
                       )}
-                      {producto.es_unico && (
+                      {p.es_unico && (
                         <span className="absolute top-3 left-3 bg-[#6B3A2A] text-white text-[10px] px-2 py-0.5 rounded-full uppercase tracking-wide">
-                          Unico
+                          Único
                         </span>
                       )}
-                      {producto.descuento_pct > 0 && (
+                      {p.descuento_pct > 0 && (
                         <span className="absolute top-3 right-3 bg-[#C0392B] text-white text-[10px] px-2 py-0.5 rounded-full">
-                          -{producto.descuento_pct}%
+                          -{p.descuento_pct}%
                         </span>
                       )}
                     </div>
 
+                    {/* Precio e info (USD07) */}
                     <div className="p-4">
-                      <p className="text-xs text-[#A08070] mb-1">
-                        {producto.tecnica || producto.materiales || "Artesania"}
-                      </p>
-                      <p className="font-medium text-[#2C1810] text-sm line-clamp-2">{producto.nombre}</p>
+                      <p className="text-xs text-[#A08070] mb-1">{p.tecnica || p.materiales || "Artesanía"}</p>
+                      <p className="font-medium text-[#2C1810] text-sm line-clamp-2">{p.nombre}</p>
                       <div className="mt-2 flex items-center gap-2">
-                        {producto.descuento_pct > 0 ? (
+                        {p.descuento_pct > 0 ? (
                           <>
                             <span className="font-bold text-[#6B3A2A]">
-                              $
-                              {(
-                                Number(producto.precio) *
-                                (1 - Number(producto.descuento_pct) / 100)
-                              ).toLocaleString("es-MX")}{" "}
-                              MXN
+                              ${(Number(p.precio) * (1 - p.descuento_pct / 100)).toLocaleString("es-MX")} MXN
                             </span>
                             <span className="text-xs text-[#A08070] line-through">
-                              ${Number(producto.precio).toLocaleString("es-MX")}
+                              ${Number(p.precio).toLocaleString("es-MX")}
                             </span>
                           </>
                         ) : (
                           <span className="font-bold text-[#6B3A2A]">
-                            ${Number(producto.precio).toLocaleString("es-MX")} MXN
+                            ${Number(p.precio).toLocaleString("es-MX")} MXN
                           </span>
                         )}
                       </div>
@@ -196,21 +155,20 @@ export default async function CatalogoPage({
                 ))}
               </div>
 
+              {/* Paginación */}
               {totalPaginas > 1 && (
                 <div className="mt-10 flex justify-center gap-2">
-                  {Array.from({ length: totalPaginas }, (_, index) => index + 1).map((numero) => (
+                  {Array.from({ length: totalPaginas }, (_, i) => i + 1).map((n) => (
                     <Link
-                      key={numero}
-                      href={`/client/catalogo?pagina=${numero}${cat ? `&categoria=${cat}` : ""}${
-                        q ? `&q=${q}` : ""
-                      }`}
+                      key={n}
+                      href={`/client/catalogo?pagina=${n}${cat ? `&categoria=${cat}` : ""}${q ? `&q=${q}` : ""}`}
                       className={`w-9 h-9 rounded-full flex items-center justify-center text-sm transition-colors ${
-                        numero === pagina
+                        n === pagina
                           ? "bg-[#2C1810] text-white"
                           : "border border-[#D4C4B0] text-[#5C4A3A] hover:border-[#6B3A2A]"
                       }`}
                     >
-                      {numero}
+                      {n}
                     </Link>
                   ))}
                 </div>

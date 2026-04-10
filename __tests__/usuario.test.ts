@@ -20,8 +20,8 @@ beforeEach(() => {
     jest.clearAllMocks();
 });
 
-// ─── ADM21 - Consultar usuario ─────────────────────────────
-describe("ADM21 - Consultar usuarios", () => {
+// ─── AMD10 - Consultar lista de usuarios ─────────────────────────────
+describe("AMD10 - Consultar lista de usuarios", () => {
     test("Retorna lista de usuarios con nombre, email y rol", async () => {
         const mockUsuarios = [
             { nombre: "Juan", email: "juan@example.com", rol: "administrador" },
@@ -43,8 +43,8 @@ describe("ADM21 - Consultar usuarios", () => {
     });
 });
 
-// ─── ADM22 - Eliminar usuario ─────────────────────────────────────────
-describe("ADM22 - Eliminar usuario", () => {
+// ─── AMD11 - Eliminar usuario ─────────────────────────────────────────
+describe("AMD11 - Eliminar usuario", () => {
     test("Elimina un usuario exitosamente", async () => {
         (deleteUsuario as jest.Mock).mockResolvedValue(true);
         const result = await eliminarUsuario("user123");
@@ -58,8 +58,8 @@ describe("ADM22 - Eliminar usuario", () => {
     });
 });
 
-// ─── ADM28 - Interfaz limitada para Vendedor ────────────────
-describe("ADM28 - Interfaz limitada para Vendedor", () => {
+// ─── AMD16 - Obtener acceso limitado para vendedores ────────────────
+describe("AMD12 - Obtener acceso limitado para vendedores", () => {
     test("Retorna interfaz limitada para vendedor", async () => {
         (getUsuarios as jest.Mock).mockResolvedValue([
             { nombre: "vendedor123", rol: "vendedor" }

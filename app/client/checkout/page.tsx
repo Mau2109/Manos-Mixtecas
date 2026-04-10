@@ -2,7 +2,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useCart } from "@/app/lib/context/_CardContext";
+import { useCart } from "@/app/lib/context/ CardContext";
 
 const IVA = 0.16;
 

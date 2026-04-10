@@ -1,8 +1,5 @@
 import { supabase } from "../../supabaseClient";
 
-/* ===============================
-   ADM21 - Consultar usuario(s) (persistencia)
-   =============================== */
 export async function getUsuarios() {
     const { data, error } = await supabase
         .from('usuarios')
@@ -12,9 +9,6 @@ export async function getUsuarios() {
     return data;
 }
 
-/* ===============================
-   ADM22 - Eliminar usuario (persistencia)
-   =============================== */
 export async function deleteUsuario(nombre: string) {
     const { error } = await supabase
         .from('usuarios')
@@ -25,9 +19,6 @@ export async function deleteUsuario(nombre: string) {
     
 }
 
-/* ===============================
-   ADM28 - Interfaz limitada para Vendedor (persistencia)
-   =============================== */
 export async function getVendedorAccess(nombre: string) {
     const { data, error } = await supabase
         .from('usuarios')
@@ -43,3 +34,4 @@ export async function getVendedorAccess(nombre: string) {
         otros: false
     };
 }
+

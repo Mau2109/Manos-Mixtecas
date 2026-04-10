@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { crearVenta, agregarProductoVenta, confirmarPedido } from "@/lib/services/ventaService";
 import { crearCliente } from "@/lib/services/clienteService";
-import { useCart } from "@/app/lib/context/_CardContext";
+import { useCart } from "@/app/lib/context/ CardContext";
 
 const IVA = 0.16;
 
@@ -39,7 +39,7 @@ export default function ConfirmacionPage() {
     try {
       // 1. Crear/obtener cliente
       const cliente = await crearCliente({
-        nombre: `${datosEnvio.nombre} ${datosEnvio.apellido ?? ""}`.trim(),
+        nombre: `${datosEnvio.nombre} ${datosEnvio.apellido}`,
         email: datosEnvio.email,
       });
 

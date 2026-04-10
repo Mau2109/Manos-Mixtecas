@@ -88,12 +88,20 @@ export async function listarVentas(filtros?: {
 /* ===============================
    ADM29 - Generar reporte de ventas
    =============================== */
-export async function generarReporteVentas(filtros?: {
-  fechaInicio?: string;
-  fechaFin?: string;
-}) {
-  return await generarReporteVentasDb(filtros);
-}
+
+  export async function generarReporteVentas(filtros?: {
+    fechaInicio?: string;
+    fechaFin?: string;
+  }) {
+
+    const reporte = await generarReporteVentasDb(filtros);
+
+    if (!reporte || reporte.ventas.length === 0) {
+      throw new Error("No hay ventas registradas para el reporte");
+    }
+
+    return reporte;
+  }
 
 /* ===============================
    ADM30 - Reporte de productos "Top Sellers"
@@ -138,6 +146,7 @@ export async function generarTicketVenta(idVenta: number) {
 
 /* ===============================
    ADM14 - Registrar venta (actualizar stock al confirmar)
+   ADM07 - Confirmar pedido y actualizar stock
    =============================== */
 export async function confirmarYActualizarStock(idVenta: number) {
   if (!idVenta) throw new Error("ID de venta requerido");
@@ -180,28 +189,9 @@ export async function obtenerEstadoEnvio(idVenta: number) {
 }
 
 /* ===============================
-   Cancelar venta y restaurar stock
+   USD18 - Aplicar descuetos
    =============================== */
-export async function cancelarVenta(idVenta: number) {
-  if (!idVenta) throw new Error("ID de venta requerido");
-
-  const productos = await obtenerProductosVentaDb(idVenta);
-  if (productos && productos.length > 0) {
-    for (const producto of productos) {
-      await restaurarStockProductoDb(producto.id_producto, producto.cantidad);
-    }
-  }
-
-  return await cancelarVentaDb(idVenta);
-}
-
-
-
-/* ===============================
-   ADM31 - Aplicar descuentos
-   =============================== */
-
-export const aplicarDescuento = (
+   export const aplicarDescuento = (
   total: number,
   porcentaje: number
 ) => {
@@ -214,3 +204,20 @@ export const aplicarDescuento = (
 
   return totalFinal;
 };
+
+export async function cancelarVenta(idVenta: number) {
+  if (!idVenta) throw new Error("ID de venta requerido");
+
+  // Obtener productos de la venta.
+  const productos = await obtenerProductosVentaDb(idVenta);
+
+  if (productos && productos.length > 0) {
+    // Restaurar stock para cada producto.
+    for (const producto of productos) {
+      await restaurarStockProductoDb(producto.id_producto, producto.cantidad);
+    }
+  }
+
+  // Cancelar la venta.
+  return await cancelarVentaDb(idVenta);
+}

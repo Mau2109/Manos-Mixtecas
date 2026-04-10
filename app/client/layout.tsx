@@ -4,7 +4,7 @@ import { usePathname } from "next/navigation";
 import { useState, useEffect } from "react";
 
 // ─── Carrito global (Context liviano via localStorage) ───────────────────────
-import { CartProvider, useCart } from "../lib/context/_CardContext";
+import { CartProvider, useCart } from "../lib/context/ CardContext"; 
 
 function Navbar() {
   const pathname = usePathname();

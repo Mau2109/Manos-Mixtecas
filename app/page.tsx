@@ -1,8 +1,6 @@
-import Home from "./client/page";
+import { redirect } from "next/navigation"
 
-export const dynamic = "force-dynamic";
-
-export default function Page() {
-  return <Home />;
+export default function Home() {
+  redirect("/inventario")
 }
 
