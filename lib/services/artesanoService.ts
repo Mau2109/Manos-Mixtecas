@@ -7,7 +7,7 @@ import {
   obtenerGaleriaArtesanoDb,
   obtenerPerfilArtesanoDb,
 } from "../persistence/repositories/artesanoRepository";
-
+import { supabase } from "@/lib/supabaseClient";
 /* ===============================
    USD16 - Visualizar perfil del artesano
    USD21 - Información del artesano
@@ -133,4 +133,14 @@ export async function asignarEstatusProveedor(
   }
 
   return actualizarArtesanoDb(idArtesano, { estado });
+}
+
+export async function obtenerArtesanos() {
+  const { data, error } = await supabase
+    .from("artesanos")
+    .select("*")
+    .eq("estado", true);
+
+  if (error) throw error;
+  return data;
 }
