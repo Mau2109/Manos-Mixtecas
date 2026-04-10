@@ -155,7 +155,7 @@ export async function listarProductosPorTipoArtesanoDb(tipo: string) {
     .from("productos")
     .select(
       `
-      id_producto, nombre, precio, imagen, es_unico, fragilidad, descuento_pct,
+      id_producto, nombre, descripcion, precio, imagen, es_unico, fragilidad, descuento_pct,
       artesanos!inner(id_artesano, nombre, apellido, tipo, comunidad)
     `
     )
@@ -190,7 +190,7 @@ export async function listarProductosDestacadosDb() {
     .from("productos")
     .select(
       `
-      id_producto, nombre, precio, imagen, es_unico, fragilidad, descuento_pct,
+      id_producto, nombre, descripcion, precio, imagen, es_unico, fragilidad, descuento_pct,
       artesanos(nombre, apellido, comunidad)
     `
     )
