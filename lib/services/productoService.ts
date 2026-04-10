@@ -12,8 +12,9 @@ import {
   actualizarCategoria,
 } from "../persistence/repositories/productoRepository";
 export const runtime = "nodejs";
+import { supabase } from "@/lib/supabaseClient";
 
-import PDFDocument from "pdfkit";
+// import PDFDocument from "pdfkit";
 
 /* ==========================================
    VALIDACIONES DE PRODUCTO (REGLAS NEGOCIO)
@@ -193,19 +194,29 @@ export async function listarProductosDestacados() {
    USD1 - Imprimir listado de productos
    =============================== */
 
-export const generarListadoProductosPDF = async (productos: any[]) => {
-  const doc = new PDFDocument();
+// export const generarListadoProductosPDF = async (productos: any[]) => {
+//   const doc = new PDFDocument();
 
-  productos.forEach((producto) => {
-    doc.text(
-      `${producto.codigo} - ${producto.nombre} - ${producto.categoria} - $${producto.precio}`
-    );
-  });
+//   productos.forEach((producto) => {
+//     doc.text(
+//       `${producto.codigo} - ${producto.nombre} - ${producto.categoria} - $${producto.precio}`
+//     );
+//   });
 
-  doc.end();
-  return doc;
-};
+//   doc.end();
+//   return doc;
+// };
 
+export async function obtenerCategorias() {
+  const { data, error } = await supabase
+      .from("categorias")
+      .select("*")
+      .eq("estado", true);
+
+    if (error) throw error;
+
+    return data;
+  }
 /* ===============================
    USD1 - CONTROL DE STOCK
    =============================== */
@@ -229,3 +240,4 @@ export const clasificarProducto = async (id: string, categoria: string) => {
 
   return await actualizarCategoria(id, categoria);
 };
+
