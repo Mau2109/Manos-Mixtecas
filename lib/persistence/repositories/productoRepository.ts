@@ -1,5 +1,6 @@
 import { supabase } from "../../supabaseClient";
 
+
 export async function consultarStockDb(id_producto: number) {
   const { data, error } = await supabase
     .from("productos")
@@ -166,3 +167,43 @@ export async function listarProductosDestacadosDb() {
   if (error) throw error;
   return data;
 }
+
+//CONSULTAR PRODUCTOS
+
+
+
+export const getAllProducts = async () => {
+  const { data, error } = await supabase
+    .from("productos")
+    .select("*");
+
+  if (error) throw error;
+
+  return data;
+};
+
+//CONTROL DE STOCK
+export const getStockByProductId = async (id: string) => {
+  const { data, error } = await supabase
+    .from("productos")
+    .select("stock")
+    .eq("id", id)
+    .single();
+
+  if (error) throw error;
+
+  return data;
+};
+
+//CLASIFICAR PRODUCTOS
+
+export const actualizarCategoria = async (id: string, categoria: string) => {
+  const { data, error } = await supabase
+    .from("productos")
+    .update({ categoria })
+    .eq("id", id);
+
+  if (error) throw error;
+
+  return data;
+};
