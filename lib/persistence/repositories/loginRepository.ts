@@ -1,5 +1,8 @@
 import { supabase } from "../../supabaseClient";
 
+/* ===============================
+   ADM01 - Inicio de sesión administrador (persistencia)
+   =============================== */
 export async function loginAdministradorDb(email: string, password: string) {
   const { data, error } = await supabase
     .from("usuarios")
@@ -16,6 +19,10 @@ export async function loginAdministradorDb(email: string, password: string) {
   return data;
 }
 
+/* ===============================
+   ADM20 - Crear usuario (persistencia)
+   ADM23 - Asignar roles (id_rol)
+   =============================== */
 export async function crearUsuarioDb(usuario: {
   nombre: string;
   email: string;

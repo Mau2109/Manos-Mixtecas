@@ -1,5 +1,10 @@
 import { supabase } from "../../supabaseClient";
 
+/* ===============================
+   USD14 - Formulario de datos de envío (persistencia: datos_envio)
+   USD13 - Confirmación de pedido (persistencia: venta)
+   ADM14 - Registrar venta (persistencia)
+   =============================== */
 export async function crearVentaDb(venta: {
   id_cliente: number;
   total: number;
@@ -37,40 +42,92 @@ export async function crearVentaDb(venta: {
 
 
 /* ===============================
-   Repository - Generar reporte de ventas
+   ADM29 - Generar reporte de ventas (persistencia)
    =============================== */
-export async function generarReporteVentasDb(filtros?: {
-  fechaInicio?: string;
-  fechaFin?: string;
-}) {
-  let query = supabase
-    .from("ventas")
-    .select("id_venta, total, fecha_venta")
-    .order("fecha_venta", { ascending: false });
+   /* ===============================
+   Repository - Generar reporte de ventas
+   ADM29
+   =============================== */
+  export async function generarReporteVentasDb(filtros?: {
+    fechaInicio?: string;
+    fechaFin?: string;
+  }) {
 
-  if (filtros?.fechaInicio) {
-    query = query.gte("fecha_venta", filtros.fechaInicio);
+    let query = supabase
+      .from("ventas")
+      .select(`
+        id_venta,
+        fecha_venta,
+        total,
+        detalle_venta(
+          cantidad,
+          precio_unitario,
+          productos(nombre)
+        )
+      `)
+      .order("fecha_venta", { ascending: false });
+
+    if (filtros?.fechaInicio) {
+      query = query.gte("fecha_venta", filtros.fechaInicio);
+    }
+
+    if (filtros?.fechaFin) {
+      query = query.lte("fecha_venta", filtros.fechaFin);
+    }
+
+    const { data, error } = await query;
+
+    if (error) throw error;
+
+    const ventas = data ?? [];
+
+    const totalIngresos = ventas.reduce(
+      (acc, v) => acc + Number(v.total),
+      0
+    );
+
+    return {
+      ventas,
+      resumen: {
+        totalIngresos,
+        cantidad: ventas.length
+      }
+    };
   }
-  if (filtros?.fechaFin) {
-    query = query.lte("fecha_venta", filtros.fechaFin);
-  }
 
-  const { data, error } = await query;
-  if (error) throw error;
 
-  const ventas = data ?? [];
-  const totalIngresos = ventas.reduce((acc, v) => acc + Number(v.total), 0);
-  return {
-    ventas,
-    resumen: {
-      totalIngresos,
-      cantidad: ventas.length,
-    },
-  };
-}
+// export async function generarReporteVentasDb(filtros?: {
+//   fechaInicio?: string;
+//   fechaFin?: string;
+// }) {
+//   let query = supabase
+//     .from("ventas")
+//     .select("id_venta, total, fecha_venta")
+//     .order("fecha_venta", { ascending: false });
+
+//   if (filtros?.fechaInicio) {
+//     query = query.gte("fecha_venta", filtros.fechaInicio);
+//   }
+//   if (filtros?.fechaFin) {
+//     query = query.lte("fecha_venta", filtros.fechaFin);
+//   }
+
+//   const { data, error } = await query;
+//   if (error) throw error;
+
+//   const ventas = data ?? [];
+//   const totalIngresos = ventas.reduce((acc, v) => acc + Number(v.total), 0);
+//   return {
+//     ventas,
+//     resumen: {
+//       totalIngresos,
+//       cantidad: ventas.length,
+//     },
+//   };
+// }
 
 /* ===============================
-   Repository - Top 5 productos más vendidos
+   ADM30 - Reporte de productos "Top Sellers" (persistencia)
    =============================== */
 export async function obtenerTopProductosDb() {
   // sumar cantidades por producto y ordenar descendente
@@ -93,6 +150,9 @@ export async function obtenerTopProductosDb() {
   }));
 }
 
+/* ===============================
+   USD13 - Confirmar pedido (persistencia)
+   =============================== */
 export async function confirmarPedidoDb(idVenta: number) {
   const { data, error } = await supabase
     .from("ventas")
@@ -105,6 +165,9 @@ export async function confirmarPedidoDb(idVenta: number) {
   return data;
 }
 
+/* ===============================
+   UCD15 - Resumen de compra (persistencia)
+   =============================== */
 export async function obtenerResumenVentaDb(idVenta: number) {
   const { data, error } = await supabase
     .from("ventas")
@@ -127,6 +190,9 @@ export async function obtenerResumenVentaDb(idVenta: number) {
   return data;
 }
 
+/* ===============================
+   ADM25 - Estado/confirmación de envío (persistencia)
+   =============================== */
 export async function obtenerEstadoEnvioDb(idVenta: number) {
   const { data, error } = await supabase
     .from("ventas")
@@ -139,7 +205,7 @@ export async function obtenerEstadoEnvioDb(idVenta: number) {
 }
 
 /* ===============================
-   Repository - Agregar producto a venta
+   ADM14 - Registrar venta (detalle_venta) (persistencia)
    =============================== */
 export async function agregarProductoVentaDb(detalleVenta: {
   id_venta: number;
@@ -163,7 +229,8 @@ export async function agregarProductoVentaDb(detalleVenta: {
 }
 
 /* ===============================
-   Repository - Listar ventas con filtros
+   ADM15 - Consultar ventas (dashboard) (persistencia)
+   ADM25 - Filtrar ventas (persistencia)
    =============================== */
 export async function listarVentasDb(filtros?: {
   estado?: string;
@@ -198,23 +265,36 @@ export async function listarVentasDb(filtros?: {
   return data;
 }
 
-/* ===============================
-   Repository - Confirmar venta (cambiar estado)
-   =============================== */
-export async function confirmarVentaDb(idVenta: number) {
+export async function listarVentasClienteDb(idCliente: number) {
   const { data, error } = await supabase
     .from("ventas")
-    .update({ confirmacion_pedido: true, estado: "Confirmado" })
-    .eq("id_venta", idVenta)
-    .select()
-    .single();
+    .select(
+      `
+      id_venta, total, subtotal, estado, fecha_venta, confirmacion_pedido,
+      id_metodo_pago, datos_envio,
+      metodos_pago(nombre),
+      detalle_venta(
+        id_detalle, cantidad, precio_unitario,
+        productos(id_producto, nombre, imagen)
+      )
+    `
+    )
+    .eq("id_cliente", idCliente)
+    .order("fecha_venta", { ascending: false });
 
   if (error) throw error;
   return data;
 }
 
 /* ===============================
-   Repository - Cancelar venta
+   USD13 - Confirmar pedido (alias) (persistencia)
+   =============================== */
+export async function confirmarVentaDb(idVenta: number) {
+  return confirmarPedidoDb(idVenta);
+}
+
+/* ===============================
+   ADM25 - Filtrar/gestionar logística (cancelación) (persistencia)
    =============================== */
 export async function cancelarVentaDb(idVenta: number) {
   const { data, error } = await supabase
@@ -229,7 +309,7 @@ export async function cancelarVentaDb(idVenta: number) {
 }
 
 /* ===============================
-   Repository - Obtener productos de una venta
+   ADM14 - Registrar venta (consulta detalle) (persistencia)
    =============================== */
 export async function obtenerProductosVentaDb(idVenta: number) {
   const { data, error } = await supabase
@@ -242,7 +322,7 @@ export async function obtenerProductosVentaDb(idVenta: number) {
 }
 
 /* ===============================
-   Repository - Actualizar stock del producto (decrementar)
+   ADM07 - Control de stock (decrementar) (persistencia)
    =============================== */
 export async function actualizarStockProductoDb(
   idProducto: number,
@@ -270,7 +350,7 @@ export async function actualizarStockProductoDb(
 }
 
 /* ===============================
-   Repository - Restaurar stock (incrementar en caso de cancelación)
+   ADM07 - Control de stock (restaurar/incrementar) (persistencia)
    =============================== */
 export async function restaurarStockProductoDb(
   idProducto: number,
@@ -296,4 +376,3 @@ export async function restaurarStockProductoDb(
   if (error) throw error;
   return data;
 }
-

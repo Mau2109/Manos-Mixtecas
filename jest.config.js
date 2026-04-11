@@ -2,12 +2,18 @@
 module.exports = {
   preset: "ts-jest",
 
-  // Integración = Node real
+  // Unit tests only. Integration tests run with jest.integration.config.js
   testEnvironment: "node",
+  moduleNameMapper: {
+    "^@/(.*)$": "<rootDir>/$1",
+  },
 
-  testMatch: ["**/__tests__/**/*.test.ts"],
+  testMatch: ["**/__tests__/**/*.test.ts", "**/__tests__/**/*.test.tsx"],
+  testPathIgnorePatterns: ["/node_modules/", "__tests__/integration/"],
 
   setupFiles: ["<rootDir>/jest.integration.setup.ts"],
 
   setupFilesAfterEnv: ["<rootDir>/jest.setup.ts"],
+
+  reporters: ["default", "<rootDir>/jest.huReporter.cjs"],
 };

@@ -7,7 +7,7 @@ import {
   obtenerGaleriaArtesanoDb,
   obtenerPerfilArtesanoDb,
 } from "../persistence/repositories/artesanoRepository";
-
+import { supabase } from "@/lib/supabaseClient";
 /* ===============================
    USD16 - Visualizar perfil del artesano
    USD21 - Información del artesano
@@ -102,4 +102,45 @@ export async function eliminarArtesano(idArtesano: number) {
   }
 
   return eliminarArtesanoDb(idArtesano);
+}
+
+/* ===============================
+   ADM27 - Categorización de proveedores
+   =============================== */
+export async function categorizarProveedor(
+  idArtesano: number,
+  idCategoria: number
+) {
+  if (!idArtesano) {
+    throw new Error("ID de artesano requerido");
+  }
+  if (!idCategoria) {
+    throw new Error("ID de categoría requerido");
+  }
+
+  return actualizarArtesanoDb(idArtesano, { id_categoria: idCategoria });
+}
+
+/* ===============================
+   ADM33 - Asignar estatus proveedor (activo/inactivo)
+   =============================== */
+export async function asignarEstatusProveedor(
+  idArtesano: number,
+  estado: boolean
+) {
+  if (!idArtesano) {
+    throw new Error("ID de artesano requerido");
+  }
+
+  return actualizarArtesanoDb(idArtesano, { estado });
+}
+
+export async function obtenerArtesanos() {
+  const { data, error } = await supabase
+    .from("artesanos")
+    .select("*")
+    .eq("estado", true);
+
+  if (error) throw error;
+  return data;
 }

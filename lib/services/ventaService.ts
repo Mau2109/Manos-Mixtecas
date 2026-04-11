@@ -5,6 +5,7 @@
   obtenerResumenVentaDb,
   agregarProductoVentaDb,
   listarVentasDb,
+  listarVentasClienteDb,
   cancelarVentaDb,
   obtenerProductosVentaDb,
   actualizarStockProductoDb,
@@ -55,7 +56,7 @@ export async function confirmarPedido(idVenta: number) {
 }
 
 /* ===============================
-   Agregar producto a venta
+   ADM14 - Agregar productos a venta (detalle)
    =============================== */
 export async function agregarProductoVenta(detalleVenta: {
   id_venta: number;
@@ -83,15 +84,28 @@ export async function listarVentas(filtros?: {
   return await listarVentasDb(filtros);
 }
 
+export async function listarVentasCliente(idCliente: number) {
+  if (!idCliente) throw new Error("ID de cliente requerido");
+  return listarVentasClienteDb(idCliente);
+}
+
 /* ===============================
    ADM17 - Generar reporte de ventas
    =============================== */
-export async function generarReporteVentas(filtros?: {
-  fechaInicio?: string;
-  fechaFin?: string;
-}) {
-  return await generarReporteVentasDb(filtros);
-}
+
+  export async function generarReporteVentas(filtros?: {
+    fechaInicio?: string;
+    fechaFin?: string;
+  }) {
+
+    const reporte = await generarReporteVentasDb(filtros);
+
+    if (!reporte || reporte.ventas.length === 0) {
+      throw new Error("No hay ventas registradas para el reporte");
+    }
+
+    return reporte;
+  }
 
 
 /* ===============================
@@ -122,8 +136,7 @@ export async function generarTicketVenta(idVenta: number) {
       lines.push(`Total: ${resumen.total}`);
     }
     if (resumen.clientes) {
-      // Supabase may return related rows as an array (e.g. clientes: [{...}])
-      // or as an object depending on the query/context. Handle both.
+      // Supabase can return related rows as array or object.
       const cliente = Array.isArray(resumen.clientes)
         ? resumen.clientes[0]
         : resumen.clientes;
@@ -142,19 +155,19 @@ export async function generarTicketVenta(idVenta: number) {
 export async function confirmarYActualizarStock(idVenta: number) {
   if (!idVenta) throw new Error("ID de venta requerido");
 
-  // Obtener productos de la venta
+  // Obtener productos de la venta.
   const productos = await obtenerProductosVentaDb(idVenta);
 
   if (!productos || productos.length === 0) {
     throw new Error("La venta no tiene productos para confirmar");
   }
 
-  // Actualizar stock para cada producto
+  // Actualizar stock para cada producto.
   for (const producto of productos) {
     await actualizarStockProductoDb(producto.id_producto, producto.cantidad);
   }
 
-  // Confirmar la venta
+  // Confirmar la venta.
   return await confirmarPedidoDb(idVenta);
 }
 
@@ -162,9 +175,14 @@ export async function confirmarYActualizarStock(idVenta: number) {
 /* ===============================
    USD15 - Resumen de compra (obtener venta con detalles)
    =============================== */
-export async function obtenerResumenVenta(idVenta: number) {
+export async function obtenerResumenCompra(idVenta: number) {
   if (!idVenta) throw new Error("ID de venta requerido");
   return obtenerResumenVentaDb(idVenta);
+}
+
+// Alias para mantener compatibilidad con codigo existente.
+export async function obtenerResumenVenta(idVenta: number) {
+  return obtenerResumenCompra(idVenta);
 }
 
 /* ===============================
@@ -176,21 +194,35 @@ export async function obtenerEstadoEnvio(idVenta: number) {
 }
 
 /* ===============================
-   Cancelar venta y restaurar stock
+   USD18 - Aplicar descuetos
    =============================== */
+   export const aplicarDescuento = (
+  total: number,
+  porcentaje: number
+) => {
+  if (porcentaje <= 0) {
+    throw new Error("El descuento debe ser un valor positivo");
+  }
+
+  const descuento = total * (porcentaje / 100);
+  const totalFinal = total - descuento;
+
+  return totalFinal;
+};
+
 export async function cancelarVenta(idVenta: number) {
   if (!idVenta) throw new Error("ID de venta requerido");
 
-  // Obtener productos de la venta
+  // Obtener productos de la venta.
   const productos = await obtenerProductosVentaDb(idVenta);
 
   if (productos && productos.length > 0) {
-    // Restaurar stock para cada producto
+    // Restaurar stock para cada producto.
     for (const producto of productos) {
       await restaurarStockProductoDb(producto.id_producto, producto.cantidad);
     }
   }
 
-  // Cancelar la venta
+  // Cancelar la venta.
   return await cancelarVentaDb(idVenta);
 }

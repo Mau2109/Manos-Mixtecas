@@ -26,21 +26,21 @@ export async function crearMetodoPago(metodoPago: {
 }
 
 /* ===============================
-   Listar todos los métodos de pago
+   USD12 - Selección método de pago (listar activos)
    =============================== */
 export async function listarMetodosPago() {
   return await listarMetodosPagoDb();
 }
 
 /* ===============================
-   Listar métodos de pago (incluyendo inactivos - para admin)
+   ADM13 - Consultar métodos de pago (incluye inactivos)
    =============================== */
 export async function listarTodosMetodosPago() {
   return await listarTodosMetodosPagoDb();
 }
 
 /* ===============================
-   Obtener método de pago por ID
+   ADM13 - Consultar método de pago por ID
    =============================== */
 export async function obtenerMetodoPago(idMetodoPago: number) {
   if (!idMetodoPago) {
@@ -51,7 +51,7 @@ export async function obtenerMetodoPago(idMetodoPago: number) {
 }
 
 /* ===============================
-   Actualizar método de pago
+   ADM13 - Actualizar método de pago
    =============================== */
 export async function actualizarMetodoPago(
   idMetodoPago: number,
@@ -75,7 +75,7 @@ export async function actualizarMetodoPago(
 }
 
 /* ===============================
-   Cambiar estado del método de pago (desactivar)
+   ADM13 - Desactivar método de pago
    =============================== */
 export async function desactivarMetodoPago(idMetodoPago: number) {
   if (!idMetodoPago) {
@@ -86,7 +86,7 @@ export async function desactivarMetodoPago(idMetodoPago: number) {
 }
 
 /* ===============================
-   Reactivar método de pago
+   ADM13 - Reactivar método de pago
    =============================== */
 export async function reactivarMetodoPago(idMetodoPago: number) {
   if (!idMetodoPago) {

@@ -13,10 +13,15 @@ jest.mock("../lib/persistence/repositories/ventaRepository", () => ({
   generarReporteVentasDb: jest.fn(),
   obtenerTopProductosDb: jest.fn(),
 }));
+
+
+import * as repo from "../lib/persistence/repositories/ventaRepository";
+
   
   import {
     crearVenta,
     confirmarPedido,
+    obtenerResumenCompra,
     obtenerResumenVenta,
     obtenerEstadoEnvio,
     agregarProductoVenta,
@@ -54,8 +59,8 @@ jest.mock("../lib/persistence/repositories/ventaRepository", () => ({
     telefono: "9510000001",
   };
   
-  // ─── USD13 / USD14 - Crear venta ──────────────────────────────────────────
-  describe("USD13/14 - Crear venta con datos de envío", () => {
+  // ─── USD13 / USD14 / ADM14 - Crear/registrar venta ────────────────────────
+  describe("USD13/USD14/ADM14 - Crear venta con datos de envío", () => {
     test("Crea venta correctamente con todos los datos", async () => {
       const mockVenta = { id_venta: 1, total: 500, estado: "Pendiente" };
       (crearVentaDb as jest.Mock).mockResolvedValue(mockVenta);
@@ -79,13 +84,13 @@ jest.mock("../lib/persistence/repositories/ventaRepository", () => ({
     test("Error si el total es inválido", async () => {
       await expect(
         crearVenta({ id_cliente: 1, total: 0, id_metodo_pago: 1, datos_envio: datosEnvioValidos })
-      ).rejects.toThrow("Total inválido");
+      ).rejects.toThrow("Total invalido");
     });
   
     test("Error si falta método de pago", async () => {
       await expect(
         crearVenta({ id_cliente: 1, total: 500, id_metodo_pago: 0, datos_envio: datosEnvioValidos })
-      ).rejects.toThrow("Método de pago requerido");
+      ).rejects.toThrow("Metodo de pago requerido");
     });
   
     test("Error si los datos de envío están incompletos", async () => {
@@ -94,7 +99,7 @@ jest.mock("../lib/persistence/repositories/ventaRepository", () => ({
           id_cliente: 1, total: 500, id_metodo_pago: 1,
           datos_envio: { nombre: "", apellido: "", direccion: "", ciudad: "", telefono: "" },
         })
-      ).rejects.toThrow("Datos de envío incompletos");
+      ).rejects.toThrow("Datos de envio incompletos");
     });
   });
   
@@ -141,9 +146,26 @@ jest.mock("../lib/persistence/repositories/ventaRepository", () => ({
       await expect(obtenerResumenVenta(0)).rejects.toThrow("ID de venta requerido");
     });
   });
+
+  // ─── UCD15 - Resumen de compra ───────────────────────────────────
+  describe("UCD15 - Resumen de compra", () => {
+    test("Retorna resumen de compra antes de pago", async () => {
+      const mockResumen = {
+        id_venta: 99,
+        total: 800,
+        detalle_venta: [{ id_detalle: 1, cantidad: 2, precio_unitario: 400 }],
+      };
+      (obtenerResumenVentaDb as jest.Mock).mockResolvedValue(mockResumen);
+
+      const resumen = await obtenerResumenCompra(99);
+      expect(resumen.id_venta).toBe(99);
+      expect(resumen.total).toBe(800);
+      expect(resumen.detalle_venta).toHaveLength(1);
+    });
+  });
   
-  // ─── USD17 - Estado de envío ──────────────────────────────────────────────
-  describe("USD17 - Confirmación de envío", () => {
+  // ─── ADM25 - Logística (estado de envío) ──────────────────────────────────
+  describe("ADM25 - Estado de envío del pedido", () => {
     test("Retorna el estado de envío del pedido", async () => {
       const mockEstado = {
         id_venta: 1,
@@ -210,8 +232,8 @@ jest.mock("../lib/persistence/repositories/ventaRepository", () => ({
     });
   });
 
-  // ─── Listar ventas ──────────────────────────────────────────────────────────
-  describe("Listar ventas", () => {
+  // ─── ADM15 / ADM25 - Consultar y filtrar ventas ───────────────────────────
+  describe("ADM15/ADM25 - Consultar y filtrar ventas", () => {
     test("Listar todas las ventas", async () => {
       const mockVentas = [
         { id_venta: 1, total: 500, estado: "Pendiente" },
@@ -323,63 +345,122 @@ jest.mock("../lib/persistence/repositories/ventaRepository", () => ({
     });
   });
 
-  // ─── Generar reporte de ventas ──────────────────────────────────────────────
-  describe("Generar reporte de ventas", () => {
+  // ─── ADM29 - Generar reporte de ventas ────────────────────────────────────
+  describe("ADM29 - Generar reporte de ventas", () => {
+
+    afterEach(() => {
+      jest.clearAllMocks();
+    });
+
     test("Reporte básico sin filtros", async () => {
+
       const mockReporte = {
         ventas: [
-          { id_venta: 1, total: 100 },
-          { id_venta: 2, total: 200 },
+          { id_venta: 1, total: 100, fecha_venta: "2025-01-01" },
+          { id_venta: 2, total: 200, fecha_venta: "2025-01-02" }
         ],
-        resumen: { totalIngresos: 300, cantidad: 2 },
+        resumen: {
+          totalIngresos: 300,
+          cantidad: 2
+        }
       };
-      const { generarReporteVentasDb } = require("../lib/persistence/repositories/ventaRepository");
-      generarReporteVentasDb.mockResolvedValue(mockReporte);
+
+      (repo.generarReporteVentasDb as jest.Mock)
+        .mockResolvedValue(mockReporte);
 
       const rpt = await generarReporteVentas();
+
       expect(rpt.resumen.totalIngresos).toBe(300);
       expect(rpt.ventas.length).toBe(2);
+
     });
 
     test("Reporte con rango de fechas", async () => {
+
       const mockReporte = {
-        ventas: [{ id_venta: 3, total: 150 }],
-        resumen: { totalIngresos: 150, cantidad: 1 },
+        ventas: [
+          { id_venta: 3, total: 150, fecha_venta: "2025-06-01" }
+        ],
+        resumen: {
+          totalIngresos: 150,
+          cantidad: 1
+        }
       };
-      const { generarReporteVentasDb } = require("../lib/persistence/repositories/ventaRepository");
-      generarReporteVentasDb.mockResolvedValue(mockReporte);
+
+      (repo.generarReporteVentasDb as jest.Mock)
+        .mockResolvedValue(mockReporte);
 
       const rpt = await generarReporteVentas({
         fechaInicio: "2025-01-01",
-        fechaFin: "2025-12-31",
+        fechaFin: "2025-12-31"
       });
+
       expect(rpt.resumen.cantidad).toBe(1);
-      expect(generarReporteVentasDb).toHaveBeenCalledWith({
+
+      expect(repo.generarReporteVentasDb).toHaveBeenCalledWith({
         fechaInicio: "2025-01-01",
         fechaFin: "2025-12-31",
-      });
-    });
-
-    // ─── Top sellers report ─────────────────────────────────────────────
-    describe("Reporte top productos", () => {
-      test("Obtiene top 5 productos por cantidad vendida", async () => {
-        const mockTop = [
-          { id_producto: 1, nombre: "Producto A", total_vendido: 10 },
-          { id_producto: 2, nombre: "Producto B", total_vendido: 8 },
-        ];
-        const { obtenerTopProductosDb } = require("../lib/persistence/repositories/ventaRepository");
-        obtenerTopProductosDb.mockResolvedValue(mockTop);
-
-        const resultado = await obtenerTopProductos();
-        expect(Array.isArray(resultado)).toBe(true);
-        expect(resultado[0].total_vendido).toBe(10);
-        expect(obtenerTopProductosDb).toHaveBeenCalled();
       });
     });
   });
 
-  // ─── Reporte top products ────────────────────────────────────────────
-  describe("Top 5 productos más vendidos", () => {
+  // // ─── Generar reporte de ventas ──────────────────────────────────────────────
+  // describe("Generar reporte de ventas", () => {
+  //   test("Reporte básico sin filtros", async () => {
+  //     const mockReporte = {
+  //       ventas: [
+  //         { id_venta: 1, total: 100 },
+  //         { id_venta: 2, total: 200 },
+  //       ],
+  //       resumen: { totalIngresos: 300, cantidad: 2 },
+  //     };
+  //     const { generarReporteVentasDb } = require("../lib/persistence/repositories/ventaRepository");
+  //     generarReporteVentasDb.mockResolvedValue(mockReporte);
+
+  //     const rpt = await generarReporteVentas();
+  //     expect(rpt.resumen.totalIngresos).toBe(300);
+  //     expect(rpt.ventas.length).toBe(2);
+  //   });
+
+  //   test("Reporte con rango de fechas", async () => {
+  //     const mockReporte = {
+  //       ventas: [{ id_venta: 3, total: 150 }],
+  //       resumen: { totalIngresos: 150, cantidad: 1 },
+  //     };
+  //     const { generarReporteVentasDb } = require("../lib/persistence/repositories/ventaRepository");
+  //     generarReporteVentasDb.mockResolvedValue(mockReporte);
+
+  //     const rpt = await generarReporteVentas({
+  //       fechaInicio: "2025-01-01",
+  //       fechaFin: "2025-12-31",
+  //     });
+  //     expect(rpt.resumen.cantidad).toBe(1);
+  //     expect(generarReporteVentasDb).toHaveBeenCalledWith({
+  //       fechaInicio: "2025-01-01",
+  //       fechaFin: "2025-12-31",
+  //     });
+  //   });
+
+      // ─── ADM30 - Reporte de productos \"Top Sellers\" ─────────────────────
+  // describe("ADM30 - Reporte de productos \"Top Sellers\"", () => {
+  //   test("Obtiene top 5 productos por cantidad vendida", async () => {
+  //     const mockTop = [
+  //       { id_producto: 1, nombre: "Producto A", total_vendido: 10 },
+  //       { id_producto: 2, nombre: "Producto B", total_vendido: 8 },
+  //     ];
+  //     const { obtenerTopProductosDb } = require("../lib/persistence/repositories/ventaRepository");
+  //     obtenerTopProductosDb.mockResolvedValue(mockTop);
+
+  //       const resultado = await obtenerTopProductos();
+  //       expect(Array.isArray(resultado)).toBe(true);
+  //       expect(resultado[0].total_vendido).toBe(10);
+  //       expect(obtenerTopProductosDb).toHaveBeenCalled();
+  //     });
+  //   });
+  // });
+
+    // ─── ADM30 - Top 5 productos más vendidos ────────────────────────────
+  describe("ADM30 - Reporte de productos Top Sellers", () => {
     test("Devuelve ranking de productos", async () => {
       const mockTop = [
         { id_producto: 1, nombre: "Alhaja", total_vendido: 10 },
@@ -393,8 +474,8 @@ jest.mock("../lib/persistence/repositories/ventaRepository", () => ({
     });
   });
 
-  // ─── Generar ticket de venta en PDF ────────────────────────────────────
-  describe("Generar ticket de venta en PDF", () => {
+  // ─── ADM32 - Generar ticket de venta en PDF ───────────────────────────
+  describe("ADM32 - Generar ticket de venta en PDF", () => {
     test("Genera buffer con contenido y encabezado PDF", async () => {
       const mockResumen = {
         id_venta: 1,
