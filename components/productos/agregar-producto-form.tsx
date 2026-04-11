@@ -221,7 +221,7 @@ export function AgregarProductoForm() {
           </div>
           <Button
             variant="outline"
-            onClick={() => router.push("/inventario")}
+            onClick={() => router.push("/admin/inventario")}
             className="gap-2"
           >
             <ArrowLeft className="w-4 h-4" />
@@ -528,7 +528,7 @@ export function AgregarProductoForm() {
             <Button
               type="button"
               variant="outline"
-              onClick={() => router.push("/inventario")}
+              onClick={() => router.push("/admin/inventario")}
               disabled={isSubmitting}
             >
               Cancelar
