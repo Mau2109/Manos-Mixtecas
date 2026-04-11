@@ -87,23 +87,19 @@ export async function crearProducto(producto: any) {
   ========================================== */
 export async function consultarProductos() {
 
-  const productos = await listarProductosDb();
+  const { data, error } = await supabase
+  .from("productos")
+  .select(`
+    *,
+    categorias(nombre),
+    artesanos(nombre, apellido)
+  `)
 
-  return productos;
+if (error) throw error
+
+return data
+
 }
-
-/* ===============================
-   ADM03 - Consultar productos
-   =============================== */
-// export const consultarProductos = async () => {
-//   const productos = await getAllProducts();
-
-//   if (!productos || productos.length === 0) {
-//     return { mensaje: "No hay productos disponibles", data: [] };
-//   }
-
-//   return { data: productos };
-// };
 
 
 /* ==========================================
@@ -292,3 +288,26 @@ export const clasificarProducto = async (id: string, categoria: string) => {
   return await actualizarCategoria(id, categoria);
 };
 
+export async function crearCategoria(data: {
+  nombre: string;
+  descripcion?: string;
+}) {
+
+  if (!data.nombre || data.nombre.trim() === "") {
+    throw new Error("El nombre de la categoría es obligatorio");
+  }
+
+  const { data: nuevaCategoria, error } = await supabase
+    .from("categorias")
+    .insert({
+      nombre: data.nombre,
+      descripcion: data.descripcion || null,
+      estado: true
+    })
+    .select()
+    .single();
+
+  if (error) throw error;
+
+  return nuevaCategoria;
+}
