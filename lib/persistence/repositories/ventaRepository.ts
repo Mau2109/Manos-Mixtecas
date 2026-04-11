@@ -236,12 +236,13 @@ export async function listarVentasDb(filtros?: {
   estado?: string;
   fechaInicio?: string;
   fechaFin?: string;
+  confirmacionEnvio?: boolean;
 }) {
   let query = supabase
     .from("ventas")
     .select(
       `
-      id_venta, total, estado, fecha_venta,
+      id_venta, total, estado, fecha_venta, confirmacion_envio,
       clientes(nombre, apellido, email)
     `
     )
@@ -257,6 +258,10 @@ export async function listarVentasDb(filtros?: {
 
   if (filtros?.fechaFin) {
     query = query.lte("fecha_venta", filtros.fechaFin);
+  }
+
+  if (typeof filtros?.confirmacionEnvio === "boolean") {
+    query = query.eq("confirmacion_envio", filtros.confirmacionEnvio);
   }
 
   const { data, error } = await query;

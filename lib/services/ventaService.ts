@@ -81,6 +81,7 @@ export async function listarVentas(filtros?: {
   estado?: string;
   fechaInicio?: string;
   fechaFin?: string;
+  confirmacionEnvio?: boolean;
 }) {
   return await listarVentasDb(filtros);
 }
