@@ -45,10 +45,11 @@ beforeEach(() => {
 });
 
 describe("USD10 - Diseño acceso a catalogo", () => {
-  test("Muestra acceso al catálogo desde la página de inicio", () => {
-    render(<Home />);
-    const link = screen.getByRole("link", { name: /ver catálogo/i });
-    expect(link).toHaveAttribute("href", "/catalogo");
+  test("Muestra acceso al catálogo desde la página de inicio", async () => {
+    const home = await Home();
+    render(home);
+    const link = screen.getByRole("link", { name: /explorar colección/i });
+    expect(link).toHaveAttribute("href", "/client/catalogo");
   });
 });
 
