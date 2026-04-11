@@ -1,6 +1,10 @@
 "use client";
+
 import { useEffect, useState } from "react";
-import { guardarPerfilCliente } from "@/lib/services/clienteService";
+import Link from "next/link";
+import { guardarPerfilCliente, obtenerPerfilCliente } from "@/lib/services/clienteService";
+import { listarVentasCliente } from "@/lib/services/ventaService";
+import { useCart } from "@/app/lib/context/_CardContext";
 
 type Tab = "datos" | "pedidos" | "direcciones";
 
@@ -21,30 +25,95 @@ const DEFAULT: PerfilDatos = {
 };
 
 export default function PerfilPage() {
+  const {
+    clienteId,
+    cliente,
+    isAuthenticated,
+    authEmail,
+    authUserId,
+    authLoading,
+    setClienteSession,
+    logoutClienteSession,
+  } = useCart();
   const [tab, setTab] = useState<Tab>("datos");
   const [datos, setDatos] = useState<PerfilDatos>(DEFAULT);
+  const [pedidos, setPedidos] = useState<any[]>([]);
   const [saved, setSaved] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [loadingPerfil, setLoadingPerfil] = useState(true);
+  const [loadingPedidos, setLoadingPedidos] = useState(false);
   const [error, setError] = useState("");
-  const [erroresCampos, setErroresCampos] = useState<Partial<Record<keyof PerfilDatos, string>>>({});
+  const [erroresCampos, setErroresCampos] = useState<
+    Partial<Record<keyof PerfilDatos, string>>
+  >({});
 
   const nombreCompleto = [datos.nombre, datos.apellido].filter(Boolean).join(" ").trim();
 
   useEffect(() => {
-    const local = localStorage.getItem("mm_perfil");
-    if (!local) return;
+    let active = true;
 
-    try {
-      const parsed = JSON.parse(local) as Partial<PerfilDatos>;
-      setDatos({
-        nombre: parsed.nombre ?? "",
-        apellido: parsed.apellido ?? "",
-        email: parsed.email ?? "",
-        telefono: parsed.telefono ?? "",
-        direccion: parsed.direccion ?? "",
-      });
-    } catch { }
-  }, []);
+    async function cargarPerfil() {
+      if (!clienteId) {
+        setDatos(DEFAULT);
+        setPedidos([]);
+        setLoadingPerfil(false);
+        return;
+      }
+
+      try {
+        const perfil = await obtenerPerfilCliente(clienteId);
+        if (!active) return;
+
+        const esInvitadoTemporal = perfil.email.endsWith("@manosmixtecas.local");
+        if (esInvitadoTemporal) {
+          setDatos(DEFAULT);
+        } else {
+          setDatos({
+            nombre: perfil.nombre ?? "",
+            apellido: perfil.apellido ?? "",
+            email: perfil.email ?? "",
+            telefono: perfil.telefono ?? "",
+            direccion: perfil.direccion ?? "",
+          });
+        }
+      } catch (e: any) {
+        if (active) setError(e?.message ?? "No se pudo cargar el perfil.");
+      } finally {
+        if (active) setLoadingPerfil(false);
+      }
+    }
+
+    void cargarPerfil();
+    return () => {
+      active = false;
+    };
+  }, [clienteId]);
+
+  useEffect(() => {
+    let active = true;
+
+    async function cargarPedidos() {
+      if (!clienteId || !isAuthenticated) {
+        setPedidos([]);
+        return;
+      }
+
+      setLoadingPedidos(true);
+      try {
+        const data = await listarVentasCliente(clienteId);
+        if (active) setPedidos(data ?? []);
+      } catch (e: any) {
+        if (active) setError(e?.message ?? "No se pudieron cargar los pedidos.");
+      } finally {
+        if (active) setLoadingPedidos(false);
+      }
+    }
+
+    void cargarPedidos();
+    return () => {
+      active = false;
+    };
+  }, [clienteId, isAuthenticated]);
 
   const validarCampo = (key: keyof PerfilDatos, valor: string) => {
     let errorMsg = "";
@@ -62,6 +131,10 @@ export default function PerfilPage() {
   };
 
   const handleGuardar = async () => {
+    if (!isAuthenticated) {
+      setError("Para guardar tus datos necesitas iniciar sesión.");
+      return;
+    }
     const validNombre = validarCampo("nombre", datos.nombre);
     const validEmail = validarCampo("email", datos.email);
     const validTel = validarCampo("telefono", datos.telefono);
@@ -76,14 +149,18 @@ export default function PerfilPage() {
     setError("");
 
     try {
-      await guardarPerfilCliente({
+      const numerosTelefono = datos.telefono.replace(/\D/g, "");
+      const result = await guardarPerfilCliente({
+        id_cliente: clienteId ?? undefined,
+        auth_user_id: authUserId ?? undefined,
         nombre: datos.nombre,
         apellido: datos.apellido,
         email: datos.email,
         telefono: numerosTelefono,
         direccion: datos.direccion,
       });
-      localStorage.setItem("mm_perfil", JSON.stringify(datos));
+      const clienteGuardado = result.cliente as { id_cliente: number };
+      await setClienteSession(clienteGuardado.id_cliente);
       setSaved(true);
       setTimeout(() => setSaved(false), 2500);
     } catch (e: any) {
@@ -109,23 +186,80 @@ export default function PerfilPage() {
     type: string;
     placeholder: string;
   }[] = [
-      { key: "nombre", label: "Nombre", type: "text", placeholder: "Juan" },
-      { key: "apellido", label: "Apellido", type: "text", placeholder: "Garcia" },
-      { key: "email", label: "Correo electronico", type: "email", placeholder: "tu@email.com" },
-      { key: "telefono", label: "Telefono", type: "tel", placeholder: "+52 000 000 0000" },
-      { key: "direccion", label: "Direccion principal", type: "text", placeholder: "Calle, numero, colonia" },
-    ];
+    { key: "nombre", label: "Nombre", type: "text", placeholder: "Juan" },
+    { key: "apellido", label: "Apellido", type: "text", placeholder: "Garcia" },
+    { key: "email", label: "Correo electronico", type: "email", placeholder: "tu@email.com" },
+    { key: "telefono", label: "Telefono", type: "tel", placeholder: "+52 000 000 0000" },
+    {
+      key: "direccion",
+      label: "Direccion principal",
+      type: "text",
+      placeholder: "Calle, numero, colonia",
+    },
+  ];
+
+  const formatearFecha = (fecha?: string) =>
+    fecha
+      ? new Date(fecha).toLocaleDateString("es-MX", {
+          year: "numeric",
+          month: "short",
+          day: "numeric",
+        })
+      : "Sin fecha";
+
+  if (loadingPerfil) {
+    return (
+      <div className="max-w-4xl mx-auto px-6 py-10 text-[#A08070]">
+        Cargando perfil...
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-4xl mx-auto px-6 py-10">
-      <div className="flex items-center gap-4 mb-10">
-        <div className="w-16 h-16 rounded-full bg-[#6B3A2A] flex items-center justify-center text-white text-2xl font-bold">
-          {datos.nombre ? datos.nombre.charAt(0).toUpperCase() : "?"}
+      <div className="flex items-center justify-between gap-4 mb-10 flex-wrap">
+        <div className="flex items-center gap-4">
+          <div className="w-16 h-16 rounded-full bg-[#6B3A2A] flex items-center justify-center text-white text-2xl font-bold">
+            {datos.nombre ? datos.nombre.charAt(0).toUpperCase() : "?"}
+          </div>
+          <div>
+            <h1 className="text-2xl font-bold text-[#2C1810]">
+              {nombreCompleto || "Mi perfil"}
+            </h1>
+            {isAuthenticated && cliente?.email ? (
+              <p className="text-sm text-[#A08070]">{cliente.email}</p>
+            ) : (
+              <p className="text-sm text-[#A08070]">
+                Navegas como invitado. Solo pedimos tus datos al guardar perfil o pagar.
+              </p>
+            )}
+          </div>
         </div>
-        <div>
-          <h1 className="text-2xl font-bold text-[#2C1810]">{nombreCompleto || "Mi perfil"}</h1>
-          {datos.email && <p className="text-sm text-[#A08070]">{datos.email}</p>}
-        </div>
+
+        {isAuthenticated && (
+          <button
+            onClick={() => void logoutClienteSession()}
+            className="border border-[#2C1810] text-[#2C1810] px-5 py-2 rounded-full text-sm hover:bg-[#2C1810] hover:text-white transition-colors"
+          >
+            Cerrar sesión
+          </button>
+        )}
+        {!authLoading && !isAuthenticated && (
+          <div className="flex items-center gap-3">
+            <Link
+              href="/client/login"
+              className="border border-[#2C1810] text-[#2C1810] px-5 py-2 rounded-full text-sm hover:bg-[#2C1810] hover:text-white transition-colors"
+            >
+              Iniciar sesión
+            </Link>
+            <Link
+              href="/client/registro"
+              className="text-sm text-[#6B3A2A] hover:underline"
+            >
+              Crear cuenta
+            </Link>
+          </div>
+        )}
       </div>
 
       <div className="flex gap-1 bg-[#F0E8DC] rounded-2xl p-1 mb-8 w-fit">
@@ -133,8 +267,11 @@ export default function PerfilPage() {
           <button
             key={id}
             onClick={() => setTab(id)}
-            className={`px-5 py-2.5 rounded-xl text-sm font-medium transition-all ${tab === id ? "bg-[#2C1810] text-white shadow-sm" : "text-[#5C4A3A] hover:text-[#2C1810]"
-              }`}
+            className={`px-5 py-2.5 rounded-xl text-sm font-medium transition-all ${
+              tab === id
+                ? "bg-[#2C1810] text-white shadow-sm"
+                : "text-[#5C4A3A] hover:text-[#2C1810]"
+            }`}
           >
             {label}
           </button>
@@ -161,10 +298,11 @@ export default function PerfilPage() {
                       validarCampo(key, val);
                     }}
                     onBlur={(e) => validarCampo(key, e.target.value)}
-                    className={`w-full border rounded-xl px-4 py-3 text-sm focus:outline-none transition-colors ${erroresCampos[key]
+                    className={`w-full border rounded-xl px-4 py-3 text-sm focus:outline-none transition-colors ${
+                      erroresCampos[key]
                         ? "border-red-500 bg-red-50 text-red-900 focus:border-red-600"
                         : "border-[#D4C4B0] text-[#2C1810] focus:border-[#6B3A2A]"
-                      } placeholder:text-[#C4B8A8]`}
+                    } placeholder:text-[#C4B8A8]`}
                   />
                   {erroresCampos[key] && (
                     <p className="text-xs text-red-500 mt-1.5 ml-1">{erroresCampos[key]}</p>
@@ -176,22 +314,33 @@ export default function PerfilPage() {
             <button
               onClick={handleGuardar}
               disabled={loading}
-              className={`mt-6 w-full py-3 rounded-full font-medium transition-all disabled:opacity-50 ${saved ? "bg-green-700 text-white" : "bg-[#2C1810] text-white hover:bg-[#6B3A2A]"
-                }`}
+              className={`mt-6 w-full py-3 rounded-full font-medium transition-all disabled:opacity-50 ${
+                saved
+                  ? "bg-green-700 text-white"
+                  : "bg-[#2C1810] text-white hover:bg-[#6B3A2A]"
+              }`}
             >
-              {loading ? "Guardando..." : saved ? "Perfil guardado correctamente" : "Guardar cambios"}
+              {loading
+                ? "Guardando..."
+                : saved
+                ? "Perfil guardado correctamente"
+                : isAuthenticated
+                ? "Actualizar perfil"
+                : "Inicia sesión para guardar"}
             </button>
           </div>
 
           <div className="space-y-4">
             <div className="bg-[#F0E8DC] rounded-2xl p-5">
-              <h3 className="text-sm font-semibold text-[#2C1810] mb-3">Por que completar tu perfil?</h3>
+              <h3 className="text-sm font-semibold text-[#2C1810] mb-3">
+                Cómo funciona tu sesión
+              </h3>
               <ul className="space-y-2 text-sm text-[#5C4A3A]">
                 {[
-                  "Agiliza el proceso de compra",
-                  "Recibe actualizaciones de tus pedidos",
-                  "Guarda tus direcciones favoritas",
-                  "Accede a ofertas exclusivas",
+                  "Puedes navegar por todo el catálogo sin iniciar sesión.",
+                  "Tu identidad de cliente se consolida cuando guardas tu perfil o completas un pago.",
+                  "Tus pedidos se asocian al email y al cliente actual guardado en Supabase.",
+                  "Si cierras sesión, la navegación sigue libre, pero tu carrito y perfil local se limpian.",
                 ].map((item) => (
                   <li key={item} className="flex items-start gap-2">
                     <span className="text-[#6B3A2A]">*</span>
@@ -205,20 +354,114 @@ export default function PerfilPage() {
       )}
 
       {tab === "pedidos" && (
-        <div className="bg-white rounded-2xl p-10 shadow-sm text-center max-w-md mx-auto">
-          <div className="w-20 h-20 bg-[#F0E8DC] rounded-full flex items-center justify-center mx-auto mb-5 text-4xl">
-            #
-          </div>
-          <h3 className="font-semibold text-[#2C1810] text-lg mb-2">Sin pedidos todavia</h3>
-          <p className="text-[#A08070] text-sm mb-6">
-            Tus pedidos apareceran aqui una vez que completes tu primera compra.
-          </p>
-          <a
-            href="/client/catalogo"
-            className="inline-block bg-[#2C1810] text-white px-7 py-2.5 rounded-full text-sm font-medium hover:bg-[#6B3A2A] transition-colors"
-          >
-            Explorar catalogo
-          </a>
+        <div className="space-y-4">
+          {!isAuthenticated ? (
+            <div className="bg-white rounded-2xl p-10 shadow-sm text-center max-w-md mx-auto">
+              <div className="w-20 h-20 bg-[#F0E8DC] rounded-full flex items-center justify-center mx-auto mb-5 text-4xl">
+                #
+              </div>
+              <h3 className="font-semibold text-[#2C1810] text-lg mb-2">
+                Aún no identificamos tu cuenta
+              </h3>
+              <p className="text-[#A08070] text-sm mb-6">
+                Guarda tu perfil o completa una compra para enlazar tus pedidos a este dispositivo.
+              </p>
+              <button
+                onClick={() => setTab("datos")}
+                className="inline-block bg-[#2C1810] text-white px-7 py-2.5 rounded-full text-sm font-medium hover:bg-[#6B3A2A] transition-colors"
+              >
+                Completar mi perfil
+              </button>
+            </div>
+          ) : loadingPedidos ? (
+            <div className="text-[#A08070]">Cargando pedidos...</div>
+          ) : pedidos.length === 0 ? (
+            <div className="bg-white rounded-2xl p-10 shadow-sm text-center max-w-md mx-auto">
+              <div className="w-20 h-20 bg-[#F0E8DC] rounded-full flex items-center justify-center mx-auto mb-5 text-4xl">
+                #
+              </div>
+              <h3 className="font-semibold text-[#2C1810] text-lg mb-2">Sin pedidos todavía</h3>
+              <p className="text-[#A08070] text-sm mb-6">
+                Tus pedidos aparecerán aquí una vez que completes tu primera compra.
+              </p>
+              <Link
+                href="/client/catalogo"
+                className="inline-block bg-[#2C1810] text-white px-7 py-2.5 rounded-full text-sm font-medium hover:bg-[#6B3A2A] transition-colors"
+              >
+                Explorar catálogo
+              </Link>
+            </div>
+          ) : (
+            pedidos.map((pedido: any) => {
+              const metodoPago = Array.isArray(pedido.metodos_pago)
+                ? pedido.metodos_pago[0]
+                : pedido.metodos_pago;
+
+              return (
+                <div key={pedido.id_venta} className="bg-white rounded-2xl p-6 shadow-sm">
+                  <div className="flex justify-between gap-4 flex-wrap mb-4">
+                    <div>
+                      <p className="text-xs tracking-widest uppercase text-[#A08070] mb-1">
+                        Pedido #{pedido.id_venta}
+                      </p>
+                      <h3 className="font-semibold text-[#2C1810]">
+                        {pedido.estado ?? "Pendiente"}
+                      </h3>
+                      <p className="text-sm text-[#A08070]">
+                        {formatearFecha(pedido.fecha_venta)}
+                      </p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-xs tracking-widest uppercase text-[#A08070] mb-1">
+                        Total
+                      </p>
+                      <p className="text-lg font-bold text-[#6B3A2A]">
+                        ${Number(pedido.total ?? 0).toLocaleString("es-MX", {
+                          minimumFractionDigits: 2,
+                        })}{" "}
+                        MXN
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="grid md:grid-cols-2 gap-6">
+                    <div>
+                      <p className="text-xs tracking-widest uppercase text-[#A08070] mb-2">
+                        Productos
+                      </p>
+                      <div className="space-y-2">
+                        {(pedido.detalle_venta ?? []).map((detalle: any) => (
+                          <div
+                            key={detalle.id_detalle}
+                            className="flex justify-between text-sm text-[#2C1810]"
+                          >
+                            <span>
+                              {detalle.productos?.nombre ?? "Producto"} x{detalle.cantidad}
+                            </span>
+                            <span>
+                              ${Number(detalle.precio_unitario ?? 0).toLocaleString("es-MX")}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div>
+                      <p className="text-xs tracking-widest uppercase text-[#A08070] mb-2">
+                        Entrega y pago
+                      </p>
+                      <p className="text-sm text-[#2C1810]">
+                        {pedido.datos_envio?.direccion ?? "Sin dirección registrada"}
+                      </p>
+                      <p className="text-sm text-[#A08070] mt-1">
+                        Método: {metodoPago?.nombre ?? "No especificado"}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              );
+            })
+          )}
         </div>
       )}
 
@@ -234,7 +477,7 @@ export default function PerfilPage() {
               </div>
               <div className="flex-1">
                 <div className="flex items-center gap-2 mb-1">
-                  <p className="font-medium text-[#2C1810]">{nombreCompleto || "Mi direccion"}</p>
+                  <p className="font-medium text-[#2C1810]">{nombreCompleto || "Mi dirección"}</p>
                   <span className="text-[10px] bg-[#6B3A2A] text-white px-2 py-0.5 rounded-full">
                     Principal
                   </span>
@@ -242,7 +485,10 @@ export default function PerfilPage() {
                 <p className="text-sm text-[#5C4A3A]">{datos.direccion}</p>
                 {datos.telefono && <p className="text-xs text-[#A08070] mt-1">{datos.telefono}</p>}
               </div>
-              <button onClick={() => setTab("datos")} className="text-xs text-[#6B3A2A] hover:underline shrink-0">
+              <button
+                onClick={() => setTab("datos")}
+                className="text-xs text-[#6B3A2A] hover:underline shrink-0"
+              >
                 Editar
               </button>
             </div>
@@ -252,8 +498,13 @@ export default function PerfilPage() {
                 @
               </div>
               <h3 className="font-semibold text-[#2C1810] mb-2">Sin direcciones guardadas</h3>
-              <p className="text-[#A08070] text-sm mb-4">Agrega tu direccion desde datos personales.</p>
-              <button onClick={() => setTab("datos")} className="text-sm text-[#6B3A2A] hover:underline">
+              <p className="text-[#A08070] text-sm mb-4">
+                Agrega tu dirección desde datos personales o durante checkout.
+              </p>
+              <button
+                onClick={() => setTab("datos")}
+                className="text-sm text-[#6B3A2A] hover:underline"
+              >
                 Ir a datos personales
               </button>
             </div>

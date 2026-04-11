@@ -1,8 +1,16 @@
 jest.mock("../lib/persistence/repositories/carritoRepository", () => ({
   agregarProductoCarritoDb: jest.fn(),
+  actualizarCantidadProductoCarritoDb: jest.fn(),
   eliminarProductoCarritoDb: jest.fn(),
   listarMetodosPagoDb: jest.fn(),
+  obtenerDetalleCarritoPorProductoDb: jest.fn(),
+  obtenerOCrearCarritoActivoDb: jest.fn(),
   obtenerCarritoDb: jest.fn(),
+  vaciarCarritoDb: jest.fn(),
+}));
+
+jest.mock("../lib/persistence/repositories/productoRepository", () => ({
+  consultarStockDb: jest.fn(),
 }));
 
 import {
@@ -14,10 +22,12 @@ import {
 } from "../lib/services/carritoService";
 import {
   agregarProductoCarritoDb,
+  obtenerDetalleCarritoPorProductoDb,
   eliminarProductoCarritoDb,
   listarMetodosPagoDb,
   obtenerCarritoDb,
 } from "../lib/persistence/repositories/carritoRepository";
+import { consultarStockDb } from "../lib/persistence/repositories/productoRepository";
 
 beforeEach(() => {
   jest.clearAllMocks();
@@ -65,6 +75,8 @@ describe("USD05 - Cálculo total de compras", () => {
 // ─── USD02 - Agregar producto al carrito ──────────────────────────────────
 describe("USD02 - Agregar producto al carrito", () => {
   test("Agrega producto correctamente", async () => {
+    (obtenerDetalleCarritoPorProductoDb as jest.Mock).mockResolvedValue(null);
+    (consultarStockDb as jest.Mock).mockResolvedValue({ stock: 10 });
     (agregarProductoCarritoDb as jest.Mock).mockResolvedValue(true);
     const resultado = await agregarProductoCarrito(1, 1, 2, 100);
     expect(resultado).toBe(true);

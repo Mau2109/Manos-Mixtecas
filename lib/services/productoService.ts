@@ -23,7 +23,7 @@ import { supabase } from "@/lib/supabaseClient";
 function validarProducto(producto: any) {
 
   if (!producto.nombre || producto.nombre.trim() === "") {
-    throw new Error("El nombre del producto es obligatorio");
+    throw new Error("Datos obligatorios del producto");
   }
 
   if (producto.precio == null || producto.precio < 0) {
@@ -108,7 +108,7 @@ return data
 export async function actualizarProducto(idProducto: number, datos: any) {
 
   if (!idProducto) {
-    throw new Error("El id del producto es obligatorio");
+    throw new Error("ID de producto requerido");
   }
 
   validarActualizacionProducto(datos);
@@ -122,7 +122,7 @@ export async function actualizarProducto(idProducto: number, datos: any) {
 export async function eliminarProducto(id: number) {
 
   if (!id) {
-    throw new Error("El id del producto es obligatorio");
+    throw new Error("ID de producto requerido");
   }
 
   return await eliminarProductoDb(id);

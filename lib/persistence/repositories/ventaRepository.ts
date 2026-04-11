@@ -265,6 +265,27 @@ export async function listarVentasDb(filtros?: {
   return data;
 }
 
+export async function listarVentasClienteDb(idCliente: number) {
+  const { data, error } = await supabase
+    .from("ventas")
+    .select(
+      `
+      id_venta, total, subtotal, estado, fecha_venta, confirmacion_pedido,
+      id_metodo_pago, datos_envio,
+      metodos_pago(nombre),
+      detalle_venta(
+        id_detalle, cantidad, precio_unitario,
+        productos(id_producto, nombre, imagen)
+      )
+    `
+    )
+    .eq("id_cliente", idCliente)
+    .order("fecha_venta", { ascending: false });
+
+  if (error) throw error;
+  return data;
+}
+
 /* ===============================
    USD13 - Confirmar pedido (alias) (persistencia)
    =============================== */
