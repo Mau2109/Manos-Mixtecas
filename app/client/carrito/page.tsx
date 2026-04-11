@@ -1,15 +1,44 @@
 "use client";
 import Link from "next/link";
+import { useState } from "react";
 import { useCart } from "@/app/lib/context/_CardContext";
-
-const IVA = 0.16;
+import { calcularResumenCheckout } from "@/lib/checkout";
 
 export default function CarritoPage() {
-  const { items, removeItem, updateQty, total, itemCount } = useCart();
+  const { items, removeItem, updateQty, total, itemCount, loading } = useCart();
+  const [feedback, setFeedback] = useState("");
 
-  const subtotal = total;
-  const iva = subtotal * IVA;
-  const totalConIva = subtotal + iva;
+  const { subtotal, envio, total: totalFinal } = calcularResumenCheckout({
+    subtotal: total,
+    cantidadPiezas: itemCount,
+  });
+
+  const mostrarFeedback = (mensaje?: string) => {
+    if (!mensaje) return;
+    setFeedback(mensaje);
+    setTimeout(() => setFeedback(""), 2200);
+  };
+
+  const handleRemove = async (idProducto: number) => {
+    const confirmar = window.confirm("¿Desea eliminar este producto?");
+    if (!confirmar) return;
+
+    const resultado = await removeItem(idProducto);
+    mostrarFeedback(resultado.message);
+  };
+
+  const handleQtyChange = async (idProducto: number, cantidad: number) => {
+    const resultado = await updateQty(idProducto, cantidad);
+    mostrarFeedback(resultado.message);
+  };
+
+  if (loading) {
+    return (
+      <div className="max-w-7xl mx-auto px-6 py-20 text-center text-[#A08070]">
+        Cargando tu carrito...
+      </div>
+    );
+  }
 
   if (items.length === 0) {
     return (
@@ -47,6 +76,7 @@ export default function CarritoPage() {
       <h1 className="text-3xl font-bold text-[#2C1810] mb-8">
         Mi carrito <span className="text-[#A08070] text-xl font-normal">({itemCount} {itemCount === 1 ? "pieza" : "piezas"})</span>
       </h1>
+      {feedback && <p className="mb-6 text-sm text-[#6B3A2A]">{feedback}</p>}
 
       <div className="grid md:grid-cols-3 gap-10">
         {/* ── Lista ítems (USD04, USD03) ───────────────── */}
@@ -84,14 +114,14 @@ export default function CarritoPage() {
                 <div className="flex items-center gap-3 mt-3">
                   <div className="flex items-center border border-[#D4C4B0] rounded-full text-sm overflow-hidden">
                     <button
-                      onClick={() => updateQty(item.id_producto, item.cantidad - 1)}
+                      onClick={() => void handleQtyChange(item.id_producto, item.cantidad - 1)}
                       className="px-3 py-1 hover:bg-[#F0E8DC] transition-colors text-[#2C1810]"
                     >
                       −
                     </button>
                     <span className="px-3 py-1 font-medium text-[#2C1810]">{item.cantidad}</span>
                     <button
-                      onClick={() => updateQty(item.id_producto, item.cantidad + 1)}
+                      onClick={() => void handleQtyChange(item.id_producto, item.cantidad + 1)}
                       className="px-3 py-1 hover:bg-[#F0E8DC] transition-colors text-[#2C1810]"
                     >
                       +
@@ -99,7 +129,7 @@ export default function CarritoPage() {
                   </div>
 
                   <button
-                    onClick={() => removeItem(item.id_producto)}
+                    onClick={() => void handleRemove(item.id_producto)}
                     className="text-xs text-[#A08070] hover:text-[#C0392B] transition-colors flex items-center gap-1"
                   >
                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -134,16 +164,16 @@ export default function CarritoPage() {
                 <span>${subtotal.toLocaleString("es-MX", { minimumFractionDigits: 2 })} MXN</span>
               </div>
               <div className="flex justify-between text-[#5C4A3A]">
-                <span>IVA (16%)</span>
-                <span>${iva.toLocaleString("es-MX", { minimumFractionDigits: 2 })} MXN</span>
-              </div>
-              <div className="flex justify-between text-[#A08070] text-xs">
-                <span>Envío</span>
-                <span>Se calcula al confirmar</span>
+                <span>Envío estimado</span>
+                <span>
+                  {envio > 0
+                    ? `$${envio.toLocaleString("es-MX", { minimumFractionDigits: 2 })} MXN`
+                    : "Se calcula en checkout"}
+                </span>
               </div>
               <div className="border-t border-[#E8DDD0] pt-3 flex justify-between font-bold text-[#2C1810] text-base">
                 <span>Total</span>
-                <span>${totalConIva.toLocaleString("es-MX", { minimumFractionDigits: 2 })} MXN</span>
+                <span>${totalFinal.toLocaleString("es-MX", { minimumFractionDigits: 2 })} MXN</span>
               </div>
             </div>
 
