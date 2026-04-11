@@ -1,10 +1,8 @@
 "use client"
 
-import { actualizarProducto } from "@/lib/services/productoService"
-import { consultarProductos } from "@/lib/services/productoService"
+import { actualizarProducto, consultarProductos, eliminarProducto, obtenerCategorias } from "@/lib/services/productoService"
 import { useEffect } from "react"
 import { useState } from "react"
-import { eliminarProducto } from "@/lib/services/productoService"
 import Link from "next/link"
 import {
   Package,
@@ -73,96 +71,6 @@ export interface Producto {
   artesano: string
 }
 
-// Datos de ejemplo con todos los campos
-const productosEjemplo: Producto[] = [
-  {
-    id: "1",
-    codigo: "ART001",
-    imagen: "/placeholder.svg?height=60&width=60",
-    nombre: "Jarrón de Barro Negro",
-    descripcion: "Hermoso jarrón elaborado con la técnica tradicional de barro negro de Oaxaca. Pieza única con acabado brillante.",
-    precio: 850,
-    stock: 25,
-    materiales: "Barro negro, pigmentos naturales",
-    tecnica: "Moldeado y bruñido a mano",
-    categoria: "Barro Negro",
-    artesano: "María García",
-  },
-  {
-    id: "2",
-    codigo: "ART002",
-    imagen: "/placeholder.svg?height=60&width=60",
-    nombre: "Rebozo de Seda",
-    descripcion: "Rebozo tejido en telar de cintura con hilos de seda natural. Diseño tradicional con flecos elaborados.",
-    precio: 2400,
-    stock: 15,
-    materiales: "Seda natural, tintes vegetales",
-    tecnica: "Tejido en telar de cintura",
-    categoria: "Textiles",
-    artesano: "Elena Cruz",
-  },
-  {
-    id: "3",
-    codigo: "ART003",
-    imagen: "/placeholder.svg?height=60&width=60",
-    nombre: "Alebrije de Madera",
-    descripcion: "Figura fantástica tallada en madera de copal, pintada a mano con colores vibrantes y patrones intrincados.",
-    precio: 1200,
-    stock: 8,
-    materiales: "Madera de copal, pintura acrílica",
-    tecnica: "Tallado y pintado a mano",
-    categoria: "Madera",
-    artesano: "Juan Pérez",
-  },
-  {
-    id: "4",
-    codigo: "ART004",
-    imagen: "/placeholder.svg?height=60&width=60",
-    nombre: "Collar de Ámbar",
-    descripcion: "Collar artesanal con piedras de ámbar auténtico de Chiapas, engarzado en plata .925",
-    precio: 650,
-    stock: 3,
-    materiales: "Ámbar de Chiapas, plata .925",
-    tecnica: "Engarzado artesanal",
-    categoria: "Joyería",
-    artesano: "Ana López",
-  },
-  {
-    id: "5",
-    codigo: "ART005",
-    imagen: "/placeholder.svg?height=60&width=60",
-    nombre: "Talavera Poblana",
-    descripcion: "Plato decorativo de talavera poblana con diseño tradicional en azul y blanco. Certificado de autenticidad.",
-    precio: 450,
-    stock: 30,
-    materiales: "Barro, esmaltes cerámicos",
-    tecnica: "Moldeado y esmaltado tradicional",
-    categoria: "Cerámica",
-    artesano: "Mateo Rodríguez",
-  },
-  {
-    id: "6",
-    codigo: "ART006",
-    imagen: "/placeholder.svg?height=60&width=60",
-    nombre: "Huipil Bordado",
-    descripcion: "Huipil tradicional con bordados a mano representando flores y aves de la región.",
-    precio: 1800,
-    stock: 5,
-    materiales: "Algodón, hilos de seda",
-    tecnica: "Bordado a mano",
-    categoria: "Textiles",
-    artesano: "Elena Cruz",
-  },
-]
-
-const categorias = [
-  "Todas las categorías",
-  "Textiles",
-  "Cerámica",
-  "Madera",
-  "Joyería",
-  "Barro Negro",
-]
 
 // Función para obtener el color del stock según las reglas
 function getStockColor(stock: number): string {
@@ -177,11 +85,15 @@ function getStockColor(stock: number): string {
 
 export function InventarioList() {
   const [productos, setProductos] = useState<Producto[]>([])
+  const [categoriasDB, setCategoriasDB] = useState<{ id_categoria: number; nombre: string }[]>([])
 
   useEffect(() => {
-    const cargarProductos = async () => {
+    const cargarDatos = async () => {
       try {
-        const data = await consultarProductos()
+        const [data, cats] = await Promise.all([
+          consultarProductos(),
+          obtenerCategorias(),
+        ])
 
         // MAPEO de backend → UI
         const productosMapeados = data.map((p: any) => ({
@@ -201,13 +113,14 @@ export function InventarioList() {
         }))
 
         setProductos(productosMapeados)
+        setCategoriasDB(cats ?? [])
 
       } catch (error) {
-        console.error("Error cargando productos:", error)
+        console.error("Error cargando datos:", error)
       }
     }
 
-    cargarProductos()
+    cargarDatos()
   }, [])
 
   const [busqueda, setBusqueda] = useState("")
@@ -220,7 +133,7 @@ export function InventarioList() {
   const totalProductos = productos.length
   const stockBajo = productos.filter((p) => p.stock <= 5).length
   const valorInventario = productos.reduce((acc, p) => acc + p.precio * p.stock, 0)
-  const totalCategorias = new Set(categorias.filter((c) => c !== "Todas las categorías")).size
+  const totalCategorias = categoriasDB.length
 
   // Filtrar productos
   const productosFiltrados = productos.filter((producto) => {
@@ -382,9 +295,10 @@ export function InventarioList() {
                 <SelectValue placeholder="Todas las categorías" />
               </SelectTrigger>
               <SelectContent>
-                {categorias.map((cat) => (
-                  <SelectItem key={cat} value={cat}>
-                    {cat}
+                <SelectItem value="Todas las categorías">Todas las categorías</SelectItem>
+                {categoriasDB.map((cat) => (
+                  <SelectItem key={cat.id_categoria} value={cat.nombre}>
+                    {cat.nombre}
                   </SelectItem>
                 ))}
               </SelectContent>
