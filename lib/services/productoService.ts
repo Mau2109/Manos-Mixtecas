@@ -87,23 +87,19 @@ export async function crearProducto(producto: any) {
   ========================================== */
 export async function consultarProductos() {
 
-  const productos = await listarProductosDb();
+  const { data, error } = await supabase
+  .from("productos")
+  .select(`
+    *,
+    categorias(nombre),
+    artesanos(nombre, apellido)
+  `)
 
-  return productos;
+if (error) throw error
+
+return data
+
 }
-
-/* ===============================
-   ADM03 - Consultar productos
-   =============================== */
-// export const consultarProductos = async () => {
-//   const productos = await getAllProducts();
-
-//   if (!productos || productos.length === 0) {
-//     return { mensaje: "No hay productos disponibles", data: [] };
-//   }
-
-//   return { data: productos };
-// };
 
 
 /* ==========================================
