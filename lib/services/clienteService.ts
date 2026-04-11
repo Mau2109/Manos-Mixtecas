@@ -24,10 +24,9 @@ export async function guardarPerfilCliente(cliente: PerfilClientePayload) {
 
   return guardarPerfilClienteDb({
     nombre: cliente.nombre.trim(),
+    apellido: cliente.apellido?.trim(),
     email: cliente.email.trim(),
     telefono: cliente.telefono?.trim(),
     direccion: cliente.direccion?.trim(),
-    foto_perfil: cliente.foto_perfil?.trim(),
-    codigo_cliente: cliente.codigo_cliente?.trim(),
   });
 }

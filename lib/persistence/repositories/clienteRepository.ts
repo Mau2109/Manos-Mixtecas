@@ -2,53 +2,33 @@ import { supabase } from "../../supabaseClient";
 
 export type PerfilClientePayload = {
   nombre: string;
+  apellido?: string;
   email: string;
   telefono?: string;
   direccion?: string;
-  foto_perfil?: string;
-  codigo_cliente?: string;
 };
 
 export type PerfilClienteGuardado = {
   cliente: Record<string, unknown>;
-  partialSave: boolean;
 };
 
-function construirPayloadBase(cliente: PerfilClientePayload) {
+function construirPayloadDB(cliente: PerfilClientePayload) {
   return {
     nombre: cliente.nombre,
+    apellido: cliente.apellido || null,
     email: cliente.email,
-  };
-}
-
-function construirPayloadExtendido(cliente: PerfilClientePayload) {
-  return {
-    ...construirPayloadBase(cliente),
     telefono: cliente.telefono || null,
     direccion: cliente.direccion || null,
-    foto_perfil: cliente.foto_perfil || null,
-    codigo_cliente: cliente.codigo_cliente || null,
   };
-}
-
-function esErrorPorColumnaFaltante(error: unknown) {
-  if (!error || typeof error !== "object" || !("message" in error)) {
-    return false;
-  }
-
-  const message = String(error.message).toLowerCase();
-  return (
-    message.includes("column") ||
-    message.includes("schema cache") ||
-    message.includes("could not find") ||
-    message.includes("does not exist")
-  );
 }
 
 /* ===============================
    USD01 - Crear perfil cliente (persistencia)
    =============================== */
 export async function crearClienteDb(cliente: { nombre: string; email: string }) {
+  const existente = await obtenerClientePorEmailDb(cliente.email);
+  if (existente?.id_cliente) return existente;
+
   const { data, error } = await supabase
     .from("clientes")
     .insert(cliente)
@@ -74,58 +54,29 @@ export async function obtenerClientePorEmailDb(email: string) {
 async function insertarCliente(
   payload: PerfilClientePayload
 ): Promise<PerfilClienteGuardado> {
-  const extendido = await supabase
+  const { data, error } = await supabase
     .from("clientes")
-    .insert(construirPayloadExtendido(payload))
+    .insert(construirPayloadDB(payload))
     .select()
     .single();
 
-  if (!extendido.error) {
-    return { cliente: extendido.data, partialSave: false };
-  }
-
-  if (!esErrorPorColumnaFaltante(extendido.error)) {
-    throw extendido.error;
-  }
-
-  const base = await supabase
-    .from("clientes")
-    .insert(construirPayloadBase(payload))
-    .select()
-    .single();
-
-  if (base.error) throw base.error;
-  return { cliente: base.data, partialSave: true };
+  if (error) throw error;
+  return { cliente: data };
 }
 
 async function actualizarCliente(
   idCliente: number,
   payload: PerfilClientePayload
 ): Promise<PerfilClienteGuardado> {
-  const extendido = await supabase
+  const { data, error } = await supabase
     .from("clientes")
-    .update(construirPayloadExtendido(payload))
+    .update(construirPayloadDB(payload))
     .eq("id_cliente", idCliente)
     .select()
     .single();
 
-  if (!extendido.error) {
-    return { cliente: extendido.data, partialSave: false };
-  }
-
-  if (!esErrorPorColumnaFaltante(extendido.error)) {
-    throw extendido.error;
-  }
-
-  const base = await supabase
-    .from("clientes")
-    .update(construirPayloadBase(payload))
-    .eq("id_cliente", idCliente)
-    .select()
-    .single();
-
-  if (base.error) throw base.error;
-  return { cliente: base.data, partialSave: true };
+  if (error) throw error;
+  return { cliente: data };
 }
 
 export async function guardarPerfilClienteDb(

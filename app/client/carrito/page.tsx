@@ -1,6 +1,6 @@
 "use client";
 import Link from "next/link";
-import { useCart } from "@/app/lib/context/ CardContext";
+import { useCart } from "@/app/lib/context/_CardContext";
 
 const IVA = 0.16;
 

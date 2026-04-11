@@ -10,12 +10,12 @@ export async function obtenerPerfilArtesanoDb(idArtesano: number) {
     .select(
       `
       id_artesano, nombre, apellido, biografia, tipo, comunidad,
-      historia, ubicacion, foto_perfil, telefono, email,
+      historia, ubicacion, foto_perfil, telefono, email, estado,
       categorias(nombre)
     `
     )
     .eq("id_artesano", idArtesano)
-    .eq("estado", true)
+
     .single();
 
   if (error) throw error;
@@ -62,7 +62,7 @@ export async function listarArtesanosDb() {
   const { data, error } = await supabase
     .from("artesanos")
     .select(
-      "id_artesano, nombre, apellido, tipo, comunidad, ubicacion, foto_perfil"
+      "id_artesano, nombre, apellido, biografia, tipo, comunidad, historia, ubicacion, foto_perfil"
     )
     .eq("estado", true);
 

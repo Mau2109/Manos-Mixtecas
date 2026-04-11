@@ -4,7 +4,7 @@ import Link from "next/link";
 import { obtenerProductoDetalle, obtenerImagenesProducto } from "@/lib/services/productoService";
 
 import { useParams, useRouter } from "next/navigation";
-import { useCart } from "@/app/lib/context/ CardContext";
+import { useCart } from "@/app/lib/context/_CardContext";
 
 export default function ProductoPage() {
   const params = useParams();
