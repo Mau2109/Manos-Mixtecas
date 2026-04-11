@@ -115,8 +115,18 @@ export default function CheckoutPage() {
       <input
         type={type}
         value={datos[name]}
-        onChange={(e) => setDatos((d) => ({ ...d, [name]: e.target.value }))}
+        onChange={(e) => {
+          const value = e.target.value;
+          if (name === "telefono") {
+            const digits = value.replace(/\D/g, "").slice(0, 10);
+            setDatos((d) => ({ ...d, [name]: digits }));
+            return;
+          }
+          setDatos((d) => ({ ...d, [name]: value }));
+        }}
         placeholder={placeholder}
+        inputMode={name === "telefono" ? "numeric" : undefined}
+        maxLength={name === "telefono" ? 10 : undefined}
         className={`w-full border rounded-xl px-4 py-3 text-sm bg-white focus:outline-none transition-colors ${
           errors[name]
             ? "border-red-400 focus:border-red-500"
