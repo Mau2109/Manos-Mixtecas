@@ -5,6 +5,7 @@
   obtenerResumenVentaDb,
   agregarProductoVentaDb,
   listarVentasDb,
+  listarVentasClienteDb,
   cancelarVentaDb,
   obtenerProductosVentaDb,
   actualizarStockProductoDb,
@@ -83,6 +84,11 @@ export async function listarVentas(filtros?: {
   fechaFin?: string;
 }) {
   return await listarVentasDb(filtros);
+}
+
+export async function listarVentasCliente(idCliente: number) {
+  if (!idCliente) throw new Error("ID de cliente requerido");
+  return listarVentasClienteDb(idCliente);
 }
 
 /* ===============================

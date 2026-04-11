@@ -3,12 +3,11 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { obtenerProductoDetalle, obtenerImagenesProducto } from "@/lib/services/productoService";
 
-import { useParams, useRouter } from "next/navigation";
+import { useParams } from "next/navigation";
 import { useCart } from "@/app/lib/context/_CardContext";
 
 export default function ProductoPage() {
   const params = useParams();
-  const router = useRouter();
   const id = Number(params.id);
   const { addItem, items } = useCart();
 
@@ -18,6 +17,7 @@ export default function ProductoPage() {
   const [cantidad, setCantidad] = useState(1);
   const [loading, setLoading] = useState(true);
   const [agregado, setAgregado] = useState(false);
+  const [mensajeCarrito, setMensajeCarrito] = useState("");
 
   useEffect(() => {
     async function load() {
@@ -39,18 +39,23 @@ export default function ProductoPage() {
 
   const yaEnCarrito = items.some((i) => i.id_producto === id);
 
-  const handleAgregarCarrito = () => {
+  const handleAgregarCarrito = async () => {
     if (!producto) return;
-    addItem({
+    const resultado = await addItem({
       id_producto: producto.id_producto,
       nombre: producto.nombre,
-      precio_unitario: Number(producto.precio),
+      precio_unitario: precioFinal,
       cantidad,
       imagen: producto.imagen,
       artesano: producto.artesano_nombre,
+      stock: producto.stock,
     });
-    setAgregado(true);
-    setTimeout(() => setAgregado(false), 2000);
+    setAgregado(resultado.ok);
+    setMensajeCarrito(resultado.message ?? "");
+    setTimeout(() => {
+      setAgregado(false);
+      setMensajeCarrito("");
+    }, 2000);
   };
 
   if (loading) {
@@ -269,6 +274,11 @@ export default function ProductoPage() {
                   Ver carrito
                 </Link>
               </div>
+              {mensajeCarrito && (
+                <p className={`text-sm ${agregado ? "text-green-700" : "text-red-600"}`}>
+                  {mensajeCarrito}
+                </p>
+              )}
             </div>
           ) : (
             <p className="text-center py-4 bg-[#F0E8DC] rounded-full text-[#A08070]">
