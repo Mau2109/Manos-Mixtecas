@@ -20,6 +20,11 @@ function normalizarTelefono(telefono?: string) {
   return digits;
 }
 
+function normalizarTextoOpcional(valor?: string) {
+  const limpio = valor?.trim();
+  return limpio ? limpio : undefined;
+}
+
 /* ===============================
    USD01 - Crear perfil cliente
    =============================== */
@@ -64,19 +69,19 @@ export async function sincronizarClienteAuth(params: {
     return upsertClienteAuthDb({
       auth_user_id: params.auth_user_id,
       nombre: nombreLimpio,
-      apellido: params.apellido?.trim(),
+      apellido: normalizarTextoOpcional(params.apellido),
       email: params.email.trim(),
       telefono: normalizarTelefono(params.telefono),
-      direccion: params.direccion?.trim(),
+      direccion: normalizarTextoOpcional(params.direccion),
     });
   }
 
   return guardarPerfilClienteDb({
     nombre: nombreLimpio,
-    apellido: params.apellido?.trim(),
+    apellido: normalizarTextoOpcional(params.apellido),
     email: params.email.trim(),
     telefono: normalizarTelefono(params.telefono),
-    direccion: params.direccion?.trim(),
+    direccion: normalizarTextoOpcional(params.direccion),
   });
 }
 
@@ -103,9 +108,9 @@ export async function guardarPerfilCliente(cliente: PerfilClientePayload) {
     id_cliente: cliente.id_cliente,
     auth_user_id: cliente.auth_user_id,
     nombre: cliente.nombre.trim(),
-    apellido: cliente.apellido?.trim(),
+    apellido: normalizarTextoOpcional(cliente.apellido),
     email: cliente.email.trim(),
     telefono: normalizarTelefono(cliente.telefono),
-    direccion: cliente.direccion?.trim(),
+    direccion: normalizarTextoOpcional(cliente.direccion),
   });
 }
