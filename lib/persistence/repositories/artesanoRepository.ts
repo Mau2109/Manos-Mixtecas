@@ -55,6 +55,15 @@ export async function listarTiposArtesanoDb() {
   return data;
 }
 
+  export async function listarCategoriasDb() {
+    const { data, error } = await supabase
+      .from("categorias")
+      .select("id_categoria, nombre");
+
+    if (error) throw error;
+    return data;
+  }
+
 /* ===============================
    ADM24 - Directorio de artesanos/proveedores (persistencia)
    =============================== */

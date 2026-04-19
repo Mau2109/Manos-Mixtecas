@@ -75,13 +75,17 @@ export default function ContactoPage() {
               <div className="space-y-4">
                 {[
                   { key: "nombre", label: "Nombre", type: "text", placeholder: "Tu nombre" },
-                  { key: "email", label: "Correo electrónico", type: "email", placeholder: "tu@email.com" },
+                  { key: "email", label: "Email", type: "email", placeholder: "tu@email.com" },
                 ].map(({ key, label, type, placeholder }) => (
                   <div key={key}>
-                    <label className="block text-xs font-medium text-[#5C4A3A] mb-1 uppercase tracking-wide">
+                    <label
+                      htmlFor={`contacto-${key}`}
+                      className="block text-xs font-medium text-[#5C4A3A] mb-1 uppercase tracking-wide"
+                    >
                       {label}
                     </label>
                     <input
+                      id={`contacto-${key}`}
                       type={type}
                       placeholder={placeholder}
                       value={(form as any)[key]}
@@ -94,10 +98,14 @@ export default function ContactoPage() {
                   </div>
                 ))}
                 <div>
-                  <label className="block text-xs font-medium text-[#5C4A3A] mb-1 uppercase tracking-wide">
+                  <label
+                    htmlFor="contacto-mensaje"
+                    className="block text-xs font-medium text-[#5C4A3A] mb-1 uppercase tracking-wide"
+                  >
                     Mensaje
                   </label>
                   <textarea
+                    id="contacto-mensaje"
                     rows={5}
                     placeholder="¿En qué podemos ayudarte?"
                     value={form.mensaje}

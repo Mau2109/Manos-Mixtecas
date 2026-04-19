@@ -9,7 +9,15 @@ import {
 } from "../persistence/repositories/metodoPagoRepository";
 
 /* ===============================
+<<<<<<< HEAD
+<<<<<<< HEAD
    ADM13 - Registrar método de pago
+=======
+   ADM06 - Registrar método de pago
+>>>>>>> ea5f1595797c80911272899c768e7a6357210313
+=======
+   ADM06 - Registrar método de pago
+>>>>>>> 7cec1e47faf0a8c79528ea522a800bdf5f96c0b4
    =============================== */
 export async function crearMetodoPago(metodoPago: {
   nombre: string;

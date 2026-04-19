@@ -82,7 +82,7 @@ export async function obtenerMisionYValoresDb() {
 export async function obtenerContactoYRedesDb() {
   const { data, error } = await supabase
     .from("empresa")
-    .select("telefono, email, redes_sociales, formulario_contacto_email")
+    .select("telefono, email, redes_sociales, formulario_contacto_email, direccion")
     .limit(1)
     .single();
 

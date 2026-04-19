@@ -22,16 +22,15 @@ describe("USD01 - Guardar perfil ampliado de cliente", () => {
       email: " elena@artesanal.mx ",
       telefono: " +52 55 4321 9876 ",
       direccion: " Oaxaca ",
-      foto_perfil: " https://img.test/elena.jpg ",
     });
 
     expect(guardarPerfilClienteDb).toHaveBeenCalledWith({
+      id_cliente: undefined,
       nombre: "Elena Rodriguez",
+      apellido: undefined,
       email: "elena@artesanal.mx",
       telefono: "+52 55 4321 9876",
       direccion: "Oaxaca",
-      foto_perfil: "https://img.test/elena.jpg",
-      codigo_cliente: undefined,
     });
     expect(result.cliente.id_cliente).toBe(7);
   });
