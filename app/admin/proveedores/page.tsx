@@ -33,7 +33,7 @@ export interface Artesano {
   email?: string
   comunidad?: string
   estado: boolean
-  categorias?: { nombre: string } 
+  categorias?: { nombre: string }
   tipo?: string 
   foto_perfil?: string
 }
@@ -92,7 +92,7 @@ export default function ProveedoresList() {
           </Badge>
         </div>
       </div>
-
+      
       {/* Main Table Card (Todos los proveedores) */}
       <Card className="border-0 shadow-sm bg-white rounded-2xl overflow-hidden">
         <CardContent className="p-0">

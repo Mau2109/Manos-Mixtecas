@@ -21,11 +21,11 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 const menuItems = [
   { name: "Perfil de Empresa", href: "/empresa", icon: Building2 },
   { name: "Inventario", href: "/admin/inventario", icon: Package },
-  { name: "Proveedores", href: "/proveedores", icon: Truck },
+  { name: "Proveedores", href: "/admin/proveedores", icon: Truck },
   { name: "Compras", href: "/admin/compras/opciones_modulo", icon: ShoppingCart },
   { name: "Ventas", href: "/admin/ventas/opciones_modulov", icon: DollarSign },
-  { name: "Usuarios", href: "/usuarios", icon: Users },
-  { name: "Reportes", href: "/reportes", icon: BarChart3 },
+  { name: "Usuarios", href: "/admin/usuarios", icon: Users },
+  { name: "Reportes", href: "/admin/reportes", icon: BarChart3 },
 ]
 
 export function Sidebar() {
