@@ -50,10 +50,10 @@ export default function ConfirmacionPage() {
     if (envio) setDatosEnvio(JSON.parse(envio));
     if (pago) setMetodoPago(JSON.parse(pago));
 
-    if (!envio || (!loading && items.length === 0)) {
+    if (estado === "revision" && (!envio || (!loading && items.length === 0))) {
       router.push("/client/carrito");
     }
-  }, [items.length, loading, router]);
+  }, [items.length, loading, router, estado]);
 
   const handleConfirmar = async () => {
     if (!isAuthenticated) {

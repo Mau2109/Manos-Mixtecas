@@ -16,6 +16,19 @@ export default async function HomePage() {
   const mision = empresa.status === "fulfilled" ? empresa.value : null;
   const artesanoDelMes = artesanosList[0] ?? null;
 
+  const textoMision =
+    mision?.mision?.trim() ||
+    "Preservamos la herencia Mixteca conectando a los maestros artesanos con personas que valoran lo hecho a mano.";
+  const textoValores =
+    mision?.valores?.trim() ||
+    "Respeto por las comunidades, comercio justo, piezas únicas y procesos sustentables.";
+  const valoresLista =
+    mision?.valores
+      ?.split(".")
+      .map((item: string) => item.trim())
+      .filter(Boolean)
+      .slice(0, 3) ?? [];
+
   return (
     <div className="overflow-x-hidden">
       {/* ── HERO ─────────────────────────────────────────────── */}
@@ -82,33 +95,81 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* ── VALORES (USD11) ──────────────────────────────────── */}
-      <section className="py-16 bg-white">
+      {/* ── MISIÓN & VALORES (USD11) ─────────────────────────── */}
+      <section className="py-20 bg-[#F7F1E8]">
         <div className="max-w-7xl mx-auto px-6">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {[
-              {
-                icon: "🤝",
-                title: "Comercio Justo",
-                desc: mision?.valores?.split(".")[0] || "Garantizamos precios que respetan la dignidad y el tiempo del maestro artesano.",
-              },
-              {
-                icon: "🏺",
-                title: "Herencia Ancestral",
-                desc: "Técnicas transmitidas por generaciones, manteniendo viva la identidad Mixteca.",
-              },
-              {
-                icon: "✦",
-                title: "Calidad Curada",
-                desc: "Cada objeto es seleccionado bajo estrictos estándares de excelencia y originalidad.",
-              },
-            ].map((v) => (
-              <div key={v.title} className="group p-6 rounded-2xl hover:bg-[#FAF7F2] transition-colors">
-                <div className="text-3xl mb-4">{v.icon}</div>
-                <h3 className="font-semibold text-[#2C1810] mb-2">{v.title}</h3>
-                <p className="text-sm text-[#7A6A5A] leading-relaxed">{v.desc}</p>
+          <div className="grid md:grid-cols-[1.15fr_0.85fr] gap-10 items-start">
+            <div>
+              <p className="text-xs tracking-widest uppercase text-[#A08070] mb-3">
+                Misión y valores
+              </p>
+              <h2 className="text-3xl font-bold text-[#2C1810] mb-4">
+                Nuestra misión
+              </h2>
+              <p className="text-[#5C4A3A] leading-relaxed text-base mb-6">
+                {textoMision}
+              </p>
+              <h3 className="text-xl font-semibold text-[#2C1810] mb-3">
+                Valores que guían el taller
+              </h3>
+              <p className="text-[#7A6A5A] leading-relaxed text-sm">
+                {textoValores}
+              </p>
+            </div>
+
+            <div className="grid gap-5">
+              {[
+                {
+                  icon: "🤝",
+                  title: "Comercio Justo",
+                  desc:
+                    valoresLista[0] ||
+                    "Garantizamos precios que respetan la dignidad y el tiempo del maestro artesano.",
+                },
+                {
+                  icon: "🏺",
+                  title: "Herencia Ancestral",
+                  desc:
+                    valoresLista[1] ||
+                    "Técnicas transmitidas por generaciones, manteniendo viva la identidad Mixteca.",
+                },
+                {
+                  icon: "✦",
+                  title: "Calidad Curada",
+                  desc:
+                    valoresLista[2] ||
+                    "Cada objeto es seleccionado bajo estándares de excelencia y originalidad.",
+                },
+              ].map((v) => (
+                <div
+                  key={v.title}
+                  className="group p-5 rounded-2xl bg-white border border-[#E6D6C5] shadow-sm hover:shadow-md transition-shadow"
+                >
+                  <div className="flex items-center gap-3 mb-2">
+                    <span className="text-2xl">{v.icon}</span>
+                    <h4 className="font-semibold text-[#2C1810]">{v.title}</h4>
+                  </div>
+                  <p className="text-sm text-[#7A6A5A] leading-relaxed">{v.desc}</p>
+                </div>
+              ))}
+              <div className="rounded-2xl bg-gradient-to-br from-[#D8C2A4] via-[#E6D6C5] to-[#F5EFE6] p-5 border border-[#E6D6C5]">
+                <p className="text-xs tracking-widest uppercase text-[#6B3A2A] mb-3">
+                  Inspiración Mixteca
+                </p>
+                <div className="grid grid-cols-3 gap-2 text-center text-[#5C4A3A] text-sm">
+                  {[
+                    { icon: "🧵", label: "Bordado" },
+                    { icon: "🪵", label: "Tallado en madera" },
+                    { icon: "🪨", label: "Alfareria" },
+                  ].map((item) => (
+                    <div key={item.label} className="bg-white/70 rounded-xl py-4">
+                      <div className="text-2xl">{item.icon}</div>
+                      <p className="mt-2 text-xs">{item.label}</p>
+                    </div>
+                  ))}
+                </div>
               </div>
-            ))}
+            </div>
           </div>
         </div>
       </section>

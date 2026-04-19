@@ -27,14 +27,21 @@ export type ClientePerfil = {
 };
 
 function construirPayloadDB(cliente: PerfilClientePayload) {
-  return {
+  const payload: Record<string, unknown> = {
     auth_user_id: cliente.auth_user_id ?? null,
     nombre: cliente.nombre,
     apellido: cliente.apellido || null,
     email: cliente.email,
-    telefono: cliente.telefono || null,
-    direccion: cliente.direccion || null,
   };
+
+  if (cliente.telefono !== undefined && cliente.telefono !== "") {
+    payload.telefono = cliente.telefono || null;
+  }
+  if (cliente.direccion !== undefined && cliente.direccion !== "") {
+    payload.direccion = cliente.direccion || null;
+  }
+
+  return payload;
 }
 
 /* ===============================
@@ -109,12 +116,30 @@ export async function upsertClienteAuthDb(payload: PerfilClientePayload) {
 
   const existenteAuth = await obtenerClientePorAuthIdDb(payload.auth_user_id);
   if (existenteAuth?.id_cliente) {
-    return actualizarCliente(existenteAuth.id_cliente, payload);
+    const merged: PerfilClientePayload = {
+      id_cliente: existenteAuth.id_cliente,
+      auth_user_id: payload.auth_user_id ?? existenteAuth.auth_user_id ?? null,
+      nombre: payload.nombre || existenteAuth.nombre,
+      apellido: payload.apellido ?? (existenteAuth.apellido ?? undefined),
+      email: payload.email || existenteAuth.email,
+      telefono: payload.telefono ?? (existenteAuth.telefono ?? undefined),
+      direccion: payload.direccion ?? (existenteAuth.direccion ?? undefined),
+    };
+    return actualizarCliente(existenteAuth.id_cliente, merged);
   }
 
   const existenteEmail = await obtenerClientePorEmailDb(payload.email);
   if (existenteEmail?.id_cliente) {
-    return actualizarCliente(existenteEmail.id_cliente, payload);
+    const merged: PerfilClientePayload = {
+      id_cliente: existenteEmail.id_cliente,
+      auth_user_id: payload.auth_user_id ?? existenteEmail.auth_user_id ?? null,
+      nombre: payload.nombre || existenteEmail.nombre,
+      apellido: payload.apellido ?? (existenteEmail.apellido ?? undefined),
+      email: payload.email || existenteEmail.email,
+      telefono: payload.telefono ?? (existenteEmail.telefono ?? undefined),
+      direccion: payload.direccion ?? (existenteEmail.direccion ?? undefined),
+    };
+    return actualizarCliente(existenteEmail.id_cliente, merged);
   }
 
   const { data, error } = await supabase
