@@ -10,7 +10,8 @@ import {
   Phone, 
   Mail,
   MapPin,
-  X
+  X,
+  Search
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
@@ -23,6 +24,7 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
+import { Input } from "@/components/ui/input"
 import Link from "next/link"
 
 export interface Artesano {
@@ -41,6 +43,8 @@ export interface Artesano {
 export default function ProveedoresList() {
   const [proveedores, setProveedores] = useState<Artesano[]>([])
   const [loading, setLoading] = useState(true)
+  const [searchTerm, setSearchTerm] = useState("")
+  const [selectedCategory, setSelectedCategory] = useState<string>("all")
 
   useEffect(() => {
     const cargarProveedores = async () => {
@@ -57,6 +61,26 @@ export default function ProveedoresList() {
 
     cargarProveedores()
   }, [])
+
+  // Obtener categorías únicas
+  const obtenerCategorias = () => {
+    const categorias = new Set<string>()
+    proveedores.forEach((proveedor) => {
+      const cat = proveedor.categorias?.nombre || proveedor.tipo
+      if (cat) categorias.add(cat)
+    })
+    return Array.from(categorias).sort()
+  }
+
+  // Filtrar proveedores
+  const proveedoresFiltrados = proveedores.filter((proveedor) => {
+    const nombreCompleto = `${proveedor.nombre} ${proveedor.apellido || ""}`.toLowerCase()
+    const categoria = proveedor.categorias?.nombre || proveedor.tipo || ""
+    const cumpleBusqueda = nombreCompleto.includes(searchTerm.toLowerCase()) || 
+                          categoria.toLowerCase().includes(searchTerm.toLowerCase())
+    const cumpleCategoria = selectedCategory === "all" || categoria === selectedCategory
+    return cumpleBusqueda && cumpleCategoria
+  })
 
   const getCategoryColor = (categoria: string) => {
     const cat = categoria?.toLowerCase() || ""
@@ -83,16 +107,49 @@ export default function ProveedoresList() {
         </Link>
       </div>
 
+      {/* Search and Filters */}
+      <div className="flex flex-col sm:flex-row gap-4">
+        <div className="flex-1 relative">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+          <Input
+            placeholder="Buscar por nombre o categoría..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="pl-10 rounded-lg border-gray-200 focus:border-orange-500"
+          />
+        </div>
+        <div className="flex gap-2 flex-wrap sm:flex-nowrap">
+          <Button
+            variant={selectedCategory === "all" ? "default" : "outline"}
+            onClick={() => setSelectedCategory("all")}
+            className={`rounded-full ${selectedCategory === "all" ? "bg-orange-500 hover:bg-orange-600" : "border-gray-200"}`}
+          >
+            Todas
+          </Button>
+          {obtenerCategorias().map((categoria) => (
+            <Button
+              key={categoria}
+              variant={selectedCategory === categoria ? "default" : "outline"}
+              onClick={() => setSelectedCategory(categoria)}
+              className={`rounded-full whitespace-nowrap ${selectedCategory === categoria ? "bg-orange-500 hover:bg-orange-600" : "border-gray-200"}`}
+            >
+              {categoria}
+            </Button>
+          ))}
+        </div>
+      </div>
+
       {/* Tabs */}
       <div className="border-b border-gray-200">
         <div className="flex items-center gap-2 pb-4 border-b-2 border-orange-500 w-fit px-1">
           <span className="font-semibold text-orange-600">Artesanos</span>
           <Badge variant="secondary" className="bg-orange-100 text-orange-700 hover:bg-orange-100 rounded-full px-2">
-            {proveedores.length}
+            {proveedoresFiltrados.length}
           </Badge>
         </div>
       </div>
       
+
       {/* Main Table Card (Todos los proveedores) */}
       <Card className="border-0 shadow-sm bg-white rounded-2xl overflow-hidden">
         <CardContent className="p-0">
@@ -111,12 +168,14 @@ export default function ProveedoresList() {
                 <TableRow>
                   <TableCell colSpan={5} className="text-center py-8 text-gray-500">Cargando proveedores...</TableCell>
                 </TableRow>
-              ) : proveedores.length === 0 ? (
+              ) : proveedoresFiltrados.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={5} className="text-center py-8 text-gray-500">No hay proveedores registrados.</TableCell>
+                  <TableCell colSpan={5} className="text-center py-8 text-gray-500">
+                    {proveedores.length === 0 ? "No hay proveedores registrados." : "No se encontraron resultados."}
+                  </TableCell>
                 </TableRow>
               ) : (
-                proveedores.map((proveedor) => (
+                proveedoresFiltrados.map((proveedor) => (
                   <TableRow key={proveedor.id_artesano} className="hover:bg-gray-50/50 transition-colors">
                     <TableCell className="pl-6 py-4">
                       <div className="flex items-center gap-3">
