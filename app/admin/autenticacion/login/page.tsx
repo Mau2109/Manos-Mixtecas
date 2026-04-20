@@ -1,5 +1,6 @@
 "use client";
 import React, { useState } from "react";
+import { useRouter } from "next/navigation";
 import { Card, CardHeader, CardTitle, CardContent, CardFooter, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -12,6 +13,7 @@ import { loginAdministrador } from "@/lib/services/loginServices";
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export default function LoginPage() {
+	const router = useRouter();
 	const [email, setEmail] = useState("");
 	const [password, setPassword] = useState("");
 	const [error, setError] = useState("");
@@ -33,7 +35,7 @@ export default function LoginPage() {
 			await loginAdministrador(email, password);
 			// Aquí podrías redirigir o mostrar mensaje de éxito
 			setError("");
-			window.location.href = "/admin";
+			router.push("/admin/perfil_empresa/visualizar_empresa");
 		} catch (err: any) {
 			setError("Correo o contraseña incorrectos");
 		} finally {
@@ -57,7 +59,7 @@ export default function LoginPage() {
 				<Card className="shadow-xl">
 					<CardHeader className="flex flex-col items-center gap-2">
 						<div className="bg-primary/90 rounded-full p-3 mb-2">
-							<svg width="32" height="32" fill="none" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="#8b5a2b"/><path d="M12 13a3 3 0 1 0 0-6 3 3 0 0 0 0 6Zm0 2c-2.67 0-8 1.34-8 4v1a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-1c0-2.66-5.33-4-8-4Z" fill="#fff"/></svg>
+							<svg width="32" height="32" fill="none" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="#8b5a2b" /><path d="M12 13a3 3 0 1 0 0-6 3 3 0 0 0 0 6Zm0 2c-2.67 0-8 1.34-8 4v1a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-1c0-2.66-5.33-4-8-4Z" fill="#fff" /></svg>
 						</div>
 						<CardTitle className="text-2xl font-bold text-center">Manos Mixtecas</CardTitle>
 						<CardDescription className="text-center">ACCESO ADMINISTRATIVO</CardDescription>
@@ -103,7 +105,7 @@ export default function LoginPage() {
 							className="w-full bg-primary text-primary-foreground hover:bg-primary/90 text-base py-2 rounded-full"
 							disabled={loading || !isFormValid}
 						>
-							Entrar al Panel
+							{loading ? "Verificando..." : "Entrar al Panel"}
 						</Button>
 					</CardFooter>
 				</Card>

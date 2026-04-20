@@ -1,6 +1,6 @@
 "use client";
 import { useRouter } from "next/navigation";
-import { Sidebar } from "@/components/layout/sidebar";
+// import { Sidebar } from "@/components/layout/sidebar";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
@@ -12,7 +12,7 @@ export default function VentasOpcionesModuloPage() {
   const router = useRouter();
   return (
     <div className="flex min-h-screen">
-      <Sidebar />
+      {/* <Sidebar /> */}
       <main className="flex-1 bg-muted/40 p-8">
         <div className="max-w-6xl mx-auto">
           <div className="text-xs text-muted-foreground mb-2 tracking-widest">

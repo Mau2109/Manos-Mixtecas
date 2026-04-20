@@ -1,6 +1,6 @@
 "use client";
 import React, { useEffect, useState } from "react";
-import { Sidebar } from "@/components/layout/sidebar";
+// import { Sidebar } from "@/components/layout/sidebar";
 import { Card, CardHeader, CardTitle, CardContent, CardFooter } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -66,7 +66,7 @@ export default function RegistrarCompraPage() {
 
 	return (
 		<div className="flex min-h-screen">
-			<Sidebar />
+			{/* <Sidebar /> */}
 			<main className="flex-1 bg-muted/40 flex flex-col items-center py-10">
 				<Toaster />
 				<div className="w-full max-w-4xl">

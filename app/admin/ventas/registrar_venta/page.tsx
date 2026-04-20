@@ -1,6 +1,6 @@
 "use client";
 import React, { useState } from "react";
-import { Sidebar } from "@/components/layout/sidebar";
+// import { Sidebar } from "@/components/layout/sidebar";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -34,7 +34,7 @@ export default function RegistrarVentaPage() {
 
   return (
     <div className="flex h-screen bg-[#FBFBFB] overflow-hidden">
-      <Sidebar />
+      {/* <Sidebar /> */}
       <main className="flex-1 p-6 lg:p-10 flex flex-col">
         
         {/* Header */}
