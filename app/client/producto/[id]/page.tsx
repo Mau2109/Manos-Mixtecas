@@ -155,13 +155,13 @@ export default function ProductoPage() {
           {/* Tags */}
           <div className="flex flex-wrap gap-2 mb-4">
             {producto.es_unico && (
-              <span className="bg-[#6B3A2A] text-white text-[10px] px-3 py-1 rounded-full uppercase tracking-wide">
+              <span className="bg-[#6B3A2A] text-white text-xs px-4 py-1.5 rounded-full uppercase font-bold tracking-widest flex items-center gap-2 shadow-sm">
                 Pieza Única
               </span>
             )}
             {fragInfo && (
               <span
-                className="text-[10px] px-3 py-1 rounded-full uppercase tracking-wide text-white"
+                className="text-xs px-4 py-1.5 rounded-full uppercase font-medium tracking-wide text-white"
                 style={{ backgroundColor: fragInfo.color }}
               >
                 {fragInfo.label}
@@ -239,6 +239,11 @@ export default function ProductoPage() {
           {/* Cantidad + Agregar */}
           {producto.stock > 0 ? (
             <div className="space-y-4">
+              {producto.es_unico && (
+                <p className="text-sm font-medium text-[#6B3A2A]">
+                  Existen {producto.stock} disponibles.
+                </p>
+              )}
               <div className="flex items-center gap-4">
                 <div className="flex items-center border border-[#D4C4B0] rounded-full overflow-hidden">
                   <button

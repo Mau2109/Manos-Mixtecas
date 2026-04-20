@@ -1,4 +1,4 @@
-﻿import {
+import {
   confirmarPedidoDb,
   crearVentaDb,
   obtenerEstadoEnvioDb,
@@ -93,6 +93,12 @@ export async function listarVentasCliente(idCliente: number) {
 /* ===============================
    ADM17 - Generar reporte de ventas
    =============================== */
+export async function generarReporteVentas(filtros?: {
+  fechaInicio?: string;
+  fechaFin?: string;
+}) {
+  return await generarReporteVentasDb(filtros);
+}
 
 
 /* ===============================
