@@ -23,7 +23,7 @@ import { supabase } from "@/lib/supabaseClient";
 function validarProducto(producto: any) {
 
   if (!producto.nombre || producto.nombre.trim() === "") {
-    throw new Error("Datos obligatorios del producto");
+    throw new Error("El nombre del producto es obligatorio");
   }
 
   if (producto.precio == null || producto.precio < 0) {
@@ -87,19 +87,23 @@ export async function crearProducto(producto: any) {
   ========================================== */
 export async function consultarProductos() {
 
-  const { data, error } = await supabase
-  .from("productos")
-  .select(`
-    *,
-    categorias(nombre),
-    artesanos(nombre, apellido)
-  `)
+  const productos = await listarProductosDb();
 
-if (error) throw error
-
-return data
-
+  return productos;
 }
+
+/* ===============================
+   ADM03 - Consultar productos
+   =============================== */
+// export const consultarProductos = async () => {
+//   const productos = await getAllProducts();
+
+//   if (!productos || productos.length === 0) {
+//     return { mensaje: "No hay productos disponibles", data: [] };
+//   }
+
+//   return { data: productos };
+// };
 
 
 /* ==========================================
@@ -108,7 +112,7 @@ return data
 export async function actualizarProducto(idProducto: number, datos: any) {
 
   if (!idProducto) {
-    throw new Error("ID de producto requerido");
+    throw new Error("El id del producto es obligatorio");
   }
 
   validarActualizacionProducto(datos);
@@ -122,7 +126,7 @@ export async function actualizarProducto(idProducto: number, datos: any) {
 export async function eliminarProducto(id: number) {
 
   if (!id) {
-    throw new Error("ID de producto requerido");
+    throw new Error("El id del producto es obligatorio");
   }
 
   return await eliminarProductoDb(id);
@@ -287,3 +291,4 @@ export const clasificarProducto = async (id: string, categoria: string) => {
 
   return await actualizarCategoria(id, categoria);
 };
+

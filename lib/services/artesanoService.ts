@@ -143,7 +143,8 @@ export async function asignarEstatusProveedor(
 export async function obtenerArtesanos() {
   const { data, error } = await supabase
     .from("artesanos")
-    .select("*");
+    .select("*")
+    .eq("estado", true);
 
   if (error) throw error;
   return data;

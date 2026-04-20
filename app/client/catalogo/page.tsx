@@ -1,39 +1,23 @@
 import Link from "next/link";
-import { consultarProductos } from "@/lib/services/productoService";
-
-export const dynamic = "force-dynamic";
-
-type CatalogoSearchParams = {
-  categoria?: string;
-  q?: string;
-  pagina?: string;
-};
+import { imprimirListadoProductos } from "@/lib/services/productoService";
 
 export default async function CatalogoPage({
   searchParams,
 }: {
   searchParams: Promise<CatalogoSearchParams>;
 }) {
-  const params = await searchParams;
-  let productos: any[] = [];
+  const productos = (await imprimirListadoProductos()) ?? [];
 
-  try {
-    productos = (await consultarProductos()) ?? [];
-  } catch {
-    productos = [];
-  }
+  // Filtrar por categoría o búsqueda en el servidor
+  const q = searchParams.q?.toLowerCase() ?? "";
+  const cat = searchParams.categoria ?? "";
+  const pagina = Number(searchParams.pagina ?? 1);
+  const POR_PAGINA = 12;
 
-  const q = params.q?.toLowerCase() ?? "";
-  const cat = params.categoria ?? "";
-  const pagina = Number(params.pagina ?? 1);
-  const porPagina = 12;
-
-  const filtrados = productos.filter((producto: any) => {
-    const nombre = producto.nombre?.toLowerCase() ?? "";
-    const descripcion = producto.descripcion?.toLowerCase() ?? "";
-    const matchBusqueda = q ? nombre.includes(q) || descripcion.includes(q) : true;
-    const matchCategoria = cat ? String(producto.id_categoria) === cat : true;
-    return matchBusqueda && matchCategoria && producto.estado !== false;
+  const filtrados = productos.filter((p: any) => {
+    const matchQ = q ? p.nombre?.toLowerCase().includes(q) || p.descripcion?.toLowerCase().includes(q) : true;
+    const matchCat = cat ? String(p.id_categoria) === cat : true;
+    return matchQ && matchCat && p.estado !== false;
   });
 
   const totalPaginas = Math.ceil(filtrados.length / porPagina);
