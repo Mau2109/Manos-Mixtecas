@@ -72,7 +72,7 @@ export function Sidebar() {
                   : "text-sidebar-foreground/70 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground"
               )}
             >
-              <item.icon className="w-5 h-5 shrink-0" />
+              <item.icon className="w-5 h-5 flex-shrink-0" />
               {!collapsed && <span className="text-sm font-medium">{item.name}</span>}
             </Link>
           )
