@@ -7,12 +7,13 @@ export default function ContactoPage() {
   const [form, setForm] = useState({ nombre: "", email: "", mensaje: "" });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [estado, setEstado] = useState<"idle" | "enviando" | "enviado" | "error">("idle");
+  const [errorMsg, setErrorMsg] = useState("");
   const [empresa, setEmpresa] = useState<any>(null);
 
   useEffect(() => {
     obtenerContactoYRedes()
       .then(setEmpresa)
-      .catch(() => {});
+      .catch(() => { });
   }, []);
 
   const validate = () => {
@@ -27,11 +28,14 @@ export default function ContactoPage() {
   const handleEnviar = async () => {
     if (!validate()) return;
     setEstado("enviando");
+    setErrorMsg("");
     try {
       await enviarMensajeContacto(form);
       setEstado("enviado");
       setForm({ nombre: "", email: "", mensaje: "" });
-    } catch {
+    } catch (error) {
+      console.error("Error al enviar contacto:", error);
+      setErrorMsg(error instanceof Error ? error.message : "Hubo un error al enviar. Por favor intenta de nuevo.");
       setEstado("error");
     }
   };
@@ -90,9 +94,8 @@ export default function ContactoPage() {
                       placeholder={placeholder}
                       value={(form as any)[key]}
                       onChange={(e) => setForm((f) => ({ ...f, [key]: e.target.value }))}
-                      className={`w-full border rounded-xl px-4 py-3 text-sm bg-white focus:outline-none transition-colors placeholder:text-[#C4B8A8] text-[#2C1810] ${
-                        errors[key] ? "border-red-400" : "border-[#D4C4B0] focus:border-[#6B3A2A]"
-                      }`}
+                      className={`w-full border rounded-xl px-4 py-3 text-sm bg-white focus:outline-none transition-colors placeholder:text-[#C4B8A8] text-[#2C1810] ${errors[key] ? "border-red-400" : "border-[#D4C4B0] focus:border-[#6B3A2A]"
+                        }`}
                     />
                     {errors[key] && <p className="text-xs text-red-500 mt-1">{errors[key]}</p>}
                   </div>
@@ -110,9 +113,8 @@ export default function ContactoPage() {
                     placeholder="¿En qué podemos ayudarte?"
                     value={form.mensaje}
                     onChange={(e) => setForm((f) => ({ ...f, mensaje: e.target.value }))}
-                    className={`w-full border rounded-xl px-4 py-3 text-sm bg-white focus:outline-none resize-none transition-colors placeholder:text-[#C4B8A8] text-[#2C1810] ${
-                      errors.mensaje ? "border-red-400" : "border-[#D4C4B0] focus:border-[#6B3A2A]"
-                    }`}
+                    className={`w-full border rounded-xl px-4 py-3 text-sm bg-white focus:outline-none resize-none transition-colors placeholder:text-[#C4B8A8] text-[#2C1810] ${errors.mensaje ? "border-red-400" : "border-[#D4C4B0] focus:border-[#6B3A2A]"
+                      }`}
                   />
                   {errors.mensaje && <p className="text-xs text-red-500 mt-1">{errors.mensaje}</p>}
                 </div>
@@ -120,7 +122,7 @@ export default function ContactoPage() {
 
               {estado === "error" && (
                 <p className="mt-3 text-sm text-red-500">
-                  Hubo un error al enviar. Por favor intenta de nuevo.
+                  {errorMsg || "Hubo un error al enviar. Por favor intenta de nuevo."}
                 </p>
               )}
 
@@ -173,10 +175,26 @@ export default function ContactoPage() {
                     <span className="text-sm text-[#2C1810]">contacto@manosmixcecas.mx</span>
                   </ContactItem>
                   <ContactItem icon="location" label="Dirección">
-                    <span className="text-sm text-[#2C1810]">Oaxaca de Juárez, México</span>
+                    <span className="text-sm text-[#2C1810]">Av. Doctor Modesto Seara Vázquez #1, Acatlima, 69000 Heroica Cdad. de Huajuapan de León, Oax.</span>
                   </ContactItem>
                 </>
               )}
+            </div>
+          </div>
+
+          {/* Ubicación USD28 */}
+          <div className="bg-white rounded-2xl p-6 shadow-sm overflow-hidden">
+            <h3 className="font-semibold text-[#2C1810] mb-4">Ubicación</h3>
+            <div className="rounded-xl overflow-hidden h-[250px] w-full border border-[#F0E8DC]">
+              <iframe
+                src="https://maps.google.com/maps?q=17.826653,-97.804444&hl=es&z=17&amp;output=embed"
+                width="100%"
+                height="100%"
+                style={{ border: 0 }}
+                allowFullScreen={true}
+                loading="lazy"
+                referrerPolicy="no-referrer-when-downgrade"
+              ></iframe>
             </div>
           </div>
 

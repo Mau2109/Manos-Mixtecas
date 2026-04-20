@@ -1,5 +1,9 @@
 import { supabase } from "../../supabaseClient";
 
+export type ConsultarCatalogoProductosDbParams = {
+  busqueda?: string;
+};
+
 /* ===============================
    ADM07 - Control de stock (persistencia)
    =============================== */
@@ -108,6 +112,78 @@ export async function listarProductosDb() {
 }
 
 /* ===============================
+   ADM03 - Consultar productos (persistencia)
+   =============================== */
+export async function consultarProductosDb() {
+  const { data, error } = await supabase
+    .from("productos")
+    .select(
+      `
+      *,
+      categorias(nombre),
+      artesanos(id_artesano, nombre, apellido, tipo, comunidad)
+    `
+    )
+    .order("id_producto", { ascending: true });
+
+  if (error) throw error;
+  return data;
+}
+
+/* ===============================
+   USD20 - Catálogo filtrable (persistencia)
+   =============================== */
+export async function consultarCatalogoProductosDb(
+  params: ConsultarCatalogoProductosDbParams = {}
+) {
+  const busqueda = params.busqueda?.trim();
+  let query = supabase
+    .from("productos")
+    .select(
+      `
+      id_producto, nombre, descripcion, precio, imagen, stock, es_unico, es_destacado,
+      fragilidad, descuento_pct, id_categoria, materiales, tecnica,
+      categorias(nombre),
+      artesanos(id_artesano, nombre, apellido, tipo, comunidad)
+    `
+    )
+    .eq("estado", true)
+    .gt("stock", 0)
+    .order("nombre", { ascending: true });
+
+  if (busqueda) {
+    const termino = busqueda.toLocaleUpperCase();
+    query = query.or(
+      [
+        `nombre.ilike.%${termino}%`,
+        `descripcion.ilike.%${termino}%`,
+        `tecnica.ilike.%${termino}%`,
+        `materiales.ilike.%${termino}%`,
+      ].join(",")
+    );
+  }
+
+  const { data, error } = await query;
+
+  if (error) throw error;
+  return data;
+}
+
+/* ===============================
+   Soporte - Categorías activas para catálogo
+   =============================== */
+export async function listarCategoriasActivasDb() {
+  const { data, error } = await supabase
+    .from("categorias")
+    .select("id_categoria, nombre, descripcion, estado")
+    .eq("estado", true)
+    .order("nombre", { ascending: true });
+
+  if (error) throw error;
+  return data;
+}
+
+/* ===============================
    USD07 - Mostrar precio e imagen
    USD09 - Mostrar descripción, material y técnica
    USD21 - Información del artesano (en detalle)
@@ -202,7 +278,7 @@ export async function listarProductosDestacadosDb() {
 }
 
 /* ===============================
-   ADM03 - Consultar productos (persistencia)
+   Compatibilidad - Consultar productos plano
    =============================== */
 export const getAllProducts = async () => {
   const { data, error } = await supabase
