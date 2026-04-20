@@ -4,7 +4,6 @@ import React, { useState, useRef, useEffect } from "react"
 import { ArrowLeft, Camera, Archive, AlertCircle, CheckCircle2 } from "lucide-react"
 import { useRouter } from "next/navigation"
 
-// Importaciones de los componentes Radix / shadcn que usas en tu proyecto
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import {
