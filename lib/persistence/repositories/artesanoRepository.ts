@@ -15,7 +15,7 @@ export async function obtenerPerfilArtesanoDb(idArtesano: number) {
     `
     )
     .eq("id_artesano", idArtesano)
-
+    .eq("estado", true)
     .single();
 
   if (error) throw error;
@@ -38,7 +38,11 @@ export async function obtenerGaleriaArtesanoDb(idArtesano: number) {
     .order("orden", { ascending: true });
 
   if (error) throw error;
-  return data;
+  return (data ?? []).map((imagen) => ({
+    ...imagen,
+    origen: "producto",
+    tipo: "trabajo",
+  }));
 }
 
 /* ===============================

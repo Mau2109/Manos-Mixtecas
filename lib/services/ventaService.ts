@@ -97,22 +97,14 @@ export async function generarReporteVentas(filtros?: {
   fechaInicio?: string;
   fechaFin?: string;
 }) {
-  return await generarReporteVentasDb(filtros);
-}
+  const reporte = await generarReporteVentasDb(filtros);
 
-  export async function generarReporteVentas(filtros?: {
-    fechaInicio?: string;
-    fechaFin?: string;
-  }) {
-
-    const reporte = await generarReporteVentasDb(filtros);
-
-    if (!reporte || reporte.ventas.length === 0) {
-      throw new Error("No hay ventas registradas para el reporte");
-    }
-
-    return reporte;
+  if (!reporte || reporte.ventas.length === 0) {
+    throw new Error("No hay ventas registradas para el reporte");
   }
+
+  return reporte;
+}
 
 /* ===============================
    ADM18 - Generar top productos vendidos
