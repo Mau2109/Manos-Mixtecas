@@ -100,6 +100,19 @@ export async function generarReporteVentas(filtros?: {
   return await generarReporteVentasDb(filtros);
 }
 
+  export async function generarReporteVentas(filtros?: {
+    fechaInicio?: string;
+    fechaFin?: string;
+  }) {
+
+    const reporte = await generarReporteVentasDb(filtros);
+
+    if (!reporte || reporte.ventas.length === 0) {
+      throw new Error("No hay ventas registradas para el reporte");
+    }
+
+    return reporte;
+  }
 
 /* ===============================
    ADM18 - Generar top productos vendidos
@@ -143,6 +156,7 @@ export async function generarTicketVenta(idVenta: number) {
 }
 
 /* ===============================
+   ADM14 - Registrar venta (actualizar stock al confirmar)
    ADM07 - Confirmar pedido y actualizar stock
    =============================== */
 export async function confirmarYActualizarStock(idVenta: number) {
