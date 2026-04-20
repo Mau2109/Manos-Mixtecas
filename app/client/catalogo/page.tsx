@@ -1,206 +1,401 @@
 import Link from "next/link";
-import { imprimirListadoProductos } from "@/lib/services/productoService";
+import { obtenerCatalogoProductos } from "@/lib/services/productoService";
+
+export const dynamic = "force-dynamic";
+
+type CatalogoSearchParams = {
+  categoria?: string;
+  q?: string;
+  pagina?: string;
+};
+
+interface CategoriaCatalogo {
+  id: number;
+  nombre: string;
+  descripcion: string | null;
+  cantidad: number;
+}
+
+interface ProductoCatalogo {
+  id_producto: number;
+  nombre: string;
+  descripcion: string | null;
+  precio: number;
+  imagen: string | null;
+  stock: number;
+  es_unico: boolean;
+  es_destacado: boolean;
+  descuento_pct?: number;
+  tipoArtesania: string;
+  artesanoNombre: string;
+}
+
+interface CatalogoData {
+  productos: ProductoCatalogo[];
+  categorias: CategoriaCatalogo[];
+  totalResultados: number;
+  totalPaginas: number;
+  paginaActual: number;
+  porPagina: number;
+  terminoBusqueda: string;
+  categoriaSeleccionada: CategoriaCatalogo | null;
+  categoriaSeleccionadaId: string;
+  hayFiltrosActivos: boolean;
+}
+
+function construirCatalogoHref(params: CatalogoSearchParams = {}) {
+  const query = new URLSearchParams();
+
+  if (params.q?.trim()) {
+    query.set("q", params.q.trim());
+  }
+
+  if (params.categoria?.trim()) {
+    query.set("categoria", params.categoria.trim());
+  }
+
+  if (params.pagina && params.pagina !== "1") {
+    query.set("pagina", params.pagina);
+  }
+
+  const queryString = query.toString();
+  return queryString ? `/client/catalogo?${queryString}` : "/client/catalogo";
+}
+
+function calcularPrecioFinal(precio: number, descuentoPct: number) {
+  return precio * (1 - descuentoPct / 100);
+}
 
 export default async function CatalogoPage({
   searchParams,
 }: {
   searchParams: Promise<CatalogoSearchParams>;
 }) {
-  const productos = (await imprimirListadoProductos()) ?? [];
+  const params = await searchParams;
+  let catalogo: CatalogoData = {
+    productos: [],
+    categorias: [],
+    totalResultados: 0,
+    totalPaginas: 1,
+    paginaActual: 1,
+    porPagina: 12,
+    terminoBusqueda: params.q?.trim() ?? "",
+    categoriaSeleccionada: null,
+    categoriaSeleccionadaId: "",
+    hayFiltrosActivos: Boolean(params.q?.trim() || params.categoria?.trim()),
+  };
 
-  // Filtrar por categoría o búsqueda en el servidor
-  const q = searchParams.q?.toLowerCase() ?? "";
-  const cat = searchParams.categoria ?? "";
-  const pagina = Number(searchParams.pagina ?? 1);
-  const POR_PAGINA = 12;
+  try {
+    const data = await obtenerCatalogoProductos({
+      categoria: params.categoria,
+      q: params.q,
+      pagina: params.pagina,
+      porPagina: 12,
+    });
+    // Forzamos el cast si estamos seguros de que la estructura coincide o adaptamos.
+    catalogo = data as unknown as CatalogoData;
+  } catch (error) {
+    console.error("No se pudo cargar el catálogo", error);
+  }
 
-  const filtrados = productos.filter((p: any) => {
-    const matchQ = q ? p.nombre?.toLowerCase().includes(q) || p.descripcion?.toLowerCase().includes(q) : true;
-    const matchCat = cat ? String(p.id_categoria) === cat : true;
-    return matchQ && matchCat && p.estado !== false;
-  });
+  const totalDisponibles = catalogo.categorias.reduce(
+    (acumulado, categoria) => acumulado + categoria.cantidad,
+    0
+  );
 
-  const totalPaginas = Math.ceil(filtrados.length / porPagina);
-  const paginados = filtrados.slice((pagina - 1) * porPagina, pagina * porPagina);
-
-  const categorias = [
-    ...new Map(
-      productos
-        .filter((producto: any) => producto.id_categoria != null)
-        .map((producto: any) => [
-          producto.id_categoria,
-          {
-            id: producto.id_categoria,
-            nombre: producto.categorias?.nombre ?? `Cat. ${producto.id_categoria}`,
-          },
-        ])
-    ).values(),
-  ];
+  const etiquetaActual = catalogo.categoriaSeleccionada
+    ? catalogo.categoriaSeleccionada.nombre
+    : "Toda la colección";
 
   return (
-    <div className="max-w-7xl mx-auto px-6 py-10">
-      <nav className="text-xs text-[#A08070] mb-8 flex gap-2">
-        <Link href="/client" className="hover:text-[#6B3A2A]">
-          Inicio
-        </Link>
-        <span>/</span>
-        <span className="text-[#2C1810]">Catalogo</span>
-      </nav>
+    <div className="bg-[linear-gradient(180deg,#faf7f2_0%,#f7f0e6_32%,#fffdf9_100%)]">
+      <div className="mx-auto flex w-full max-w-7xl flex-col gap-8 px-4 py-8 sm:px-6 lg:px-8 lg:py-10">
+        <nav className="flex flex-wrap items-center gap-2 text-xs text-[#A08070]">
+          <Link href="/client" className="transition-colors hover:text-[#6B3A2A]">
+            Inicio
+          </Link>
+          <span>/</span>
+          <span className="text-[#2C1810]">Catálogo</span>
+        </nav>
 
-      <div className="flex gap-10">
-        <aside className="hidden md:block w-56 shrink-0">
-          <div className="sticky top-24">
-            <h3 className="text-xs tracking-widest uppercase text-[#A08070] mb-4">Filtrar por</h3>
+        <div className="grid gap-8 lg:grid-cols-[280px_minmax(0,1fr)] xl:grid-cols-[320px_minmax(0,1fr)]">
+          <aside className="lg:sticky lg:top-24 lg:self-start">
+            <div className="rounded-[1.75rem] border border-[#E6D8C7] bg-white p-5 shadow-[0_12px_30px_rgba(86,55,32,0.08)] sm:p-6">
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#8B6A55]">
+                    Filtros
+                  </p>
+                  <h2 className="mt-2 text-xl font-semibold text-[#2C1810]">
+                    Explora por artesanía
+                  </h2>
+                </div>
+                {catalogo.hayFiltrosActivos && (
+                  <Link
+                    href="/client/catalogo"
+                    className="rounded-full border border-[#D8C1AA] px-3 py-1 text-xs font-medium text-[#6B3A2A] transition-colors hover:bg-[#F6EBDD]"
+                  >
+                    Limpiar
+                  </Link>
+                )}
+              </div>
 
-            <form className="mb-6">
-              <input
-                name="q"
-                defaultValue={q}
-                placeholder="Buscar..."
-                className="w-full border border-[#D4C4B0] rounded-lg px-3 py-2 text-sm bg-white focus:outline-none focus:border-[#6B3A2A] text-[#2C1810] placeholder:text-[#A08070]"
-              />
-              {cat && <input type="hidden" name="categoria" value={cat} />}
-              <button
-                type="submit"
-                className="mt-2 w-full bg-[#2C1810] text-white text-xs py-2 rounded-lg hover:bg-[#6B3A2A] transition-colors"
-              >
-                Buscar
-              </button>
-            </form>
+              <form method="get" className="mt-6 space-y-3">
+                {catalogo.categoriaSeleccionadaId && (
+                  <input
+                    type="hidden"
+                    name="categoria"
+                    value={catalogo.categoriaSeleccionadaId}
+                  />
+                )}
+                <label className="block">
+                  <span className="mb-2 block text-sm font-medium text-[#5D4839]">
+                    Buscar producto
+                  </span>
+                  <input
+                    name="q"
+                    defaultValue={catalogo.terminoBusqueda}
+                    placeholder="Barro, Cerámica, Madera"
+                    className="w-full rounded-2xl border border-[#D9C6B3] bg-[#FFFCF8] px-4 py-3 text-sm text-[#2C1810] outline-none transition-colors placeholder:text-[#A08070] focus:border-[#6B3A2A]"
+                  />
+                </label>
+                <button
+                  type="submit"
+                  className="w-full rounded-2xl bg-[#2C1810] px-4 py-3 text-sm font-semibold text-white transition-colors hover:bg-[#6B3A2A]"
+                >
+                  Aplicar búsqueda
+                </button>
+              </form>
 
-            <div>
-              <p className="text-xs font-semibold text-[#5C4A3A] mb-3">Categorias</p>
-              <div className="flex flex-col gap-1">
+              <div className="mt-6">
+                <div className="mb-3 flex items-center justify-between">
+                  <p className="text-sm font-semibold text-[#5D4839]">Tipos de artesanía</p>
+                  <span className="text-xs text-[#9B7D66]">{catalogo.categorias.length} tipos</span>
+                </div>
+
+                <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-1">
+                  <Link
+                    href={construirCatalogoHref({ q: catalogo.terminoBusqueda })}
+                    className={`flex items-center justify-between rounded-2xl px-4 py-3 text-sm transition-all ${!catalogo.categoriaSeleccionadaId
+                      ? "bg-[#2C1810] text-white shadow-[0_10px_24px_rgba(44,24,16,0.22)]"
+                      : "border border-[#E6D8C7] bg-[#FFFCF8] text-[#5D4839] hover:border-[#CFAF92] hover:bg-[#F9F1E6]"
+                      }`}
+                  >
+                    <span>Todas las artesanías</span>
+                    <span
+                      className={`rounded-full px-2.5 py-1 text-xs ${!catalogo.categoriaSeleccionadaId
+                        ? "bg-white/15 text-white"
+                        : "bg-[#F2E5D5] text-[#7C624F]"
+                        }`}
+                    >
+                      {totalDisponibles}
+                    </span>
+                  </Link>
+
+                  {catalogo.categorias.map((categoria) => {
+                    const activa =
+                      catalogo.categoriaSeleccionadaId === String(categoria.id);
+
+                    return (
+                      <Link
+                        key={categoria.id}
+                        href={construirCatalogoHref({
+                          categoria: String(categoria.id),
+                          q: catalogo.terminoBusqueda,
+                        })}
+                        className={`flex items-center justify-between rounded-2xl px-4 py-3 text-sm transition-all ${activa
+                          ? "bg-[#2C1810] text-white shadow-[0_10px_24px_rgba(44,24,16,0.22)]"
+                          : "border border-[#E6D8C7] bg-[#FFFCF8] text-[#5D4839] hover:border-[#CFAF92] hover:bg-[#F9F1E6]"
+                          } ${categoria.cantidad === 0 ? "opacity-70" : ""}`}
+                      >
+                        <span className="pr-3">{categoria.nombre}</span>
+                        <span
+                          className={`rounded-full px-2.5 py-1 text-xs ${activa
+                            ? "bg-white/15 text-white"
+                            : "bg-[#F2E5D5] text-[#7C624F]"
+                            }`}
+                        >
+                          {categoria.cantidad}
+                        </span>
+                      </Link>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+          </aside>
+
+          <section className="min-w-0">
+            <div className="mb-5 flex flex-col gap-3 rounded-[1.75rem] border border-[#E6D8C7] bg-white p-5 shadow-[0_12px_30px_rgba(86,55,32,0.08)] sm:flex-row sm:items-center sm:justify-between sm:p-6">
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#8B6A55]">
+                  Vista del catálogo
+                </p>
+                <h2 className="mt-2 text-2xl font-bold text-[#2C1810]">{etiquetaActual}</h2>
+              </div>
+
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="rounded-full bg-[#F3E7D8] px-3 py-1 text-sm font-medium text-[#6B3A2A]">
+                  {catalogo.totalResultados} resultados
+                </span>
+                {catalogo.terminoBusqueda && (
+                  <span className="rounded-full border border-[#D8C1AA] px-3 py-1 text-sm text-[#5D4839]">
+                    Búsqueda: {catalogo.terminoBusqueda}
+                  </span>
+                )}
+                {catalogo.hayFiltrosActivos && (
+                  <Link
+                    href="/client/catalogo"
+                    className="rounded-full border border-[#D8C1AA] px-3 py-1 text-sm text-[#6B3A2A] transition-colors hover:bg-[#F6EBDD]"
+                  >
+                    Quitar filtros
+                  </Link>
+                )}
+              </div>
+            </div>
+
+            {catalogo.productos.length === 0 ? (
+              <div className="rounded-[1.75rem] border border-dashed border-[#D8C1AA] bg-white px-6 py-16 text-center shadow-[0_12px_30px_rgba(86,55,32,0.06)]">
+                <p className="text-xs font-semibold uppercase tracking-[0.24em] text-[#A08070]">
+                  Sin coincidencias
+                </p>
+                <h3 className="mt-3 text-2xl font-bold text-[#2C1810]">
+                  No encontramos piezas con esos criterios.
+                </h3>
+                <p className="mx-auto mt-4 max-w-xl text-sm leading-7 text-[#6A5647]">
+                  Prueba otra búsqueda o limpia el filtro para volver a ver todas las
+                  artesanías disponibles.
+                </p>
                 <Link
                   href="/client/catalogo"
-                  className={`text-sm py-1.5 px-3 rounded-lg transition-colors ${
-                    !cat ? "bg-[#2C1810] text-white" : "text-[#5C4A3A] hover:bg-[#F0E8DC]"
-                  }`}
+                  className="mt-6 inline-flex rounded-full bg-[#2C1810] px-5 py-3 text-sm font-semibold text-white transition-colors hover:bg-[#6B3A2A]"
                 >
-                  Todos
+                  Ver todo el catálogo
                 </Link>
-                {categorias.map((categoria: any, index: number) => (
-                  <Link
-                    key={`${categoria.id}-${index}`}
-                    href={`/client/catalogo?categoria=${categoria.id}`}
-                    className={`text-sm py-1.5 px-3 rounded-lg transition-colors ${
-                      cat === String(categoria.id)
-                        ? "bg-[#2C1810] text-white"
-                        : "text-[#5C4A3A] hover:bg-[#F0E8DC]"
-                    }`}
-                  >
-                    {categoria.nombre}
-                  </Link>
-                ))}
               </div>
-            </div>
-          </div>
-        </aside>
+            ) : (
+              <>
+                <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
+                  {catalogo.productos.map((producto) => {
+                    const descuento = Number(producto.descuento_pct ?? 0);
+                    const precio = Number(producto.precio ?? 0);
+                    const precioFinal =
+                      descuento > 0 ? calcularPrecioFinal(precio, descuento) : precio;
 
-        <div className="flex-1">
-          <div className="flex items-center justify-between mb-6">
-            <h1 className="text-2xl font-bold text-[#2C1810]">
-              {cat ? "Coleccion filtrada" : "Toda la coleccion"}
-            </h1>
-            <p className="text-sm text-[#A08070]">{filtrados.length} piezas</p>
-          </div>
+                    return (
+                      <Link
+                        key={producto.id_producto}
+                        href={`/client/producto/${producto.id_producto}`}
+                        className="group overflow-hidden rounded-[1.75rem] border border-[#E6D8C7] bg-white shadow-[0_12px_28px_rgba(86,55,32,0.08)] transition-all hover:-translate-y-1 hover:shadow-[0_18px_38px_rgba(86,55,32,0.14)]"
+                      >
+                        <div className="relative aspect-[4/4.3] overflow-hidden bg-[linear-gradient(135deg,#d7bb98_0%,#8f6344_100%)]">
+                          {producto.imagen ? (
+                            <img
+                              src={producto.imagen}
+                              alt={producto.nombre}
+                              className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                            />
+                          ) : (
+                            <div className="flex h-full w-full items-center justify-center text-sm font-medium text-white/80">
+                              Sin imagen disponible
+                            </div>
+                          )}
 
-          {paginados.length === 0 ? (
-            <div className="text-center py-24">
-              <p className="text-5xl mb-4">Pieza</p>
-              <p className="text-[#A08070]">No se encontraron piezas con esos criterios.</p>
-              <Link
-                href="/client/catalogo"
-                className="mt-4 inline-block text-sm text-[#6B3A2A] hover:underline"
-              >
-                Ver todo el catalogo
-              </Link>
-            </div>
-          ) : (
-            <>
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-5">
-                {paginados.map((producto: any, index: number) => (
-                  <Link
-                    key={`${producto.id_producto ?? "producto"}-${index}`}
-                    href={`/client/producto/${producto.id_producto}`}
-                    className="group bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-lg transition-shadow"
-                  >
-                    <div className="aspect-square overflow-hidden relative">
-                      {producto.imagen ? (
-                        <img
-                          src={producto.imagen}
-                          alt={producto.nombre}
-                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                        />
-                      ) : (
-                        <div className="w-full h-full bg-gradient-to-br from-[#C4A882] to-[#8B5E3C] flex items-center justify-center">
-                          <span className="text-white/60 text-sm">Sin imagen</span>
+                          <div className="absolute left-4 top-4 flex flex-wrap gap-2">
+                            {producto.es_unico && (
+                              <span className="rounded-full bg-[#6B3A2A] px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-white">
+                                Pieza única
+                              </span>
+                            )}
+                            {descuento > 0 && (
+                              <span className="rounded-full bg-[#B64031] px-3 py-1 text-[11px] font-semibold text-white">
+                                -{descuento}%
+                              </span>
+                            )}
+                          </div>
                         </div>
-                      )}
-                      {producto.es_unico && (
-                        <span className="absolute top-3 left-3 bg-[#6B3A2A] text-white text-[10px] px-2 py-0.5 rounded-full uppercase tracking-wide">
-                          Unico
-                        </span>
-                      )}
-                      {producto.descuento_pct > 0 && (
-                        <span className="absolute top-3 right-3 bg-[#C0392B] text-white text-[10px] px-2 py-0.5 rounded-full">
-                          -{producto.descuento_pct}%
-                        </span>
-                      )}
-                    </div>
 
-                    <div className="p-4">
-                      <p className="text-xs text-[#A08070] mb-1">
-                        {producto.tecnica || producto.materiales || "Artesania"}
-                      </p>
-                      <p className="font-medium text-[#2C1810] text-sm line-clamp-2">{producto.nombre}</p>
-                      <div className="mt-2 flex items-center gap-2">
-                        {producto.descuento_pct > 0 ? (
-                          <>
-                            <span className="font-bold text-[#6B3A2A]">
-                              $
-                              {(
-                                Number(producto.precio) *
-                                (1 - Number(producto.descuento_pct) / 100)
-                              ).toLocaleString("es-MX")}{" "}
-                              MXN
+                        <div className="space-y-4 p-5">
+                          <div className="flex items-start justify-between gap-4">
+                            <div>
+                              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#A08070]">
+                                {producto.tipoArtesania}
+                              </p>
+                              <h3 className="mt-2 line-clamp-2 text-lg font-semibold text-[#2C1810]">
+                                {producto.nombre}
+                              </h3>
+                            </div>
+                            <span className="rounded-full bg-[#F7EFE5] px-3 py-1 text-xs text-[#6B3A2A]">
+                              Stock {producto.stock}
                             </span>
-                            <span className="text-xs text-[#A08070] line-through">
-                              ${Number(producto.precio).toLocaleString("es-MX")}
-                            </span>
-                          </>
-                        ) : (
-                          <span className="font-bold text-[#6B3A2A]">
-                            ${Number(producto.precio).toLocaleString("es-MX")} MXN
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                  </Link>
-                ))}
-              </div>
+                          </div>
 
-              {totalPaginas > 1 && (
-                <div className="mt-10 flex justify-center gap-2">
-                  {Array.from({ length: totalPaginas }, (_, index) => index + 1).map((numero) => (
-                    <Link
-                      key={numero}
-                      href={`/client/catalogo?pagina=${numero}${cat ? `&categoria=${cat}` : ""}${
-                        q ? `&q=${q}` : ""
-                      }`}
-                      className={`w-9 h-9 rounded-full flex items-center justify-center text-sm transition-colors ${
-                        numero === pagina
-                          ? "bg-[#2C1810] text-white"
-                          : "border border-[#D4C4B0] text-[#5C4A3A] hover:border-[#6B3A2A]"
-                      }`}
-                    >
-                      {numero}
-                    </Link>
-                  ))}
+                          <p className="line-clamp-2 text-sm leading-6 text-[#6A5647]">
+                            {producto.descripcion || "Pieza artesanal elaborada con dedicación y tradición."}
+                          </p>
+
+                          <div className="rounded-2xl bg-[#F8F1E8] p-4">
+                            <div className="flex flex-wrap items-end justify-between gap-3">
+                              <div>
+                                <p className="text-xs uppercase tracking-[0.18em] text-[#A08070]">
+                                  Precio
+                                </p>
+                                <div className="mt-2 flex flex-wrap items-center gap-2">
+                                  <span className="text-xl font-bold text-[#6B3A2A]">
+                                    ${precioFinal.toLocaleString("es-MX")} MXN
+                                  </span>
+                                  {descuento > 0 && (
+                                    <span className="text-sm text-[#A08070] line-through">
+                                      ${precio.toLocaleString("es-MX")}
+                                    </span>
+                                  )}
+                                </div>
+                              </div>
+                              <div className="text-right">
+                                <p className="text-xs uppercase tracking-[0.18em] text-[#A08070]">
+                                  Artesano
+                                </p>
+                                <p className="mt-2 text-sm font-medium text-[#2C1810]">
+                                  {producto.artesanoNombre || "Manos Mixtecas"}
+                                </p>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </Link>
+                    );
+                  })}
                 </div>
-              )}
-            </>
-          )}
+
+                {catalogo.totalPaginas > 1 && (
+                  <div className="mt-8 flex flex-wrap items-center justify-center gap-2">
+                    {Array.from({ length: catalogo.totalPaginas }, (_, index) => index + 1).map(
+                      (numeroPagina) => {
+                        const paginaActiva = numeroPagina === catalogo.paginaActual;
+
+                        return (
+                          <Link
+                            key={numeroPagina}
+                            href={construirCatalogoHref({
+                              categoria: catalogo.categoriaSeleccionadaId || undefined,
+                              q: catalogo.terminoBusqueda || undefined,
+                              pagina: String(numeroPagina),
+                            })}
+                            className={`flex h-11 min-w-11 items-center justify-center rounded-full px-4 text-sm font-medium transition-colors ${paginaActiva
+                              ? "bg-[#2C1810] text-white"
+                              : "border border-[#D8C1AA] bg-white text-[#5D4839] hover:border-[#6B3A2A] hover:text-[#2C1810]"
+                              }`}
+                          >
+                            {numeroPagina}
+                          </Link>
+                        );
+                      }
+                    )}
+                  </div>
+                )}
+              </>
+            )}
+          </section>
         </div>
       </div>
     </div>
