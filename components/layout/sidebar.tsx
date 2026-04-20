@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import {
@@ -17,6 +17,7 @@ import {
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { useSidebar } from "@/app/admin/sidebar-context"
 import path from "path"
 
 const menuItems = [
@@ -30,7 +31,7 @@ const menuItems = [
 ]
 
 export function Sidebar() {
-  const [collapsed, setCollapsed] = useState(false)
+  const { collapsed, setCollapsed } = useSidebar()
   const pathname = usePathname()
 
   if (pathname == "/admin/autenticacion/login") {
@@ -40,7 +41,7 @@ export function Sidebar() {
   return (
     <aside
       className={cn(
-        "flex flex-col bg-sidebar text-sidebar-foreground h-screen transition-all duration-300",
+        "fixed left-0 top-0 bottom-0 flex flex-col bg-sidebar text-sidebar-foreground h-screen transition-all duration-300 z-40",
         collapsed ? "w-20" : "w-64"
       )}
     >
