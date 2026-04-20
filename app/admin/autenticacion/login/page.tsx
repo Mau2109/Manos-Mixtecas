@@ -42,7 +42,7 @@ export default function LoginPage() {
 	};
 
 	return (
-		<div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#1a1614] to-[#2d2420]">
+		<div className="min-h-screen flex items-center justify-center">
 			<Toaster />
 			<form onSubmit={handleSubmit} className="w-full max-w-md">
 				{error && (
