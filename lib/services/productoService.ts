@@ -1,15 +1,17 @@
 import {
   actualizarProductoDb,
+  consultarCatalogoProductosDb,
+  consultarProductosDb,
   consultarStockDb,
   crearProductoDb,
   eliminarProductoDb,
   listarProductosDb,
+  listarCategoriasActivasDb,
   listarProductosDestacadosDb,
   listarProductosPorArtesanoDb,
   listarProductosPorTipoArtesanoDb,
   obtenerImagenesProductoDb,
   obtenerProductoDetalleDb,
-  getAllProducts,
   actualizarCategoria,
 } from "../persistence/repositories/productoRepository";
 export const runtime = "nodejs";
@@ -60,6 +62,27 @@ function validarActualizacionProducto(producto: any) {
 
 }
 
+type ObtenerCatalogoProductosParams = {
+  categoria?: string;
+  q?: string;
+  pagina?: string;
+  porPagina?: number;
+};
+
+function normalizarTextoFiltro(texto?: string) {
+  return texto?.trim().toLowerCase() ?? "";
+}
+
+function normalizarCategoriaId(categoria?: string) {
+  const categoriaId = Number(categoria);
+  return Number.isInteger(categoriaId) && categoriaId > 0 ? categoriaId : null;
+}
+
+function normalizarPagina(pagina?: string) {
+  const paginaActual = Number(pagina);
+  return Number.isInteger(paginaActual) && paginaActual > 0 ? paginaActual : 1;
+}
+
 /* ===============================
    EXTRA01 - Consultar stock
    =============================== */
@@ -86,24 +109,8 @@ export async function crearProducto(producto: any) {
   ADM03 - Consultar productos
   ========================================== */
 export async function consultarProductos() {
-
-  const productos = await listarProductosDb();
-
-  return productos;
+  return consultarProductosDb();
 }
-
-/* ===============================
-   ADM03 - Consultar productos
-   =============================== */
-// export const consultarProductos = async () => {
-//   const productos = await getAllProducts();
-
-//   if (!productos || productos.length === 0) {
-//     return { mensaje: "No hay productos disponibles", data: [] };
-//   }
-
-//   return { data: productos };
-// };
 
 
 /* ==========================================
@@ -209,6 +216,82 @@ export async function listarProductosPorTipoArtesano(tipo: string) {
 }
 
 /* ===============================
+   USD20 - Catálogo con filtro por tipo de artesanía
+   =============================== */
+export async function obtenerCatalogoProductos(
+  params: ObtenerCatalogoProductosParams = {}
+) {
+  const terminoBusqueda = normalizarTextoFiltro(params.q);
+  const categoriaSeleccionadaId = normalizarCategoriaId(params.categoria);
+  const porPagina = params.porPagina && Number(params.porPagina) > 0 ? Number(params.porPagina) : 12;
+
+  const [productosBase, categoriasActivas] = await Promise.all([
+    consultarCatalogoProductosDb({ busqueda: terminoBusqueda }),
+    listarCategoriasActivasDb(),
+  ]);
+
+  const conteoPorCategoria = new Map<number, number>();
+  for (const producto of productosBase ?? []) {
+    const categoriaId = Number(producto.id_categoria);
+    if (!Number.isInteger(categoriaId) || categoriaId <= 0) continue;
+    conteoPorCategoria.set(categoriaId, (conteoPorCategoria.get(categoriaId) ?? 0) + 1);
+  }
+
+  const categorias = (categoriasActivas ?? []).map((categoria) => ({
+    id: categoria.id_categoria,
+    nombre: categoria.nombre,
+    descripcion: categoria.descripcion ?? null,
+    cantidad: conteoPorCategoria.get(categoria.id_categoria) ?? 0,
+  }));
+
+  const productosFiltrados = (productosBase ?? []).filter((producto) => {
+    if (!categoriaSeleccionadaId) return true;
+    return Number(producto.id_categoria) === categoriaSeleccionadaId;
+  });
+
+  const productosNormalizados = productosFiltrados.map((producto) => {
+    const artesanoRelacion = Array.isArray(producto.artesanos)
+      ? producto.artesanos[0]
+      : producto.artesanos;
+    const categoriaRelacion = Array.isArray(producto.categorias)
+      ? producto.categorias[0]
+      : producto.categorias;
+    const artesanoNombre = artesanoRelacion
+      ? [artesanoRelacion.nombre, artesanoRelacion.apellido].filter(Boolean).join(" ")
+      : "";
+
+    return {
+      ...producto,
+      categoriaNombre: categoriaRelacion?.nombre ?? "Sin categoría",
+      artesanoNombre,
+      tipoArtesania:
+        categoriaRelacion?.nombre ?? producto.tecnica ?? producto.materiales ?? "Artesanía",
+    };
+  });
+
+  const totalResultados = productosNormalizados.length;
+  const totalPaginas = Math.max(1, Math.ceil(totalResultados / porPagina));
+  const paginaActual = Math.min(normalizarPagina(params.pagina), totalPaginas);
+  const inicio = (paginaActual - 1) * porPagina;
+  const productos = productosNormalizados.slice(inicio, inicio + porPagina);
+  const categoriaSeleccionada =
+    categorias.find((categoria) => categoria.id === categoriaSeleccionadaId) ?? null;
+
+  return {
+    productos,
+    categorias,
+    totalResultados,
+    totalPaginas,
+    paginaActual,
+    porPagina,
+    terminoBusqueda,
+    categoriaSeleccionada,
+    categoriaSeleccionadaId: categoriaSeleccionadaId ? String(categoriaSeleccionadaId) : "",
+    hayFiltrosActivos: Boolean(terminoBusqueda || categoriaSeleccionadaId),
+  };
+}
+
+/* ===============================
    USD24 - Listar productos del artesano
    =============================== */
 export async function listarProductosPorArtesano(idArtesano: number) {
@@ -241,15 +324,8 @@ export async function listarProductosDestacados() {
 // };
 
 export async function obtenerCategorias() {
-  const { data, error } = await supabase
-      .from("categorias")
-      .select("*")
-      .eq("estado", true);
-
-    if (error) throw error;
-
-    return data;
-  }
+  return listarCategoriasActivasDb();
+}
 
 
 /* ===============================
@@ -292,3 +368,26 @@ export const clasificarProducto = async (id: string, categoria: string) => {
   return await actualizarCategoria(id, categoria);
 };
 
+export async function crearCategoria(data: {
+  nombre: string;
+  descripcion?: string;
+}) {
+
+  if (!data.nombre || data.nombre.trim() === "") {
+    throw new Error("El nombre de la categoría es obligatorio");
+  }
+
+  const { data: nuevaCategoria, error } = await supabase
+    .from("categorias")
+    .insert({
+      nombre: data.nombre,
+      descripcion: data.descripcion || null,
+      estado: true
+    })
+    .select()
+    .single();
+
+  if (error) throw error;
+
+  return nuevaCategoria;
+}
