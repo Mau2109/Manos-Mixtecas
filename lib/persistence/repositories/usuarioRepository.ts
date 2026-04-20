@@ -28,10 +28,16 @@ export async function crearUsuarioDb(usuario: {
 export async function getUsuarios() {
     const { data, error } = await supabase
         .from('usuarios')
-        .select('nombre, email, rol');
+        .select('nombre, email, id_rol');
     
     if (error) throw error;
-    return data;
+
+    return data.map((u: any) => ({
+        nombre: u.nombre,
+        email: u.email,
+        id_rol: u.id_rol,
+        rol: u.id_rol === 1 ? 'Administrador' : (u.id_rol === 2 ? 'vendedor' : 'desconocido')
+    }));
 }
 
 export async function deleteUsuario(nombre: string) {
@@ -47,7 +53,7 @@ export async function deleteUsuario(nombre: string) {
 export async function getVendedorAccess(nombre: string) {
     const { data, error } = await supabase
         .from('usuarios')
-        .select('rol')
+        .select('id_rol')
         .eq('nombre', nombre)
         .single();
     
