@@ -17,6 +17,7 @@ import {
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import path from "path"
 
 const menuItems = [
   { name: "Perfil de Empresa", href: "/empresa", icon: Building2 },
@@ -31,6 +32,10 @@ const menuItems = [
 export function Sidebar() {
   const [collapsed, setCollapsed] = useState(false)
   const pathname = usePathname()
+
+  if (pathname == "/admin/autenticacion/login") {
+    return null
+  }
 
   return (
     <aside
