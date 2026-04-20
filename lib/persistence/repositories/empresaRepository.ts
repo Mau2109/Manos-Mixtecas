@@ -5,6 +5,8 @@ import { supabase } from "../../supabaseClient";
    =============================== */
 export async function crearEmpresaDb(empresa: {
   nombre: string;
+  rfc?: string;
+  logo_url?: string;
   direccion?: string;
   telefono?: string;
   email?: string;
@@ -31,6 +33,8 @@ export async function actualizarEmpresaDb(
   idEmpresa: number,
   empresa: {
     nombre?: string;
+    rfc?: string;
+    logo_url?: string;
     direccion?: string;
     telefono?: string;
     email?: string;

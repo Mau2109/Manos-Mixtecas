@@ -1,6 +1,6 @@
 "use client";
 import { startTransition, useEffect, useEffectEvent, useMemo, useState } from "react";
-import { Sidebar } from "@/components/layout/sidebar";
+// import { Sidebar } from "@/components/layout/sidebar";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -178,7 +178,7 @@ export default function ConsultarVentasPage() {
 
   return (
     <div className="flex h-screen bg-[#F8F9F4] overflow-hidden text-neutral-800">
-      <Sidebar />
+      {/* <Sidebar /> */}
       
       <main className="flex-1 p-8 overflow-y-auto">
         {/* Navbar */}

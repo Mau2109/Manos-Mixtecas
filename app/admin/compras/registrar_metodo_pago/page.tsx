@@ -1,7 +1,6 @@
-// (El archivo estaba vacío)
 "use client";
 import React, { useRef, useState } from "react";
-import { Sidebar } from "@/components/layout/sidebar";
+// import { Sidebar } from "@/components/layout/sidebar";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -107,7 +106,7 @@ export default function RegistrarMetodoPagoPage() {
 
 	return (
 		<div className="flex min-h-screen">
-			<Sidebar />
+			{/* <Sidebar /> */}
 			<main className="flex-1 bg-muted/40 p-8 flex flex-col items-center">
 				<Toaster />
 				<div className="w-full max-w-3xl">

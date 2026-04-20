@@ -19,9 +19,9 @@ import { cn } from "@/lib/utils"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 
 const menuItems = [
-  { name: "Perfil de Empresa", href: "/empresa", icon: Building2 },
+  { name: "Perfil de Empresa", href: "/admin/perfil_empresa/agregar_perfil_empresa", icon: Building2 },
   { name: "Inventario", href: "/admin/inventario", icon: Package },
-  { name: "Proveedores", href: "/proveedores", icon: Truck },
+  { name: "Proveedores", href: "/admin/proveedores", icon: Truck },
   { name: "Compras", href: "/admin/compras/opciones_modulo", icon: ShoppingCart },
   { name: "Ventas", href: "/admin/ventas/opciones_modulov", icon: DollarSign },
   { name: "Usuarios", href: "/usuarios", icon: Users },
