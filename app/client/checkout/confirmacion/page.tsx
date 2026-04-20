@@ -2,24 +2,47 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { crearVenta, agregarProductoVenta, confirmarPedido } from "@/lib/services/ventaService";
-import { crearCliente } from "@/lib/services/clienteService";
-import { useCart } from "@/app/lib/context/ CardContext";
-
-const IVA = 0.16;
+import { crearVenta, agregarProductoVenta, confirmarYActualizarStock } from "@/lib/services/ventaService";
+import { guardarPerfilCliente } from "@/lib/services/clienteService";
+import { useCart } from "@/app/lib/context/_CardContext";
+import { calcularResumenCheckout } from "@/lib/checkout";
 
 export default function ConfirmacionPage() {
   const router = useRouter();
-  const { items, total, clearCart } = useCart();
+  const {
+    items,
+    total,
+    clearCart,
+    clienteId,
+    setClienteSession,
+    loading,
+    isAuthenticated,
+    authLoading,
+    authEmail,
+    authUserId,
+  } = useCart();
   const [estado, setEstado] = useState<"revision" | "procesando" | "confirmado" | "error">("revision");
   const [folio, setFolio] = useState("");
   const [datosEnvio, setDatosEnvio] = useState<any>(null);
   const [metodoPago, setMetodoPago] = useState<any>(null);
   const [errorMsg, setErrorMsg] = useState("");
 
-  const subtotal = total;
-  const iva = subtotal * IVA;
-  const totalFinal = subtotal + iva;
+  const { subtotal, envio, total: totalFinal } = calcularResumenCheckout({
+    subtotal: total,
+    cantidadPiezas: items.reduce((sum, item) => sum + item.cantidad, 0),
+    datosEnvio: datosEnvio
+      ? {
+          nombre: datosEnvio.nombre,
+          apellido: datosEnvio.apellido,
+          email: datosEnvio.email,
+          telefono: datosEnvio.telefono,
+          direccion: datosEnvio.direccion,
+          ciudad: datosEnvio.ciudad,
+          estado: datosEnvio.estado_,
+          codigo_postal: datosEnvio.codigo_postal,
+        }
+      : undefined,
+  });
 
   useEffect(() => {
     const envio = sessionStorage.getItem("mm_checkout_envio");
@@ -27,21 +50,32 @@ export default function ConfirmacionPage() {
     if (envio) setDatosEnvio(JSON.parse(envio));
     if (pago) setMetodoPago(JSON.parse(pago));
 
-    if (!envio || items.length === 0) {
+    if (estado === "revision" && (!envio || (!loading && items.length === 0))) {
       router.push("/client/carrito");
     }
-  }, []);
+  }, [items.length, loading, router, estado]);
 
   const handleConfirmar = async () => {
+    if (!isAuthenticated) {
+      setErrorMsg("Necesitas iniciar sesión para finalizar el pago.");
+      return;
+    }
     if (!datosEnvio || !metodoPago) return;
     setEstado("procesando");
 
     try {
-      // 1. Crear/obtener cliente
-      const cliente = await crearCliente({
-        nombre: `${datosEnvio.nombre} ${datosEnvio.apellido}`,
-        email: datosEnvio.email,
+      // 1. Guardar/actualizar cliente actual para mantener el carrito ligado al mismo registro
+      const perfil = await guardarPerfilCliente({
+        id_cliente: clienteId ?? undefined,
+        auth_user_id: authUserId ?? undefined,
+        nombre: datosEnvio.nombre,
+        apellido: datosEnvio.apellido,
+        email: authEmail ?? datosEnvio.email,
+        telefono: datosEnvio.telefono.replace(/\D/g, ""),
+        direccion: datosEnvio.direccion,
       });
+      const cliente = perfil.cliente as { id_cliente: number };
+      await setClienteSession(cliente.id_cliente);
 
       // 2. Crear venta
       const venta = await crearVenta({
@@ -72,8 +106,8 @@ export default function ConfirmacionPage() {
         )
       );
 
-      // 4. Confirmar pedido
-      await confirmarPedido(venta.id_venta);
+      // 4. Confirmar pedido y afectar stock
+      await confirmarYActualizarStock(venta.id_venta);
 
       // Generar folio
       const folioNum = `MM-${new Date().getFullYear()}${String(venta.id_venta).padStart(4, "0")}`;
@@ -118,6 +152,26 @@ export default function ConfirmacionPage() {
         </div>
 
         <h2 className="text-2xl font-bold text-[#2C1810] mb-8">Revisa tu pedido</h2>
+        {!authLoading && !isAuthenticated && (
+          <div className="bg-[#F0E8DC] border border-[#E8DDD0] rounded-2xl p-4 text-sm text-[#5C4A3A] mb-6">
+            Para confirmar el pago necesitas iniciar sesión.
+            <div className="mt-3">
+              <Link
+                href="/client/login?redirect=/client/checkout/confirmacion"
+                className="text-[#6B3A2A] font-medium hover:underline"
+              >
+                Iniciar sesión
+              </Link>
+              <span className="mx-2 text-[#A08070]">•</span>
+              <Link
+                href="/client/registro?redirect=/client/checkout/confirmacion"
+                className="text-[#6B3A2A] font-medium hover:underline"
+              >
+                Crear cuenta
+              </Link>
+            </div>
+          </div>
+        )}
 
         <div className="space-y-4 mb-6">
           {/* Productos */}
@@ -167,8 +221,8 @@ export default function ConfirmacionPage() {
                 <span>${subtotal.toLocaleString("es-MX", { minimumFractionDigits: 2 })}</span>
               </div>
               <div className="flex justify-between text-[#5C4A3A]">
-                <span>IVA (16%)</span>
-                <span>${iva.toLocaleString("es-MX", { minimumFractionDigits: 2 })}</span>
+                <span>Envío</span>
+                <span>${envio.toLocaleString("es-MX", { minimumFractionDigits: 2 })}</span>
               </div>
               <div className="flex justify-between font-bold text-[#2C1810] text-base pt-2 border-t border-[#E8DDD0]">
                 <span>Total</span>
@@ -184,11 +238,13 @@ export default function ConfirmacionPage() {
           </Link>
           <button
             onClick={handleConfirmar}
+            disabled={!isAuthenticated}
             className="bg-[#2C1810] text-white px-8 py-3 rounded-full font-medium hover:bg-[#6B3A2A] transition-colors"
           >
             Confirmar y pagar
           </button>
         </div>
+        {errorMsg && <p className="mt-4 text-sm text-red-500">{errorMsg}</p>}
       </div>
     );
   }

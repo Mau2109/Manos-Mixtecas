@@ -5,6 +5,7 @@
   obtenerResumenVentaDb,
   agregarProductoVentaDb,
   listarVentasDb,
+  listarVentasClienteDb,
   cancelarVentaDb,
   obtenerProductosVentaDb,
   actualizarStockProductoDb,
@@ -15,8 +16,7 @@
 
 /* ===============================
    USD14 - Formulario de datos de envío
-   ADM14 - Registrar venta (impacta inventario)
-   USD13 - Confirmación de pedido (creación de venta)
+   USD13 - Crear venta (confirmar pedido)
    =============================== */
 export async function crearVenta(venta: {
   id_cliente: number;
@@ -35,14 +35,14 @@ export async function crearVenta(venta: {
   };
 }) {
   if (!venta.id_cliente) throw new Error("ID de cliente requerido");
-  if (!venta.total || venta.total <= 0) throw new Error("Total invalido");
-  if (!venta.id_metodo_pago) throw new Error("Metodo de pago requerido");
+  if (!venta.total || venta.total <= 0) throw new Error("Total inválido");
+  if (!venta.id_metodo_pago) throw new Error("Método de pago requerido");
   if (
     !venta.datos_envio?.nombre ||
     !venta.datos_envio?.direccion ||
     !venta.datos_envio?.telefono
   ) {
-    throw new Error("Datos de envio incompletos");
+    throw new Error("Datos de envío incompletos");
   }
   return crearVentaDb(venta);
 }
@@ -74,19 +74,24 @@ export async function agregarProductoVenta(detalleVenta: {
 }
 
 /* ===============================
-   ADM15 - Consultar ventas (dashboard)
-   ADM25 - Filtrar ventas (fecha/estado)
+   ADM08 - ADM13 - Listar ventas con filtros (estado, fecha)
    =============================== */
 export async function listarVentas(filtros?: {
   estado?: string;
   fechaInicio?: string;
   fechaFin?: string;
+  confirmacionEnvio?: boolean;
 }) {
   return await listarVentasDb(filtros);
 }
 
+export async function listarVentasCliente(idCliente: number) {
+  if (!idCliente) throw new Error("ID de cliente requerido");
+  return listarVentasClienteDb(idCliente);
+}
+
 /* ===============================
-   ADM29 - Generar reporte de ventas
+   ADM17 - Generar reporte de ventas
    =============================== */
 
   export async function generarReporteVentas(filtros?: {
@@ -104,25 +109,25 @@ export async function listarVentas(filtros?: {
   }
 
 /* ===============================
-   ADM30 - Reporte de productos "Top Sellers"
+   ADM18 - Generar top productos vendidos
    =============================== */
 export async function obtenerTopProductos() {
   return await obtenerTopProductosDb();
 }
 
 /* ===============================
-   ADM32 - Generar ticket de venta en PDF
+   ADM20 - Generar ticket de venta en PDF
    Retorna un Buffer con el contenido del PDF (empleado por el admin).
    Actualmente el PDF es un texto simple que incluye algunos datos de la
-   venta; en un entorno real se podria usar pdfkit/u otro generador.
+   venta; en un entorno real se podrÃ­a usar pdfkit/u otro generador.
    =============================== */
 export async function generarTicketVenta(idVenta: number) {
   if (!idVenta) throw new Error("ID de venta requerido");
 
-  // Obtener informacion de la venta.
+  // obtener informaciÃ³n de la venta
   const resumen = await obtenerResumenVentaDb(idVenta);
 
-  // Construir contenido PDF basico.
+  // construir contenido PDF bÃ¡sico
   const lines = [];
   lines.push("%PDF-1.4");
   lines.push(`Venta #${idVenta}`);
@@ -167,8 +172,9 @@ export async function confirmarYActualizarStock(idVenta: number) {
   return await confirmarPedidoDb(idVenta);
 }
 
+
 /* ===============================
-   UCD15 - Resumen de compra (antes de pagar)
+   USD15 - Resumen de compra (obtener venta con detalles)
    =============================== */
 export async function obtenerResumenCompra(idVenta: number) {
   if (!idVenta) throw new Error("ID de venta requerido");
@@ -181,7 +187,7 @@ export async function obtenerResumenVenta(idVenta: number) {
 }
 
 /* ===============================
-   ADM25 - Estado/confirmación de envío
+   USD17 - Mensaje de confirmación de envío
    =============================== */
 export async function obtenerEstadoEnvio(idVenta: number) {
   if (!idVenta) throw new Error("ID de venta requerido");

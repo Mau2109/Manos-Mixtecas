@@ -4,11 +4,11 @@ import { usePathname } from "next/navigation";
 import { useState, useEffect } from "react";
 
 // ─── Carrito global (Context liviano via localStorage) ───────────────────────
-import { CartProvider, useCart } from "../lib/context/ CardContext"; 
+import { CartProvider, useCart } from "../lib/context/_CardContext";
 
 function Navbar() {
   const pathname = usePathname();
-  const { itemCount } = useCart();
+  const { itemCount, cliente, isAuthenticated, logoutClienteSession, authLoading } = useCart();
   const [menuOpen, setMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
 
@@ -66,12 +66,31 @@ function Navbar() {
               </span>
             )}
           </Link>
-          <Link href="/client/perfil">
+          <Link href="/client/perfil" className="flex items-center gap-2">
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#2C1810" strokeWidth="1.7">
               <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
               <circle cx="12" cy="7" r="4" />
             </svg>
+            <span className="hidden lg:block text-sm text-[#5C4A3A]">
+              {authLoading ? "..." : isAuthenticated ? cliente?.nombre ?? "Mi perfil" : "Invitado"}
+            </span>
           </Link>
+          {!authLoading && !isAuthenticated && (
+            <Link
+              href="/client/login"
+              className="hidden lg:block text-sm text-[#A08070] hover:text-[#6B3A2A] transition-colors"
+            >
+              Iniciar sesión
+            </Link>
+          )}
+          {isAuthenticated && (
+            <button
+              onClick={() => void logoutClienteSession()}
+              className="hidden lg:block text-sm text-[#A08070] hover:text-[#6B3A2A] transition-colors"
+            >
+              Cerrar sesión
+            </button>
+          )}
 
           {/* Mobile hamburger */}
           <button className="md:hidden" onClick={() => setMenuOpen(!menuOpen)}>

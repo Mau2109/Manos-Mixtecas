@@ -1,10 +1,9 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useCart } from "@/app/lib/context/ CardContext";
-
-const IVA = 0.16;
+import { useCart } from "@/app/lib/context/_CardContext";
+import { calcularResumenCheckout } from "@/lib/checkout";
 
 type DatosEnvio = {
   nombre: string;
@@ -19,7 +18,7 @@ type DatosEnvio = {
 
 export default function CheckoutPage() {
   const router = useRouter();
-  const { items, total, itemCount } = useCart();
+  const { items, total, itemCount, loading, cliente, authEmail } = useCart();
 
   const [datos, setDatos] = useState<DatosEnvio>({
     nombre: "", apellido: "", email: "", telefono: "",
@@ -27,9 +26,20 @@ export default function CheckoutPage() {
   });
   const [errors, setErrors] = useState<Partial<DatosEnvio>>({});
 
-  const subtotal = total;
-  const iva = subtotal * IVA;
-  const totalFinal = subtotal + iva;
+  const { subtotal, envio, total: totalFinal } = calcularResumenCheckout({
+    subtotal: total,
+    cantidadPiezas: itemCount,
+    datosEnvio: {
+      nombre: datos.nombre,
+      apellido: datos.apellido,
+      email: datos.email,
+      telefono: datos.telefono,
+      direccion: datos.direccion,
+      ciudad: datos.ciudad,
+      estado: datos.estado_,
+      codigo_postal: datos.codigo_postal,
+    },
+  });
 
   const validate = () => {
     const e: Partial<DatosEnvio> = {};
@@ -37,11 +47,33 @@ export default function CheckoutPage() {
     if (!datos.apellido.trim()) e.apellido = "Requerido";
     if (!datos.email.trim() || !datos.email.includes("@")) e.email = "Email inválido";
     if (!datos.telefono.trim()) e.telefono = "Requerido";
+    if (datos.telefono.trim() && datos.telefono.replace(/\D/g, "").length !== 10) {
+      e.telefono = "El teléfono debe tener 10 dígitos";
+    }
     if (!datos.direccion.trim()) e.direccion = "Requerido";
     if (!datos.ciudad.trim()) e.ciudad = "Requerido";
+    if (!datos.codigo_postal.trim()) e.codigo_postal = "Requerido";
+    if (datos.codigo_postal.trim() && !/^\d{5}$/.test(datos.codigo_postal.trim())) {
+      e.codigo_postal = "El código postal debe tener 5 dígitos";
+    }
     setErrors(e);
     return Object.keys(e).length === 0;
   };
+
+  useEffect(() => {
+    if (!cliente && !authEmail) return;
+
+    setDatos((prev) => ({
+      nombre: prev.nombre || cliente?.nombre || "",
+      apellido: prev.apellido || cliente?.apellido || "",
+      email: prev.email || authEmail || cliente?.email || "",
+      telefono: prev.telefono || cliente?.telefono || "",
+      direccion: prev.direccion || cliente?.direccion || "",
+      ciudad: prev.ciudad || "",
+      estado_: prev.estado_ || "",
+      codigo_postal: prev.codigo_postal || "",
+    }));
+  }, [cliente, authEmail]);
 
   const handleNext = () => {
     if (validate()) {
@@ -51,13 +83,21 @@ export default function CheckoutPage() {
     }
   };
 
-  if (items.length === 0) {
+  if (!loading && items.length === 0) {
     return (
       <div className="max-w-7xl mx-auto px-6 py-20 text-center">
         <p className="text-[#A08070] mb-4">Tu carrito está vacío.</p>
         <Link href="/client/catalogo" className="text-[#6B3A2A] hover:underline">
           Explorar catálogo →
         </Link>
+      </div>
+    );
+  }
+
+  if (loading) {
+    return (
+      <div className="max-w-7xl mx-auto px-6 py-20 text-center text-[#A08070]">
+        Cargando checkout...
       </div>
     );
   }
@@ -75,8 +115,18 @@ export default function CheckoutPage() {
       <input
         type={type}
         value={datos[name]}
-        onChange={(e) => setDatos((d) => ({ ...d, [name]: e.target.value }))}
+        onChange={(e) => {
+          const value = e.target.value;
+          if (name === "telefono") {
+            const digits = value.replace(/\D/g, "").slice(0, 10);
+            setDatos((d) => ({ ...d, [name]: digits }));
+            return;
+          }
+          setDatos((d) => ({ ...d, [name]: value }));
+        }}
         placeholder={placeholder}
+        inputMode={name === "telefono" ? "numeric" : undefined}
+        maxLength={name === "telefono" ? 10 : undefined}
         className={`w-full border rounded-xl px-4 py-3 text-sm bg-white focus:outline-none transition-colors ${
           errors[name]
             ? "border-red-400 focus:border-red-500"
@@ -175,8 +225,8 @@ export default function CheckoutPage() {
                 <span>${subtotal.toLocaleString("es-MX", { minimumFractionDigits: 2 })}</span>
               </div>
               <div className="flex justify-between text-[#5C4A3A]">
-                <span>IVA (16%)</span>
-                <span>${iva.toLocaleString("es-MX", { minimumFractionDigits: 2 })}</span>
+                <span>Envío</span>
+                <span>${envio.toLocaleString("es-MX", { minimumFractionDigits: 2 })}</span>
               </div>
               <div className="flex justify-between font-bold text-[#2C1810] text-base pt-2 border-t border-[#E8DDD0]">
                 <span>Total</span>

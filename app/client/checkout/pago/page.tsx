@@ -3,22 +3,39 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { listarMetodosPago } from "@/lib/services/carritoService";
-import { useCart } from "@/app/lib/context/ CardContext";
-
-const IVA = 0.16;
+import { useCart } from "@/app/lib/context/_CardContext";
+import { calcularResumenCheckout } from "@/lib/checkout";
 
 export default function PagoPage() {
   const router = useRouter();
-  const { items, total } = useCart();
+  const { items, total, itemCount, loading: cartLoading } = useCart();
   const [metodos, setMetodos] = useState<any[]>([]);
   const [seleccionado, setSeleccionado] = useState<number | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [loadingMetodos, setLoadingMetodos] = useState(true);
   const [error, setError] = useState("");
+  const [datosEnvio, setDatosEnvio] = useState<any>(null);
 
-  const subtotal = total;
-  const totalFinal = subtotal * (1 + IVA);
+  const { total: totalFinal } = calcularResumenCheckout({
+    subtotal: total,
+    cantidadPiezas: itemCount,
+    datosEnvio: datosEnvio
+      ? {
+          nombre: datosEnvio.nombre,
+          apellido: datosEnvio.apellido,
+          email: datosEnvio.email,
+          telefono: datosEnvio.telefono,
+          direccion: datosEnvio.direccion,
+          ciudad: datosEnvio.ciudad,
+          estado: datosEnvio.estado_,
+          codigo_postal: datosEnvio.codigo_postal,
+        }
+      : undefined,
+  });
 
   useEffect(() => {
+    const envio = sessionStorage.getItem("mm_checkout_envio");
+    if (envio) setDatosEnvio(JSON.parse(envio));
+
     listarMetodosPago()
       .then((data) => setMetodos(data ?? []))
       .catch(() =>
@@ -28,7 +45,7 @@ export default function PagoPage() {
           { id_metodo_pago: 3, nombre: "PayPal", descripcion: "Pago seguro con PayPal" },
         ])
       )
-      .finally(() => setLoading(false));
+      .finally(() => setLoadingMetodos(false));
   }, []);
 
   const iconoPago: Record<string, string> = {
@@ -54,11 +71,19 @@ export default function PagoPage() {
     router.push("/client/checkout/confirmacion");
   };
 
-  if (items.length === 0) {
+  if (!cartLoading && !loadingMetodos && items.length === 0) {
     return (
       <div className="max-w-7xl mx-auto px-6 py-20 text-center">
         <p className="text-[#A08070]">Tu carrito está vacío.</p>
         <Link href="/client/catalogo" className="text-[#6B3A2A] hover:underline">← Explorar catálogo</Link>
+      </div>
+    );
+  }
+
+  if (cartLoading || loadingMetodos) {
+    return (
+      <div className="max-w-7xl mx-auto px-6 py-20 text-center text-[#A08070]">
+        Cargando métodos de pago...
       </div>
     );
   }
@@ -98,46 +123,41 @@ export default function PagoPage() {
       </div>
 
       {/* Métodos de pago */}
-      {loading ? (
-        <div className="space-y-3">
-          {[1, 2, 3].map((i) => (
-            <div key={i} className="h-20 bg-[#E8DDD0] rounded-2xl animate-pulse" />
-          ))}
-        </div>
-      ) : (
-        <div className="space-y-3 mb-6">
-          {metodos.map((m) => (
-            <button
-              key={m.id_metodo_pago}
-              onClick={() => { setSeleccionado(m.id_metodo_pago); setError(""); }}
-              className={`w-full flex items-center gap-4 p-4 rounded-2xl border-2 transition-all text-left ${
-                seleccionado === m.id_metodo_pago
-                  ? "border-[#6B3A2A] bg-[#FAF7F2]"
-                  : "border-[#D4C4B0] bg-white hover:border-[#C4A882]"
-              }`}
-            >
-              <div className="w-12 h-12 rounded-xl bg-[#F0E8DC] flex items-center justify-center text-2xl shrink-0">
-                {getIcono(m.nombre)}
-              </div>
-              <div className="flex-1">
-                <p className="font-medium text-[#2C1810]">{m.nombre}</p>
-                {m.descripcion && (
-                  <p className="text-xs text-[#A08070] mt-0.5">{m.descripcion}</p>
-                )}
-              </div>
-              <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
-                seleccionado === m.id_metodo_pago
-                  ? "border-[#6B3A2A] bg-[#6B3A2A]"
-                  : "border-[#D4C4B0]"
-              }`}>
-                {seleccionado === m.id_metodo_pago && (
-                  <div className="w-2 h-2 bg-white rounded-full" />
-                )}
-              </div>
-            </button>
-          ))}
-        </div>
-      )}
+      <div className="space-y-3 mb-6">
+        {metodos.map((m) => (
+          <button
+            key={m.id_metodo_pago}
+            onClick={() => {
+              setSeleccionado(m.id_metodo_pago);
+              setError("");
+            }}
+            className={`w-full flex items-center gap-4 p-4 rounded-2xl border-2 transition-all text-left ${
+              seleccionado === m.id_metodo_pago
+                ? "border-[#6B3A2A] bg-[#FAF7F2]"
+                : "border-[#D4C4B0] bg-white hover:border-[#C4A882]"
+            }`}
+          >
+            <div className="w-12 h-12 rounded-xl bg-[#F0E8DC] flex items-center justify-center text-2xl shrink-0">
+              {getIcono(m.nombre)}
+            </div>
+            <div className="flex-1">
+              <p className="font-medium text-[#2C1810]">{m.nombre}</p>
+              {m.descripcion && (
+                <p className="text-xs text-[#A08070] mt-0.5">{m.descripcion}</p>
+              )}
+            </div>
+            <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
+              seleccionado === m.id_metodo_pago
+                ? "border-[#6B3A2A] bg-[#6B3A2A]"
+                : "border-[#D4C4B0]"
+            }`}>
+              {seleccionado === m.id_metodo_pago && (
+                <div className="w-2 h-2 bg-white rounded-full" />
+              )}
+            </div>
+          </button>
+        ))}
+      </div>
 
       {error && (
         <p className="text-sm text-red-500 mb-4">{error}</p>

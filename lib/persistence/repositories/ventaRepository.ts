@@ -236,12 +236,13 @@ export async function listarVentasDb(filtros?: {
   estado?: string;
   fechaInicio?: string;
   fechaFin?: string;
+  confirmacionEnvio?: boolean;
 }) {
   let query = supabase
     .from("ventas")
     .select(
       `
-      id_venta, total, estado, fecha_venta,
+      id_venta, total, estado, fecha_venta, confirmacion_envio,
       clientes(nombre, apellido, email)
     `
     )
@@ -259,7 +260,32 @@ export async function listarVentasDb(filtros?: {
     query = query.lte("fecha_venta", filtros.fechaFin);
   }
 
+  if (typeof filtros?.confirmacionEnvio === "boolean") {
+    query = query.eq("confirmacion_envio", filtros.confirmacionEnvio);
+  }
+
   const { data, error } = await query;
+
+  if (error) throw error;
+  return data;
+}
+
+export async function listarVentasClienteDb(idCliente: number) {
+  const { data, error } = await supabase
+    .from("ventas")
+    .select(
+      `
+      id_venta, total, subtotal, estado, fecha_venta, confirmacion_pedido,
+      id_metodo_pago, datos_envio,
+      metodos_pago(nombre),
+      detalle_venta(
+        id_detalle, cantidad, precio_unitario,
+        productos(id_producto, nombre, imagen)
+      )
+    `
+    )
+    .eq("id_cliente", idCliente)
+    .order("fecha_venta", { ascending: false });
 
   if (error) throw error;
   return data;
