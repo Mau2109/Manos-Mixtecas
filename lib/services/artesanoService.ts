@@ -148,3 +148,14 @@ export async function obtenerArtesanos() {
   if (error) throw error;
   return data;
 }
+
+export async function obtenerArtesanoPorId(idArtesano: number) {
+  const { data, error } = await supabase
+    .from("artesanos")
+    .select("*, categorias(nombre)") 
+    .eq("id_artesano", idArtesano)
+    .single();
+
+  if (error) throw error;
+  return data;
+}
