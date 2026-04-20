@@ -3,12 +3,13 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { obtenerProductoDetalle, obtenerImagenesProducto } from "@/lib/services/productoService";
 
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { useCart } from "@/app/lib/context/_CardContext";
 
 export default function ProductoPage() {
   const params = useParams();
   const id = Number(params.id);
+  const router = useRouter();
   const { addItem, items } = useCart();
 
   const [producto, setProducto] = useState<any>(null);
@@ -47,7 +48,7 @@ export default function ProductoPage() {
       precio_unitario: precioFinal,
       cantidad,
       imagen: producto.imagen,
-      artesano: producto.artesano_nombre,
+      artesano: nombreArtesano,
       stock: producto.stock,
     });
     setAgregado(resultado.ok);
@@ -88,6 +89,16 @@ export default function ProductoPage() {
     );
   }
 
+  const artesano = producto.artesanos ?? null;
+  const nombreArtesano = artesano
+    ? [artesano.nombre, artesano.apellido].filter(Boolean).join(" ")
+    : "";
+  const tipoArtesano = artesano?.tipo?.trim() ?? "";
+  const comunidadArtesano = artesano?.comunidad?.trim() ?? "";
+  const historiaArtesano =
+    artesano?.historia?.trim() ||
+    (comunidadArtesano ? `Originario de ${comunidadArtesano}.` : "");
+
   // Lista de imágenes: imagen principal + galería
   const todasImagenes = [
     ...(producto.imagen ? [{ url: producto.imagen, descripcion: producto.nombre }] : []),
@@ -108,14 +119,36 @@ export default function ProductoPage() {
 
   return (
     <div className="max-w-7xl mx-auto px-6 py-10">
-      {/* Breadcrumb */}
-      <nav className="text-xs text-[#A08070] mb-8 flex gap-2">
-        <Link href="/client" className="hover:text-[#6B3A2A]">Inicio</Link>
-        <span>/</span>
-        <Link href="/client/catalogo" className="hover:text-[#6B3A2A]">Catálogo</Link>
-        <span>/</span>
-        <span className="text-[#2C1810] line-clamp-1">{producto.nombre}</span>
-      </nav>
+      {/* Botón Volver y Breadcrumb */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+        <button
+          onClick={() => router.back()}
+          className="group flex items-center gap-2 bg-white/80 backdrop-blur-md border border-[#E6D6C5] shadow-sm text-[#5C4A3A] px-5 py-2.5 rounded-full hover:bg-[#6B3A2A] hover:text-white transition-all duration-300 w-fit"
+        >
+          <svg
+            width="18"
+            height="18"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2.5"
+            className="group-hover:-translate-x-1 transition-transform"
+          >
+            <line x1="19" y1="12" x2="5" y2="12"></line>
+            <polyline points="12 19 5 12 12 5"></polyline>
+          </svg>
+          <span className="font-medium text-sm tracking-wide">Volver</span>
+        </button>
+
+        {/* Breadcrumb */}
+        <nav className="text-xs text-[#A08070] flex max-w-[50%] md:max-w-none ml-auto md:ml-0 overflow-hidden text-ellipsis whitespace-nowrap">
+          <Link href="/client" className="hover:text-[#6B3A2A]">Inicio</Link>
+          <span className="mx-2">/</span>
+          <Link href="/client/catalogo" className="hover:text-[#6B3A2A]">Catálogo</Link>
+          <span className="mx-2">/</span>
+          <span className="text-[#2C1810] truncate block">{producto.nombre}</span>
+        </nav>
+      </div>
 
       <div className="grid md:grid-cols-2 gap-12 lg:gap-20">
         {/* ── Galería (USD08) ─────────────────────────────── */}
@@ -215,25 +248,46 @@ export default function ProductoPage() {
           </div>
 
           {/* Artesano */}
-          {producto.artesano_nombre && (
-            <Link
-              href={`/client/artesano/${producto.id_artesano}`}
-              className="flex items-center gap-3 mb-8 group"
-            >
-              <div className="w-12 h-12 rounded-full bg-[#C4A882] overflow-hidden flex items-center justify-center">
-                {producto.artesano_foto ? (
-                  <img src={producto.artesano_foto} alt="" className="w-full h-full object-cover" />
-                ) : (
-                  <span className="text-xl">🧑‍🎨</span>
-                )}
-              </div>
-              <div>
-                <p className="text-xs text-[#A08070]">Creado por</p>
-                <p className="text-sm font-medium text-[#2C1810] group-hover:text-[#6B3A2A] transition-colors">
-                  {producto.artesano_nombre}
-                </p>
-              </div>
-            </Link>
+          {artesano && (
+            <div className="mb-8 rounded-2xl border border-[#E6D6C5] bg-[#FCF8F3] p-5">
+              <p className="text-xs tracking-widest uppercase text-[#A08070] mb-4">
+                Elaborado por
+              </p>
+              <Link
+                href={`/client/artesano/${artesano.id_artesano}`}
+                className="group flex items-start gap-4"
+              >
+                <div className="w-14 h-14 rounded-full bg-[#C4A882] overflow-hidden flex items-center justify-center shrink-0">
+                  {artesano.foto_perfil ? (
+                    <img
+                      src={artesano.foto_perfil}
+                      alt={nombreArtesano || "Artesano"}
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <span className="text-xl">🧑‍🎨</span>
+                  )}
+                </div>
+                <div className="min-w-0">
+                  <p className="text-lg font-semibold text-[#2C1810] group-hover:text-[#6B3A2A] transition-colors">
+                    {nombreArtesano}
+                  </p>
+                  {(tipoArtesano || comunidadArtesano) && (
+                    <p className="text-sm text-[#A08070] mt-1">
+                      {[tipoArtesano, comunidadArtesano].filter(Boolean).join(" · ")}
+                    </p>
+                  )}
+                  {historiaArtesano && (
+                    <p className="text-sm text-[#5C4A3A] leading-relaxed mt-3 line-clamp-3">
+                      {historiaArtesano}
+                    </p>
+                  )}
+                  <p className="text-sm font-medium text-[#6B3A2A] mt-3">
+                    Conocer al artesano →
+                  </p>
+                </div>
+              </Link>
+            </div>
           )}
 
           {/* Cantidad + Agregar */}

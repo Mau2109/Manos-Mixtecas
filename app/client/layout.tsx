@@ -21,7 +21,7 @@ function Navbar() {
   const links = [
     { href: "/client", label: "Shop" },
     { href: "/client/catalogo", label: "Catálogo" },
-    { href: "/client/artesano/1", label: "Artesanos" },
+    { href: "/client/artesano", label: "Artesanos" },
     { href: "/client/contacto", label: "Contacto" },
   ];
 
