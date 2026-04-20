@@ -100,7 +100,7 @@ export default function ProveedoresList() {
           <p className="text-sm text-gray-500 mt-1">Admin Control</p>
         </div>
         <Link href="/admin/proveedores/agregar">
-            <Button variant="outline" className="gap-2 rounded-full border-yellow-600 shadow-sm hover:bg-yellow-50 text-yellow-700 bg-yellow-50">
+            <Button variant="outline" className="gap-2 rounded-full bg-primary hover:bg-primary/90 text-white shadow-sm">
                 <UserPlus className="w-4 h-4 mr-2" />
                 Añadir Artesano
             </Button>
