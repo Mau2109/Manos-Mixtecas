@@ -1,18 +1,17 @@
 "use client";
 import { useRouter } from "next/navigation";
-// import { Sidebar } from "@/components/layout/sidebar";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
-import { Button } from "@/components/ui/button";
-import { ShoppingCart, Clock, User, CheckCircle, Ticket, TrendingUp, Truck } from "lucide-react";
+import { 
+  ShoppingCart, Clock, CheckCircle, Ticket, 
+  TrendingUp, Truck, FileText, Trophy 
+} from "lucide-react";
 import Image from "next/image";
 
 export default function VentasOpcionesModuloPage() {
   const router = useRouter();
   return (
     <div className="flex min-h-screen">
-      {/* <Sidebar /> */}
       <main className="flex-1 bg-muted/40 p-8">
         <div className="max-w-6xl mx-auto">
           <div className="text-xs text-muted-foreground mb-2 tracking-widest">
@@ -29,7 +28,7 @@ export default function VentasOpcionesModuloPage() {
               </div>
               <div className="flex-1 min-w-0">
                 <div className="font-semibold text-lg mb-1">Registrar venta</div>
-                <div className="text-muted-foreground text-sm mb-2">Registra una nueva transacción, valida stock y actualiza el inventario en tiempo real. Sistema integrado de facturación.</div>
+                <div className="text-muted-foreground text-sm mb-2">Registra una nueva transacción con opción de aplicar descuentos, valida stock y actualiza el inventario en tiempo real.</div>
                 <span className="text-xs text-yellow-900 font-mono">Ir al formulario →</span>
               </div>
             </Card>
@@ -43,6 +42,36 @@ export default function VentasOpcionesModuloPage() {
                 <div className="font-semibold text-lg mb-1">Consultar ventas</div>
                 <div className="text-muted-foreground text-sm mb-2">Historial completo de ventas con folios, filtros por fecha y estados de entrega. Analítica de rendimiento diario.</div>
                 <span className="text-xs text-yellow-900 font-mono">Ver historial →</span>
+              </div>
+            </Card>
+
+            {/* Reporte de Ventas */}
+            <Card className="flex flex-col items-start gap-4 p-6 cursor-pointer hover:shadow-lg transition min-h-[180px]" onClick={() => router.push("/admin/ventas/reporte_ventas")}> 
+              <div className="flex items-center justify-center w-12 h-12 rounded-full bg-green-200 mb-2">
+                <FileText className="w-6 h-6 text-green-700" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2 mb-1">
+                  <span className="font-semibold text-lg">Generar Reporte de Ventas</span>
+                  <Badge className="bg-green-100 text-green-700 text-[9px]">NUEVO</Badge>
+                </div>
+                <div className="text-muted-foreground text-sm mb-2">Genera reportes detallados con fecha, producto y monto. Descarga en CSV o PDF para análisis.</div>
+                <span className="text-xs text-yellow-900 font-mono">Generar reporte →</span>
+              </div>
+            </Card>
+
+            {/* Top Sellers */}
+            <Card className="flex flex-col items-start gap-4 p-6 cursor-pointer hover:shadow-lg transition min-h-[180px]" onClick={() => router.push("/admin/ventas/top_sellers")}> 
+              <div className="flex items-center justify-center w-12 h-12 rounded-full bg-amber-200 mb-2">
+                <Trophy className="w-6 h-6 text-amber-700" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2 mb-1">
+                  <span className="font-semibold text-lg">Top Sellers</span>
+                  <Badge className="bg-amber-100 text-amber-700 text-[9px]">NUEVO</Badge>
+                </div>
+                <div className="text-muted-foreground text-sm mb-2">Ranking de los 5 productos más vendidos para identificar artesanías con mayor demanda y pedir más stock.</div>
+                <span className="text-xs text-yellow-900 font-mono">Ver ranking →</span>
               </div>
             </Card>
           </div>
