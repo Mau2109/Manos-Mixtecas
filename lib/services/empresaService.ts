@@ -12,6 +12,8 @@ import {
    =============================== */
 export async function crearEmpresa(empresa: {
   nombre: string;
+  rfc?: string;
+  logo_url?: string;
   direccion?: string;
   telefono?: string;
   email?: string;
@@ -34,6 +36,8 @@ export async function actualizarEmpresa(
   idEmpresa: number,
   empresa: {
     nombre?: string;
+    rfc?: string;
+    logo_url?: string;
     direccion?: string;
     telefono?: string;
     email?: string;

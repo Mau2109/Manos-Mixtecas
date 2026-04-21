@@ -6,6 +6,7 @@ import {
   listarTiposArtesanoDb,
   obtenerGaleriaArtesanoDb,
   obtenerPerfilArtesanoDb,
+  listarCategoriasDb,
 } from "../persistence/repositories/artesanoRepository";
 import { supabase } from "@/lib/supabaseClient";
 /* ===============================
@@ -33,6 +34,10 @@ export async function listarTiposArtesano(): Promise<string[]> {
   const data = await listarTiposArtesanoDb();
   const tipos = [...new Set((data ?? []).map((a) => a.tipo as string))];
   return tipos;
+}
+
+export async function listarCategorias() { 
+  return listarCategoriasDb();
 }
 
 /* ===============================
@@ -138,8 +143,18 @@ export async function asignarEstatusProveedor(
 export async function obtenerArtesanos() {
   const { data, error } = await supabase
     .from("artesanos")
-    .select("*")
-    .eq("estado", true);
+    .select("*");
+
+  if (error) throw error;
+  return data;
+}
+
+export async function obtenerArtesanoPorId(idArtesano: number) {
+  const { data, error } = await supabase
+    .from("artesanos")
+    .select("*, categorias(nombre)") 
+    .eq("id_artesano", idArtesano)
+    .single();
 
   if (error) throw error;
   return data;

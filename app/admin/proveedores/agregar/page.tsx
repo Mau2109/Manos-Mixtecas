@@ -1,10 +1,9 @@
 "use client"
 
-import React, { useState, useRef } from "react"
+import React, { useState, useRef, useEffect } from "react"
 import { ArrowLeft, Camera, Archive, AlertCircle, CheckCircle2 } from "lucide-react"
 import { useRouter } from "next/navigation"
 
-// Importaciones de los componentes Radix / shadcn que usas en tu proyecto
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import {
@@ -19,11 +18,17 @@ import {
 import { supabase } from "@/lib/supabaseClient"
 
 // Importaciones de tus servicios
-import { crearArtesano, obtenerArtesanos } from "@/lib/services/artesanoService"
+import { crearArtesano, obtenerArtesanos, listarCategorias } from "@/lib/services/artesanoService"
+
+export interface Categoria {
+  id_categoria: number
+  nombre: string
+}
 
 export default function AgregarProveedor() {
   const router = useRouter()
   const [loading, setLoading] = useState(false)
+  const [categorias, setCategorias] = useState<Categoria[]>([])
   
   // Ref para el input de archivo oculto
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -44,6 +49,22 @@ export default function AgregarProveedor() {
     email: "",
     estado: true,
   }
+
+  useEffect(() => {
+    const cargarCategorias = async () => {
+      try {
+        setLoading(true)
+        const data = await listarCategorias()
+        setCategorias(data || [])
+      } catch (error) {
+        console.error("Error al cargar categorías:", error);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    cargarCategorias()
+  }, []) 
 
   const [formData, setFormData] = useState(estadoInicial)
 
@@ -150,12 +171,13 @@ export default function AgregarProveedor() {
         nombre: nombre,
         apellido: apellido,
         biografia: formData.biografia,
-        tipo: formData.tipo,
+        tipo: categorias.find(c => c.id_categoria.toString() === formData.tipo)?.nombre || "",
         comunidad: formData.comunidad,
         telefono: formData.telefono,
         email: formData.email,
         estado: formData.estado,
-        foto_perfil: foto_perfil_url // Pasamos la URL final (vacía si no subió nada)
+        foto_perfil: foto_perfil_url,
+        id_categoria: parseInt(formData.tipo)
       }
 
       // Guardar en Base de Datos (esto insertará en public.artesanos)
@@ -342,13 +364,11 @@ export default function AgregarProveedor() {
                       <SelectValue placeholder="Selecciona una especialidad" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="Alfarería y Cerámica">Alfarería y Cerámica</SelectItem>
-                      <SelectItem value="Textiles">Textiles</SelectItem>
-                      <SelectItem value="Talla en Madera">Talla en Madera</SelectItem>
-                      <SelectItem value="Joyería">Joyería</SelectItem>
-                      <SelectItem value="Cestería">Cestería</SelectItem>
-                      <SelectItem value="Cartonería">Cartonería</SelectItem>
-                      <SelectItem value="Alebrijes">Alebrijes</SelectItem>
+                      {categorias.map((categoria) => (
+                        <SelectItem key={categoria.id_categoria} value={categoria.id_categoria.toString()}>
+                          {categoria.nombre}
+                        </SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                 </div>

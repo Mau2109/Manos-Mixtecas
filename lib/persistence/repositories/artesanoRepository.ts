@@ -15,7 +15,7 @@ export async function obtenerPerfilArtesanoDb(idArtesano: number) {
     `
     )
     .eq("id_artesano", idArtesano)
-
+    .eq("estado", true)
     .single();
 
   if (error) throw error;
@@ -38,7 +38,11 @@ export async function obtenerGaleriaArtesanoDb(idArtesano: number) {
     .order("orden", { ascending: true });
 
   if (error) throw error;
-  return data;
+  return (data ?? []).map((imagen) => ({
+    ...imagen,
+    origen: "producto",
+    tipo: "trabajo",
+  }));
 }
 
 /* ===============================
@@ -54,6 +58,15 @@ export async function listarTiposArtesanoDb() {
   if (error) throw error;
   return data;
 }
+
+  export async function listarCategoriasDb() {
+    const { data, error } = await supabase
+      .from("categorias")
+      .select("id_categoria, nombre");
+
+    if (error) throw error;
+    return data;
+  }
 
 /* ===============================
    ADM24 - Directorio de artesanos/proveedores (persistencia)

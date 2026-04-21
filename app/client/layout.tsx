@@ -21,7 +21,7 @@ function Navbar() {
   const links = [
     { href: "/client", label: "Shop" },
     { href: "/client/catalogo", label: "Catálogo" },
-    { href: "/client/artesano/1", label: "Artesanos" },
+    { href: "/client/artesano", label: "Artesanos" },
     { href: "/client/contacto", label: "Contacto" },
   ];
 
@@ -31,9 +31,9 @@ function Navbar() {
         scrolled ? "bg-[#FAF7F2] shadow-sm" : "bg-[#FAF7F2]"
       }`}
     >
-      <nav className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
-        <Link href="/client" className="font-bold text-[#2C1810] text-lg tracking-tight">
-          Manos Mixtecas
+      <nav className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
+        <Link href="/client" className="flex items-center">
+          <img src="/assets/logo_manos_mixtecas.png" alt="Manos Mixtecas" className="h-16 w-auto object-contain" />
         </Link>
 
         {/* Desktop links */}
@@ -122,11 +122,11 @@ function Navbar() {
 
 function Footer() {
   return (
-    <footer className="bg-[#2C1810] text-[#C8B8A8] mt-24">
+    <footer className="bg-[#2C1810] text-[#C8B8A8]">
       <div className="max-w-7xl mx-auto px-6 py-12">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-10">
           <div className="md:col-span-2">
-            <p className="font-bold text-[#F5EFE6] text-lg mb-3">MANOS MIXTECAS</p>
+            <h2 className="text-xl font-bold text-[#F5EFE6] tracking-[0.2em] mb-6 uppercase">Manos Mixtecas</h2>
             <p className="text-sm leading-relaxed max-w-xs">
               Comprometidos con la preservación cultural y el desarrollo sostenible de las comunidades artesanas originarias de México.
             </p>
