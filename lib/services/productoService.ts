@@ -367,3 +367,27 @@ export const clasificarProducto = async (id: string, categoria: string) => {
 
   return await actualizarCategoria(id, categoria);
 };
+
+export async function crearCategoria(data: {
+  nombre: string;
+  descripcion?: string;
+}) {
+
+  if (!data.nombre || data.nombre.trim() === "") {
+    throw new Error("El nombre de la categoría es obligatorio");
+  }
+
+  const { data: nuevaCategoria, error } = await supabase
+    .from("categorias")
+    .insert({
+      nombre: data.nombre,
+      descripcion: data.descripcion || null,
+      estado: true
+    })
+    .select()
+    .single();
+
+  if (error) throw error;
+
+  return nuevaCategoria;
+}

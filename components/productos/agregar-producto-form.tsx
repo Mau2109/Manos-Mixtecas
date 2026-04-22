@@ -157,14 +157,24 @@ export function AgregarProductoForm() {
 };
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-semibold text-foreground">Agregar Producto</h1>
-          <p className="text-muted-foreground mt-1">
-            Completa la información del nuevo producto artesanal
-          </p>
+    <>
+      <div className="space-y-6">
+        {/* Header */}
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-semibold text-foreground">Agregar Producto</h1>
+            <p className="text-muted-foreground mt-1">
+              Completa la información del nuevo producto artesanal
+            </p>
+          </div>
+          <Button
+            variant="outline"
+            onClick={() => router.push("/admin/inventario")}
+            className="gap-2"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            Volver a Inventario
+          </Button>
         </div>
         <Button
           variant="outline"
@@ -357,6 +367,99 @@ export function AgregarProductoForm() {
                     className="bg-background"
                   />
                 </div>
+              </CardContent>
+            </Card>
+
+            {/* Artesano */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg">Artesano</CardTitle>
+                <CardDescription>Creador de la pieza</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <Select
+                  value={formData.artesano}
+                  onValueChange={(value) => handleSelectChange("artesano", value)}
+                >
+                  <SelectTrigger className="bg-background">
+                    <SelectValue placeholder="Seleccionar artesano (opcional)" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {artesanos.map((art: any) => (
+                      <SelectItem
+                        key={art.id_artesano}
+                        value={art.id_artesano.toString()}
+                      >
+                        {art.nombre} {art.apellido}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="mt-3 w-full"
+                  onClick={() => router.push("/proveedores/agregar")}
+                >
+                  + Nuevo artesano
+                </Button>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Botones de acción */}
+          <div className="flex items-center gap-4 mt-6 pt-6 border-t border-border">
+            <Button 
+              type="submit" 
+              className="bg-primary hover:bg-primary/90"
+              disabled={isSubmitting || !tienePrincipal}
+            >
+              {isSubmitting ? "Guardando..." : "Guardar Producto"}
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => router.push("/admin/inventario")}
+              disabled={isSubmitting}
+            >
+              Cancelar
+            </Button>
+          </div>
+        </form>
+      </div>
+
+      {/* Modal Nueva Categoría */}
+      {mostrarModalCategoria && (
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
+          <div className="bg-card p-6 rounded-lg w-96 shadow-xl">
+            <h2 className="text-lg font-bold mb-4 text-foreground">Nueva categoría</h2>
+            
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="nuevaCatNombre">Nombre</Label>
+                <Input
+                  id="nuevaCatNombre"
+                  placeholder="Nombre de la categoría"
+                  value={nuevaCategoria.nombre}
+                  onChange={(e) =>
+                    setNuevaCategoria({ ...nuevaCategoria, nombre: e.target.value })
+                  }
+                  className="bg-background"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="nuevaCatDesc">Descripción (opcional)</Label>
+                <Textarea
+                  id="nuevaCatDesc"
+                  placeholder="Descripción de la categoría"
+                  value={nuevaCategoria.descripcion}
+                  onChange={(e) =>
+                    setNuevaCategoria({ ...nuevaCategoria, descripcion: e.target.value })
+                  }
+                  className="bg-background resize-none"
+                  rows={3}
+                />
               </div>
             </CardContent>
           </Card>

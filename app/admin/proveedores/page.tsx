@@ -1,7 +1,7 @@
 "use client"
 
 import React, { useEffect, useState } from "react"
-import { obtenerArtesanos } from "@/lib/services/artesanoService"
+import { obtenerArtesanos, asignarEstatusProveedor } from "@/lib/services/artesanoService"
 import { 
   UserPlus, 
   Eye, 
@@ -11,7 +11,8 @@ import {
   Mail,
   MapPin,
   X,
-  Search
+  Search,
+  Loader2
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
@@ -45,6 +46,9 @@ export default function ProveedoresList() {
   const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState("")
   const [selectedCategory, setSelectedCategory] = useState<string>("all")
+  
+  // Nuevo estado para controlar qué botón está cargando
+  const [togglingId, setTogglingId] = useState<number | null>(null)
 
   useEffect(() => {
     const cargarProveedores = async () => {
@@ -88,6 +92,27 @@ export default function ProveedoresList() {
     if (cat.includes("textil")) return "bg-amber-100 text-amber-800 border-amber-200"
     if (cat.includes("madera")) return "bg-emerald-100 text-emerald-800 border-emerald-200"
     return "bg-gray-100 text-gray-800 border-gray-200"
+  }
+
+  // FUNCIÓN NUEVA: Maneja el cambio de estatus en la BD y en la vista
+  const handleToggleEstatus = async (id: number, estadoActual: boolean) => {
+    try {
+      setTogglingId(id) // Activamos el spinner de carga para este artesano
+      const nuevoEstado = !estadoActual
+      
+      // 1. Actualizamos en la Base de Datos
+      await asignarEstatusProveedor(id, nuevoEstado)
+      
+      // 2. Actualizamos la lista local para no recargar toda la página
+      setProveedores((prev) => 
+        prev.map((p) => p.id_artesano === id ? { ...p, estado: nuevoEstado } : p)
+      )
+    } catch (error) {
+      console.error("Error al cambiar el estatus:", error)
+      // Opcional: Aquí podrías agregar un toast o alerta de error si quieres
+    } finally {
+      setTogglingId(null) // Apagamos el spinner
+    }
   }
 
   return (
@@ -179,7 +204,6 @@ export default function ProveedoresList() {
                   <TableRow key={proveedor.id_artesano} className="hover:bg-gray-50/50 transition-colors">
                     <TableCell className="pl-6 py-4">
                       <div className="flex items-center gap-3">
-                        {/* AQUI SE MUESTRA LA FOTO EN LA TABLA */}
                         <div className="w-10 h-10 rounded-full bg-gray-200 overflow-hidden shrink-0 border border-gray-100">
                           {proveedor.foto_perfil ? (
                             <img src={proveedor.foto_perfil} alt={proveedor.nombre} className="w-full h-full object-cover" />
@@ -212,27 +236,57 @@ export default function ProveedoresList() {
                       {proveedor.estado ? (
                         <div className="flex items-center gap-1.5 text-emerald-600 text-sm font-medium">
                           <CheckCircle2 className="w-4 h-4 fill-emerald-100 text-emerald-600" />
-                          Verified
+                          Activo
                         </div>
                       ) : (
                         <div className="flex items-center gap-1.5 text-gray-400 text-sm font-medium">
                           <XCircle className="w-4 h-4" />
-                          Inactive
+                          Inactivo
                         </div>
                       )}
                     </TableCell>
                     
                     <TableCell className="text-right pr-6 py-4">
-                      <Link href={`/admin/proveedores/${proveedor.id_artesano}`}>
-                        <Button 
-                          variant="outline" 
-                          size="sm" 
-                          className="rounded-full text-gray-600 border-gray-200 hover:bg-gray-100 hover:text-gray-900"
-                        >
-                          <Eye className="w-4 h-4 mr-1.5 text-gray-400" />
-                          View Details
-                        </Button>
-                      </Link>
+                      <div className="flex items-center justify-end gap-4">
+                        
+                        {/* NUEVO BOTÓN TIPO SWITCH PARA CAMBIAR ESTATUS */}
+                        <div className="flex items-center gap-2" title={proveedor.estado ? "Desactivar artesano" : "Activar artesano"}>
+                          <button
+                            type="button"
+                            disabled={togglingId === proveedor.id_artesano}
+                            onClick={() => handleToggleEstatus(proveedor.id_artesano, proveedor.estado)}
+                            className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer items-center rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus-visible:ring-2 focus-visible:ring-orange-500 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 ${
+                              proveedor.estado ? 'bg-emerald-500' : 'bg-gray-300'
+                            }`}
+                          >
+                            <span className="sr-only">Cambiar estatus</span>
+                            
+                            {/* Muestra spinner de carga o la bolita del switch */}
+                            {togglingId === proveedor.id_artesano ? (
+                              <Loader2 className="w-3 h-3 text-white absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 animate-spin" />
+                            ) : (
+                              <span
+                                className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
+                                  proveedor.estado ? 'translate-x-5' : 'translate-x-0'
+                                }`}
+                              />
+                            )}
+                          </button>
+                        </div>
+
+                        {/* Botón original de View Details */}
+                        <Link href={`/admin/proveedores/${proveedor.id_artesano}`}>
+                          <Button 
+                            variant="outline" 
+                            size="sm" 
+                            className="rounded-full text-gray-600 border-gray-200 hover:bg-gray-100 hover:text-gray-900"
+                          >
+                            <Eye className="w-4 h-4 mr-1.5 text-gray-400" />
+                            Ver Detalles
+                          </Button>
+                        </Link>
+
+                      </div>
                     </TableCell>
                   </TableRow>
                 ))
