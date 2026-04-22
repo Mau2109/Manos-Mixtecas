@@ -70,7 +70,7 @@ import {
 /* ===============================
    Crear método de pago
    =============================== */
-describe("ADM13 - Registrar método de pago", () => {
+describe("Crear método de pago", () => {
   test("Crear método de pago correctamente", async () => {
     const metodo = await crearMetodoPago({
       nombre: "Tarjeta de Crédito",
@@ -98,7 +98,7 @@ describe("ADM13 - Registrar método de pago", () => {
 /* ===============================
    Listar métodos de pago activos
    =============================== */
-describe("USD12 - Selección método de pago (listar activos)", () => {
+describe("Listar métodos de pago activos", () => {
   test("Listar métodos de pago correctamente", async () => {
     const metodos = await listarMetodosPago();
 
@@ -110,7 +110,7 @@ describe("USD12 - Selección método de pago (listar activos)", () => {
 /* ===============================
    Listar todos los métodos (incluye inactivos)
    =============================== */
-describe("ADM13 - Consultar métodos de pago (incluye inactivos)", () => {
+describe("Listar todos los métodos de pago", () => {
   test("Listar todos los métodos incluyendo inactivos", async () => {
     const metodos = await listarTodosMetodosPago();
 
@@ -122,7 +122,7 @@ describe("ADM13 - Consultar métodos de pago (incluye inactivos)", () => {
 /* ===============================
    Obtener método de pago por ID
    =============================== */
-describe("ADM13 - Consultar método de pago por ID", () => {
+describe("Obtener método de pago por ID", () => {
   test("Obtener método de pago correctamente", async () => {
     const metodo = await obtenerMetodoPago(1);
 
@@ -140,7 +140,7 @@ describe("ADM13 - Consultar método de pago por ID", () => {
 /* ===============================
    Actualizar método de pago
    =============================== */
-describe("ADM13 - Actualizar método de pago", () => {
+describe("Actualizar método de pago", () => {
   test("Actualizar nombre del método", async () => {
     const metodo = await actualizarMetodoPago(1, {
       nombre: "Tarjeta de Débito",
@@ -165,7 +165,7 @@ describe("ADM13 - Actualizar método de pago", () => {
 /* ===============================
    Desactivar método de pago
    =============================== */
-describe("ADM13 - Desactivar método de pago", () => {
+describe("Desactivar método de pago", () => {
   test("Desactivar método de pago correctamente", async () => {
     const metodo = await desactivarMetodoPago(1);
 
@@ -182,7 +182,7 @@ describe("ADM13 - Desactivar método de pago", () => {
 /* ===============================
    Reactivar método de pago
    =============================== */
-describe("ADM13 - Reactivar método de pago", () => {
+describe("Reactivar método de pago", () => {
   test("Reactivar método de pago correctamente", async () => {
     const metodo = await reactivarMetodoPago(1);
 

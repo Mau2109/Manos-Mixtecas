@@ -1,8 +1,7 @@
 import { supabase } from "../../supabaseClient";
 
 /* ===============================
-   ADM12 - Registrar compra (cabecera) (persistencia)
-   ADM13 - Registrar método de pago en compra (id_metodo_pago)
+   Repository - Crear compra (cabecera)
    =============================== */
 export async function crearCompraDb(compra: {
   id_artesano: number;
@@ -26,7 +25,7 @@ export async function crearCompraDb(compra: {
 }
 
 /* ===============================
-   ADM12 - Registrar compra (detalle) (persistencia)
+   Repository - Agregar detalle de compra
    =============================== */
 export async function crearDetalleCompraDb(detalle: {
   id_compra: number;
@@ -50,7 +49,7 @@ export async function crearDetalleCompraDb(detalle: {
 }
 
 /* ===============================
-   ADM12 - Consultar compra con detalles (persistencia)
+   Repository - Consultar compra con detalles
    =============================== */
 export async function obtenerCompraDb(idCompra: number) {
   const { data, error } = await supabase
@@ -71,7 +70,7 @@ export async function obtenerCompraDb(idCompra: number) {
 }
 
 /* ===============================
-   ADM12 - Consultar historial de compras (persistencia)
+   Repository - Listar compras
    =============================== */
 export async function listarComprasDb(filtros?: { id_artesano?: number }) {
   let query = supabase

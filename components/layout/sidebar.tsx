@@ -24,8 +24,8 @@ const menuItems = [
   { name: "Perfil de Empresa", href: "/admin/perfil_empresa/agregar_perfil_empresa", icon: Building2 },
   { name: "Inventario", href: "/admin/inventario", icon: Package },
   { name: "Artesanos", href: "/admin/proveedores", icon: Truck },
-  { name: "Compras", href: "/admin/compras/opciones_modulo", icon: ShoppingCart },
-  { name: "Ventas", href: "/admin/ventas/opciones_modulov", icon: DollarSign },
+  { name: "Compras", href: "/admin/compras/registrar_compra", icon: ShoppingCart },
+  { name: "Ventas", href: "/admin/ventas/registrar_venta", icon: DollarSign },
   { name: "Usuarios", href: "/admin/usuarios", icon: Users },
   { name: "Reportes", href: "/admin/reportes", icon: BarChart3 },
 ]

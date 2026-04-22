@@ -1,324 +1,341 @@
 "use client";
-import React, { useState, useMemo } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Alert } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
-import { Search, Minus, Plus, Calendar, Package, Percent, Tag } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
+import { 
+  Search, Minus, Plus, Calendar, Package, Percent, Tag, 
+  ShoppingCart, Trash2, Image as ImageIcon, Loader2, CheckCircle2 
+} from "lucide-react";
+import { toast, Toaster } from "sonner";
 
-const PRODUCTO = {
-  nombre: "Jarrón de Barro Negro",
-  categoria: "Cerámica Oaxaqueña",
-  sku: "MM-CER-042",
-  precio: 1250,
-  stock: 5,
-};
+// Librerías para el Ticket Local
+import jsPDF from "jspdf";
+import html2canvas from "html2canvas";
+
+// Servicios
+import { consultarProductos } from "@/lib/services/productoService";
+import { crearVenta, agregarProductoVenta, confirmarYActualizarStock } from "@/lib/services/ventaService";
+
+interface ItemCarrito {
+  id_producto: number;
+  nombre: string;
+  precio: number;
+  cantidad: number;
+  stock: number;
+  imagen: string | null;
+}
 
 export default function RegistrarVentaPage() {
-  const [cantidad, setCantidad] = useState(1);
+  const [mounted, setMounted] = useState(false);
   const [busqueda, setBusqueda] = useState("");
-  
+  const [productosData, setProductosData] = useState<any[]>([]);
+  const [carrito, setCarrito] = useState<ItemCarrito[]>([]);
+  const [generarTicket, setGenerarTicket] = useState(true);
+  const [isConfirming, setIsConfirming] = useState(false);
+
   // Estados para el descuento
   const [descuentoPorcentaje, setDescuentoPorcentaje] = useState<number>(0);
   const [descuentoError, setDescuentoError] = useState<string | null>(null);
-  
-  const stockDisponible = PRODUCTO.stock;
-  const stockInsuficiente = cantidad > stockDisponible;
 
-  // Cálculos con descuento
+  useEffect(() => {
+    setMounted(true);
+    consultarProductos().then(setProductosData);
+  }, []);
+
+  const resultadosBusqueda = productosData.filter(p => 
+    p.nombre.toLowerCase().includes(busqueda.toLowerCase()) || 
+    p.id_producto.toString().includes(busqueda)
+  );
+
+  const agregarAlCarrito = (p: any) => {
+    if (p.stock <= 0) return toast.error("Producto sin stock");
+    setCarrito(prev => {
+      const existe = prev.find(item => item.id_producto === p.id_producto);
+      if (existe) {
+        if (existe.cantidad >= p.stock) {
+          toast.warning("Límite de stock alcanzado");
+          return prev;
+        }
+        return prev.map(item => 
+          item.id_producto === p.id_producto ? { ...item, cantidad: item.cantidad + 1 } : item
+        );
+      }
+      return [...prev, { id_producto: p.id_producto, nombre: p.nombre, precio: p.precio, cantidad: 1, stock: p.stock, imagen: p.imagen }];
+    });
+    setBusqueda("");
+  };
+
+  const actualizarCantidad = (id: number, delta: number) => {
+    setCarrito(prev => prev.map(item => {
+      if (item.id_producto === id) {
+        const nuevaCant = item.cantidad + delta;
+        if (nuevaCant < 1 || nuevaCant > item.stock) return item;
+        return { ...item, cantidad: nuevaCant };
+      }
+      return item;
+    }));
+  };
+
+  const eliminarDelCarrito = (id: number) => {
+    setCarrito(prev => prev.filter(item => item.id_producto !== id));
+  };
+
+  // Cálculos globales del carrito con descuento aplicado
   const calculos = useMemo(() => {
-    const subtotal = cantidad * PRODUCTO.precio;
-    const montoDescuento = (subtotal * descuentoPorcentaje) / 100;
-    const subtotalConDescuento = subtotal - montoDescuento;
+    const subtotalBase = carrito.reduce((acc, item) => acc + (item.precio * item.cantidad), 0);
+    const montoDescuento = (subtotalBase * descuentoPorcentaje) / 100;
+    const subtotalConDescuento = subtotalBase - montoDescuento;
     const impuestos = subtotalConDescuento * 0.16;
     const total = subtotalConDescuento + impuestos;
     
     return {
-      subtotal,
+      subtotal: subtotalBase,
       montoDescuento,
       subtotalConDescuento,
       impuestos,
       total
     };
-  }, [cantidad, descuentoPorcentaje]);
+  }, [carrito, descuentoPorcentaje]);
 
-  const handleCantidad = (delta: number) => {
-    setCantidad((prev) => {
-      let next = prev + delta;
-      return next < 1 ? 1 : next;
-    });
-  };
-
-  // Manejar cambio de descuento con validación
   const handleDescuentoChange = (value: string) => {
     setDescuentoError(null);
-    
-    // Permitir campo vacío
     if (value === "") {
       setDescuentoPorcentaje(0);
       return;
     }
-    
     const numero = parseFloat(value);
-    
-    // Validar que sea un número
     if (isNaN(numero)) {
-      setDescuentoError("Ingresa un número válido");
+      setDescuentoError("Número inválido");
       return;
     }
-    
-    // Validar que sea positivo
-    if (numero < 0) {
-      setDescuentoError("El descuento debe ser un valor positivo");
+    if (numero < 0 || numero > 100) {
+      setDescuentoError("Rango 0-100%");
       return;
     }
-    
-    // Validar que no exceda 100%
-    if (numero > 100) {
-      setDescuentoError("El descuento no puede ser mayor a 100%");
-      return;
-    }
-    
     setDescuentoPorcentaje(numero);
   };
 
-  // Aplicar descuentos predefinidos
-  const aplicarDescuentoRapido = (porcentaje: number) => {
-    setDescuentoError(null);
-    setDescuentoPorcentaje(porcentaje);
+  // Generación de Ticket Local (HTML to PDF)
+  const generarTicketLocal = async (idVenta: number) => {
+    const container = document.createElement("div");
+    container.style.width = "80mm";
+    container.style.padding = "20px";
+    container.style.backgroundColor = "#fff";
+    container.style.color = "#000";
+    container.style.fontFamily = "monospace";
+    container.style.position = "absolute";
+    container.style.left = "-9999px";
+
+    container.innerHTML = `
+      <div style="text-align: center; border-bottom: 1px dashed #000; padding-bottom: 10px;">
+        <h2 style="margin: 0;">MANOS MIXTECAS</h2>
+        <p style="font-size: 10px;">Ticket: #V-${idVenta}</p>
+      </div>
+      <table style="width: 100%; font-size: 11px; margin-top: 10px;">
+        ${carrito.map(item => `
+          <tr>
+            <td>${item.cantidad}x ${item.nombre.substring(0, 15)}</td>
+            <td style="text-align: right;">$${(item.precio * item.cantidad).toFixed(2)}</td>
+          </tr>
+        `).join('')}
+      </table>
+      <div style="border-top: 1px dashed #000; margin-top: 10px; text-align: right; font-size: 12px;">
+        <p>Subtotal: $${calculos.subtotal.toFixed(2)}</p>
+        ${descuentoPorcentaje > 0 ? `<p>Desc: -$${calculos.montoDescuento.toFixed(2)}</p>` : ''}
+        <p>IVA: $${calculos.impuestos.toFixed(2)}</p>
+        <h3 style="margin: 0;">TOTAL: $${calculos.total.toFixed(2)}</h3>
+      </div>
+    `;
+
+    document.body.appendChild(container);
+    try {
+      const canvas = await html2canvas(container, { scale: 2 });
+      const imgData = canvas.toDataURL("image/png");
+      const pdf = new jsPDF({ unit: "mm", format: [80, 150] });
+      pdf.addImage(imgData, "PNG", 0, 0, 80, 150);
+      pdf.save(`ticket-${idVenta}.pdf`);
+    } finally {
+      document.body.removeChild(container);
+    }
   };
 
+  const handleConfirmarVenta = async () => {
+    if (carrito.length === 0) return;
+    setIsConfirming(true);
+    try {
+      const venta = await crearVenta({
+        id_cliente: 29, 
+        total: Number(calculos.total.toFixed(2)), 
+        subtotal: Number(calculos.subtotalConDescuento.toFixed(2)),
+        id_metodo_pago: 1, 
+        descuento_pct: descuentoPorcentaje,
+        datos_envio: { nombre: "Venta", apellido: "Mostrador", direccion: "Tienda", ciudad: "Huajuapan", estado: "Oaxaca", codigo_postal: "69000", telefono: "000" }
+      });
+
+      if (!venta?.id_venta) throw new Error("Error al crear venta");
+
+      for (const item of carrito) {
+        await agregarProductoVenta({
+          id_venta: venta.id_venta,
+          id_producto: item.id_producto,
+          cantidad: item.cantidad,
+          precio_unitario: Number(item.precio.toFixed(2))
+        });
+      }
+
+      await confirmarYActualizarStock(venta.id_venta);
+
+      if (generarTicket) await generarTicketLocal(venta.id_venta);
+
+      toast.success("¡Venta completada!");
+      setCarrito([]);
+      setDescuentoPorcentaje(0);
+      const nuevosProds = await consultarProductos();
+      setProductosData(nuevosProds);
+    } catch (error: any) {
+      toast.error(error.message || "Error en la venta");
+    } finally {
+      setIsConfirming(false);
+    }
+  };
+
+  if (!mounted) return null;
+
   return (
-    <div className="flex h-screen bg-[#FBFBFB] overflow-hidden">
-      <main className="flex-1 p-6 lg:p-10 flex flex-col">
+    <div className="flex h-screen bg-[#F8F9FA] overflow-hidden">
+      <Toaster richColors position="top-right" />
+      <main className="flex-1 p-6 lg:p-10 flex flex-col gap-6">
         
-        {/* Header */}
-        <div className="flex justify-between items-start mb-6 w-full max-w-6xl mx-auto">
+        {/* Cabecera */}
+        <div className="flex justify-between items-center w-full max-w-7xl mx-auto">
           <div>
-            <h1 className="text-3xl font-black tracking-tight text-neutral-900">Registrar Venta</h1>
-            <p className="text-[10px] font-mono text-amber-700 font-bold uppercase tracking-[0.2em]">REF: SLS-2024-001</p>
+            <h1 className="text-4xl font-black text-neutral-900 tracking-tight">Punto de Venta</h1>
+            <p className="text-amber-600 font-bold text-xs tracking-widest uppercase font-mono">Control de Inventario Real</p>
           </div>
-          <div className="flex items-center gap-2 px-4 py-2 bg-white rounded-xl border border-neutral-100 shadow-sm text-neutral-600">
-            <Calendar className="w-4 h-4" />
-            <span className="text-xs font-bold uppercase">{new Date().toLocaleDateString("es-MX", { day: "2-digit", month: "short", year: "numeric" })}</span>
+          <div className="bg-white px-4 py-2 rounded-2xl shadow-sm border border-neutral-100 flex items-center gap-3">
+            <Calendar className="w-4 h-4 text-neutral-400" />
+            <span className="font-bold text-neutral-600 text-xs uppercase">
+                {new Date().toLocaleDateString('es-MX', { day: '2-digit', month: 'short', year: 'numeric' })}
+            </span>
           </div>
         </div>
 
-        <div className="flex flex-col md:flex-row gap-6 w-full max-w-6xl mx-auto flex-1 min-h-0">
+        <div className="flex flex-col lg:flex-row gap-8 w-full max-w-7xl mx-auto flex-1 min-h-0">
           
-          {/* Columna Izquierda */}
-          <div className="flex-[1.4] flex flex-col gap-6 min-h-0">
-            <div className="relative">
+          <div className="flex-[1.5] flex flex-col gap-6 min-h-0">
+            {/* Buscador */}
+            <div className="relative group">
               <Input
-                className="pl-12 h-12 bg-white rounded-xl border-neutral-200 shadow-sm"
-                placeholder="Buscar por nombre o SKU..."
+                className="pl-14 h-16 bg-white rounded-[1.5rem] border-none shadow-xl text-lg"
+                placeholder="Escribe para buscar artesanías..."
                 value={busqueda}
                 onChange={e => setBusqueda(e.target.value)}
               />
-              <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-neutral-400" />
+              <Search className="absolute left-5 top-1/2 -translate-y-1/2 w-6 h-6 text-neutral-300" />
+              {busqueda && (
+                <Card className="absolute w-full mt-2 bg-white rounded-2xl shadow-2xl z-50 border-none overflow-hidden max-h-64 overflow-y-auto">
+                  {resultadosBusqueda.map(p => (
+                    <div key={p.id_producto} className="p-4 hover:bg-amber-50 cursor-pointer border-b border-neutral-50 flex justify-between items-center" onClick={() => agregarAlCarrito(p)}>
+                      <div className="flex items-center gap-4">
+                        <div className="w-12 h-12 bg-neutral-100 rounded-xl overflow-hidden flex items-center justify-center border border-neutral-200">
+                           {p.imagen ? <img src={p.imagen} className="object-cover w-full h-full" alt={p.nombre}/> : <Package size={20} className="text-neutral-400" />}
+                        </div>
+                        <div><p className="font-bold text-neutral-800">{p.nombre}</p><p className="text-[10px] font-black text-neutral-400 uppercase">Stock: {p.stock}</p></div>
+                      </div>
+                      <p className="font-mono font-bold text-amber-600">$ {p.precio}</p>
+                    </div>
+                  ))}
+                </Card>
+              )}
             </div>
 
-            <Card className="rounded-[2rem] overflow-hidden border border-neutral-100 shadow-xl bg-white flex-1 flex flex-col min-h-0">
-              <div className="relative w-full h-40 bg-neutral-50 flex items-center justify-center flex-shrink-0">
-                <Package className="w-12 h-12 text-neutral-200" />
-                <Badge className="absolute top-4 left-4 bg-amber-600 text-white border-none">EN SELECCIÓN</Badge>
+            {/* Carrito */}
+            <Card className="flex-1 bg-white rounded-[2.5rem] border-none shadow-sm overflow-hidden flex flex-col p-8">
+              <div className="flex items-center gap-3 mb-8">
+                <ShoppingCart className="text-amber-500" size={24} />
+                <h2 className="font-black text-xl text-neutral-800 uppercase tracking-tighter">Carrito de Venta</h2>
+                <Badge className="ml-auto bg-neutral-100 text-neutral-500 border-none px-3 py-1">{carrito.length} Items</Badge>
               </div>
 
-              <div className="p-6 flex flex-col justify-between flex-1">
-                <div className="flex justify-between items-start">
-                  <div>
-                    <h2 className="font-bold text-2xl text-neutral-800 leading-tight">{PRODUCTO.nombre}</h2>
-                    <p className="text-neutral-500 text-sm font-medium italic">{PRODUCTO.categoria}</p>
-                  </div>
-                  <div className="text-right">
-                    <span className="text-[10px] font-bold text-neutral-400 uppercase tracking-tighter">Unitario</span>
-                    <p className="font-mono text-2xl font-black text-neutral-900">$ {PRODUCTO.precio.toFixed(2)}</p>
-                  </div>
-                </div>
-
-                <div className="flex gap-3 mt-4">
-                  <div className="flex-1 bg-neutral-50 rounded-xl p-3 border border-neutral-100 text-center">
-                    <span className="text-[9px] font-bold text-neutral-400 uppercase block">SKU</span>
-                    <span className="font-mono font-bold text-neutral-700 text-sm">{PRODUCTO.sku}</span>
-                  </div>
-                  <div className="flex-1 bg-neutral-50 rounded-xl p-3 border border-neutral-100 text-center">
-                    <span className="text-[9px] font-bold text-neutral-400 uppercase block">Stock</span>
-                    <span className="font-mono font-bold text-neutral-700 text-sm">
-                      {PRODUCTO.stock.toString().padStart(2, "0")} Unds
-                    </span>
-                  </div>
-                </div>
+              <div className="flex-1 overflow-y-auto pr-2 space-y-4">
+                {carrito.length > 0 ? (
+                  carrito.map((item) => (
+                    <div key={item.id_producto} className="flex items-center gap-4 p-4 bg-neutral-50 rounded-2xl border border-neutral-100 transition-all hover:border-amber-200">
+                      <div className="w-14 h-14 bg-white rounded-xl overflow-hidden border border-neutral-200 flex-shrink-0 flex items-center justify-center">
+                        {item.imagen ? <img src={item.imagen} alt={item.nombre} className="w-full h-full object-cover" /> : <ImageIcon size={20} className="text-neutral-300" />}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-bold text-neutral-800 mb-1">{item.nombre}</p>
+                        <p className="text-[10px] font-bold text-neutral-400 uppercase tracking-widest">$ {item.precio.toFixed(2)}</p>
+                      </div>
+                      <div className="flex items-center gap-3 bg-white rounded-xl border border-neutral-200 p-1">
+                        <Button size="icon" variant="ghost" className="h-8 w-8 rounded-lg" onClick={() => actualizarCantidad(item.id_producto, -1)}><Minus size={14}/></Button>
+                        <span className="font-black text-neutral-800 w-5 text-center">{item.cantidad}</span>
+                        <Button size="icon" variant="ghost" className="h-8 w-8 rounded-lg" onClick={() => actualizarCantidad(item.id_producto, 1)}><Plus size={14}/></Button>
+                      </div>
+                      <div className="w-28 text-right font-mono font-black text-neutral-900 text-lg">$ {(item.precio * item.cantidad).toLocaleString()}</div>
+                      <Button variant="ghost" size="icon" className="text-neutral-300 hover:text-red-500" onClick={() => eliminarDelCarrito(item.id_producto)}><Trash2 size={18} /></Button>
+                    </div>
+                  ))
+                ) : (
+                  <div className="h-full flex flex-col items-center justify-center opacity-20"><Package size={64} className="mb-4" /><p className="font-black uppercase tracking-widest text-xs">Sin productos en la lista</p></div>
+                )}
               </div>
             </Card>
           </div>
 
-          {/* Columna Derecha: PANEL OSCURO */}
-          <div className="flex-1 min-w-[340px]">
-            <div 
-              style={{ backgroundColor: '#171717', color: 'white' }} 
-              className="rounded-[2.5rem] p-8 shadow-2xl h-full flex flex-col border border-white/5"
-            >
-              <h3 className="text-[11px] font-bold text-amber-500 mb-6 tracking-[0.2em] uppercase">Resumen de Venta</h3>
+          {/* Checkout Panel Oscuro */}
+          <div className="flex-1 lg:max-w-[420px]">
+            <div className="bg-[#171717] rounded-[3rem] p-10 h-full flex flex-col border border-white/5 shadow-2xl relative overflow-hidden text-white">
+              <h3 className="text-[10px] font-black text-amber-500 mb-10 tracking-[0.4em] uppercase">Checkout</h3>
               
               <div className="space-y-6 flex-1">
-                {/* Selector Unidades */}
-                <div className="flex items-center justify-between">
-                  <span className="text-sm font-bold text-neutral-300">Unidades</span>
-                  <div className="flex items-center gap-4 bg-neutral-800/50 p-1.5 rounded-2xl border border-white/10">
-                    <Button 
-                      size="icon" variant="ghost" 
-                      style={{ color: 'white' }}
-                      className="h-9 w-9 hover:bg-neutral-700 rounded-xl"
-                      onClick={() => handleCantidad(-1)}
-                    >
-                      <Minus className="w-4 h-4" />
-                    </Button>
-                    <span className="w-6 text-center font-black text-white text-xl">{cantidad}</span>
-                    <Button 
-                      size="icon" variant="ghost" 
-                      style={{ color: 'white' }}
-                      className="h-9 w-9 hover:bg-neutral-700 rounded-xl"
-                      onClick={() => handleCantidad(1)}
-                    >
-                      <Plus className="w-4 h-4" />
-                    </Button>
-                  </div>
-                </div>
-
-                {stockInsuficiente && (
-                  <Alert className="bg-red-950/40 border-red-500/50 text-red-200 py-2 rounded-xl">
-                    <span className="text-[10px] font-bold">Stock insuficiente (Máx: {stockDisponible})</span>
-                  </Alert>
-                )}
-
-                {/* Campo de Descuento */}
+                <div className="flex justify-between text-neutral-400 font-bold text-xs uppercase"><span>Subtotal</span><span className="font-mono">$ {calculos.subtotal.toLocaleString()}</span></div>
+                
+                {/* Descuento */}
                 <div className="pt-4 border-t border-white/10">
                   <div className="flex items-center gap-2 mb-3">
                     <Tag className="w-4 h-4 text-amber-500" />
-                    <Label className="text-sm font-bold text-neutral-300">Aplicar Descuento</Label>
+                    <Label className="text-xs font-bold text-neutral-300 uppercase">Descuento %</Label>
                   </div>
-                  
-                  <div className="relative">
-                    <Input
-                      type="number"
-                      min="0"
-                      max="100"
-                      step="0.5"
-                      placeholder="0"
-                      value={descuentoPorcentaje || ""}
-                      onChange={(e) => handleDescuentoChange(e.target.value)}
-                      className="bg-neutral-800/50 border-white/10 text-white pr-10 rounded-xl h-11 font-mono text-lg"
-                    />
-                    <Percent className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-400" />
-                  </div>
-                  
-                  {descuentoError && (
-                    <p className="text-red-400 text-[10px] mt-2 font-bold">{descuentoError}</p>
-                  )}
-                  
-                  {/* Botones de descuento rápido */}
-                  <div className="flex gap-2 mt-3">
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      onClick={() => aplicarDescuentoRapido(5)}
-                      className={`flex-1 h-8 text-[10px] font-bold rounded-lg border-white/10 ${descuentoPorcentaje === 5 ? 'bg-amber-600 text-white border-amber-600' : 'bg-transparent text-neutral-400 hover:bg-neutral-800'}`}
-                    >
-                      5%
-                    </Button>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      onClick={() => aplicarDescuentoRapido(10)}
-                      className={`flex-1 h-8 text-[10px] font-bold rounded-lg border-white/10 ${descuentoPorcentaje === 10 ? 'bg-amber-600 text-white border-amber-600' : 'bg-transparent text-neutral-400 hover:bg-neutral-800'}`}
-                    >
-                      10%
-                    </Button>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      onClick={() => aplicarDescuentoRapido(15)}
-                      className={`flex-1 h-8 text-[10px] font-bold rounded-lg border-white/10 ${descuentoPorcentaje === 15 ? 'bg-amber-600 text-white border-amber-600' : 'bg-transparent text-neutral-400 hover:bg-neutral-800'}`}
-                    >
-                      15%
-                    </Button>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      onClick={() => aplicarDescuentoRapido(20)}
-                      className={`flex-1 h-8 text-[10px] font-bold rounded-lg border-white/10 ${descuentoPorcentaje === 20 ? 'bg-amber-600 text-white border-amber-600' : 'bg-transparent text-neutral-400 hover:bg-neutral-800'}`}
-                    >
-                      20%
-                    </Button>
-                  </div>
+                  <Input
+                    type="number"
+                    value={descuentoPorcentaje || ""}
+                    onChange={(e) => handleDescuentoChange(e.target.value)}
+                    className="bg-neutral-800/50 border-white/10 text-white rounded-xl h-11"
+                  />
+                  {descuentoError && <p className="text-red-400 text-[10px] mt-1">{descuentoError}</p>}
                 </div>
 
-                {/* Desglose Gastos */}
-                <div className="space-y-3 pt-4 border-t border-white/10">
-                  <div className="flex justify-between text-neutral-400 text-sm font-medium">
-                    <span>Subtotal</span>
-                    <span className="font-mono text-white">$ {calculos.subtotal.toLocaleString()}</span>
-                  </div>
-                  
-                  {/* Mostrar descuento si aplica */}
-                  {descuentoPorcentaje > 0 && (
-                    <div className="flex justify-between text-sm font-medium">
-                      <span className="text-green-400 flex items-center gap-1">
-                        <Tag className="w-3 h-3" />
-                        Descuento ({descuentoPorcentaje}%)
-                      </span>
-                      <span className="font-mono text-green-400">- $ {calculos.montoDescuento.toLocaleString()}</span>
-                    </div>
-                  )}
-                  
-                  {descuentoPorcentaje > 0 && (
-                    <div className="flex justify-between text-neutral-400 text-sm font-medium">
-                      <span>Subtotal con descuento</span>
-                      <span className="font-mono text-white">$ {calculos.subtotalConDescuento.toLocaleString()}</span>
-                    </div>
-                  )}
-                  
-                  <div className="flex justify-between text-neutral-400 text-sm font-medium">
-                    <span>IVA (16%)</span>
-                    <span className="font-mono text-white">$ {calculos.impuestos.toLocaleString(undefined, { maximumFractionDigits: 2 })}</span>
-                  </div>
-                  
-                  <div className="pt-4 mt-2 flex flex-col items-end border-t border-white/5">
-                    <span className="text-[10px] font-black text-amber-500 uppercase tracking-widest">Total a pagar</span>
-                    <span className="text-4xl font-black text-white font-mono leading-none mt-2">
-                      ${calculos.total.toLocaleString(undefined, { maximumFractionDigits: 2 })}
-                    </span>
-                    {descuentoPorcentaje > 0 && (
-                      <span className="text-[10px] text-green-400 mt-1 font-bold">
-                        Ahorro: ${calculos.montoDescuento.toLocaleString()}
-                      </span>
-                    )}
-                  </div>
+                <div className="flex justify-between text-neutral-400 font-bold text-xs uppercase"><span>IVA (16%)</span><span className="font-mono">$ {calculos.impuestos.toLocaleString(undefined, { maximumFractionDigits: 2 })}</span></div>
+                
+                <div className="pt-10 border-t border-white/5 flex flex-col items-end">
+                  <span className="text-[10px] font-black text-amber-500 uppercase tracking-[0.2em] mb-4">Total a Pagar</span>
+                  <span className="text-6xl font-black font-mono">${calculos.total.toLocaleString(undefined, { maximumFractionDigits: 2 })}</span>
                 </div>
               </div>
 
-              {/* Botón Final */}
-              <div className="mt-6">
-                <Button
-                  style={{ backgroundColor: stockInsuficiente || descuentoError ? '#262626' : '#f59e0b', color: stockInsuficiente || descuentoError ? '#525252' : 'white' }}
-                  className="w-full h-14 rounded-2xl text-base font-black tracking-widest transition-all shadow-xl active:scale-95"
-                  disabled={stockInsuficiente || !!descuentoError}
+              <div className="mt-10 space-y-6">
+                <div className="flex items-center justify-between bg-white/5 p-5 rounded-3xl border border-white/5">
+                  <Label className="text-[10px] font-black text-neutral-300 uppercase">Generar Ticket</Label>
+                  <Switch checked={generarTicket} onCheckedChange={setGenerarTicket} />
+                </div>
+
+                <Button 
+                  disabled={carrito.length === 0 || isConfirming || !!descuentoError}
+                  onClick={handleConfirmarVenta}
+                  className="w-full h-20 rounded-[2rem] text-lg font-black bg-amber-500 hover:bg-amber-400 text-white shadow-2xl transition-all active:scale-95 flex gap-3"
                 >
-                  CONFIRMAR VENTA
+                  {isConfirming ? <Loader2 className="animate-spin" /> : <><CheckCircle2 /> CONFIRMAR</>}
                 </Button>
-                <p className="text-[9px] text-neutral-500 text-center mt-4 uppercase font-bold tracking-[0.1em] opacity-50">
-                  Transacción Segura • Inventario Real
-                </p>
+                <p className="text-[9px] text-neutral-500 text-center uppercase tracking-widest opacity-50">Transacción Segura • Inventario Real</p>
               </div>
             </div>
           </div>
-          
         </div>
       </main>
     </div>

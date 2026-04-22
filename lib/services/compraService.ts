@@ -6,6 +6,10 @@ import {
 } from "../persistence/repositories/compraRepository";
 import { restaurarStockProductoDb } from "../persistence/repositories/ventaRepository";
 
+// ID por defecto para el método de pago (Asegúrate que este ID exista en tu tabla metodos_pago)
+// Val, si en tu tabla el ID de "Efectivo" es otro, solo cambia este número.
+const METODO_PAGO_DEFAULT = 1; 
+
 /* ===============================
    ADM05 - Registrar compra
    =============================== */
@@ -46,10 +50,11 @@ export async function registrarCompra(compra: {
   );
 
   // crear cabecera
+  // CORRECCIÓN: Si no viene id_metodo_pago, usamos el METODO_PAGO_DEFAULT
   const cabecera = await crearCompraDb({
     id_artesano: compra.id_artesano,
     total,
-    id_metodo_pago: compra.id_metodo_pago,
+    id_metodo_pago: compra.id_metodo_pago || METODO_PAGO_DEFAULT, 
     notas: compra.notas,
   });
 
@@ -64,7 +69,7 @@ export async function registrarCompra(compra: {
     });
     detallesInsertados.push(linea);
 
-    // incrementar stock
+    // incrementar stock (restaurarStockProductoDb suma la cantidad al stock actual)
     await restaurarStockProductoDb(det.id_producto, det.cantidad);
   }
 

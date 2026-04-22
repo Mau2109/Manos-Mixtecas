@@ -13,12 +13,6 @@ import { toast } from 'sonner';
 
 /* ===============================
    ADM17 - Editar Perfil de Empresa
-   Criterios de Aceptación:
-   1. Campos precargados con información actual
-   2. RFC no editable (protegido por seguridad)
-   3. Permitir reemplazar logotipo
-   4. Validar campos obligatorios al actualizar
-   5. Mostrar mensaje de confirmación
    =============================== */
 
 interface AlertType {
@@ -78,7 +72,8 @@ export default function EditarPerfilPage() {
             email: empresa.email || '',
             logo_url: empresa.logo_url || '',
           });
-          // Cargar preview del logo
+
+          // CORRECCIÓN: Si hay logo_url, lo ponemos en el preview directamente
           if (empresa.logo_url) {
             setLogoPreview(empresa.logo_url);
           }
@@ -100,17 +95,12 @@ export default function EditarPerfilPage() {
 
   const validarFormulario = (): boolean => {
     const errores: Record<string, string> = {};
-
-    // Nombre obligatorio
     if (!formData.nombre.trim()) {
       errores.nombre = 'El nombre de la empresa es obligatorio';
     }
-
-    // Email (validación básica si se proporciona)
     if (formData.email && !formData.email.match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/)) {
       errores.email = 'El correo no es válido';
     }
-
     setErroresValidacion(errores);
     return Object.keys(errores).length === 0;
   };
@@ -119,13 +109,8 @@ export default function EditarPerfilPage() {
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
   ) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
+    setFormData((prev) => ({ ...prev, [name]: value }));
     setFormModificado(true);
-
-    // Limpiar error del campo al escribir
     if (erroresValidacion[name]) {
       setErroresValidacion((prev) => {
         const nuevo = { ...prev };
@@ -142,31 +127,21 @@ export default function EditarPerfilPage() {
   const handleLogoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      // Validar tipo de archivo
       if (!file.type.startsWith('image/')) {
-        setErroresValidacion((prev) => ({
-          ...prev,
-          logo: 'Solo se permiten imágenes (JPG, PNG)',
-        }));
+        setErroresValidacion((prev) => ({ ...prev, logo: 'Solo imágenes (JPG, PNG)' }));
         return;
       }
-
-      // Validar tamaño (máx 5MB)
       if (file.size > 5 * 1024 * 1024) {
-        setErroresValidacion((prev) => ({
-          ...prev,
-          logo: 'El archivo no debe superar 5MB',
-        }));
+        setErroresValidacion((prev) => ({ ...prev, logo: 'Máximo 5MB' }));
         return;
       }
 
-      // Crear preview
+      // CORRECCIÓN: Generar preview local
       const previewUrl = URL.createObjectURL(file);
       setLogoPreview(previewUrl);
       setLogoFile(file);
       setFormModificado(true);
 
-      // Limpiar error del logo
       if (erroresValidacion.logo) {
         setErroresValidacion((prev) => {
           const nuevo = { ...prev };
@@ -178,41 +153,36 @@ export default function EditarPerfilPage() {
   };
 
   const subirLogoAStorage = async (file: File): Promise<string> => {
+    // 1. Limpiar el nombre del archivo para evitar problemas de caracteres
     const fileExt = file.name.split('.').pop();
-    const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`;
+    const fileName = `logo-${Date.now()}.${fileExt}`;
+    const filePath = `${fileName}`;
 
+    // 2. Subir a Supabase
     const { error: uploadError } = await supabase.storage
-      .from('logos')
-      .upload(fileName, file);
+      .from('logos') // Asegúrate de que el bucket se llame exactamente 'logos'
+      .upload(filePath, file);
 
     if (uploadError) {
-      throw new Error('No se pudo subir el logo al servidor. Verifica que el bucket "logos" exista en Supabase Storage.');
+      throw new Error(`Error de subida: ${uploadError.message}`);
     }
 
+    // 3. Obtener la URL pública
     const { data: publicUrlData } = supabase.storage
       .from('logos')
-      .getPublicUrl(fileName);
+      .getPublicUrl(filePath);
 
     return publicUrlData.publicUrl;
   };
 
   const handleActualizar = async (e: React.FormEvent) => {
     e.preventDefault();
-
-    // Validar antes de enviar
-    if (!validarFormulario()) {
-      setAlerta({
-        tipo: 'error',
-        texto: 'Por favor corrija los errores en el formulario',
-      });
-      return;
-    }
+    if (!validarFormulario()) return;
 
     setLoading(true);
     setAlerta({ tipo: '', texto: '' });
 
     try {
-      // Preparar datos a actualizar
       const datosActualizar: any = {
         nombre: formData.nombre.trim(),
         direccion: formData.direccion.trim() || undefined,
@@ -220,61 +190,39 @@ export default function EditarPerfilPage() {
         email: formData.email.trim() || undefined,
       };
 
-      // Si hay nuevo logo, subirlo
       if (logoFile) {
-        const logoUrl = await subirLogoAStorage(logoFile);
-        datosActualizar.logo_url = logoUrl;
+        const logoUrlValida = await subirLogoAStorage(logoFile);
+        datosActualizar.logo_url = logoUrlValida;
       }
 
-      // Actualizar en la base de datos
       await actualizarEmpresa(formData.id_empresa, datosActualizar);
 
-      // Mostrar éxito
-      setAlerta({
-        tipo: 'exito',
-        texto: 'Datos actualizados correctamente',
-      });
-      toast.success('Datos actualizados correctamente');
+      setAlerta({ tipo: 'exito', texto: 'Datos actualizados correctamente' });
+      toast.success('¡Perfil actualizado!');
       setFormModificado(false);
 
-      // Recargar datos después de 2 segundos
+      // Esperar un poco para que el usuario vea el éxito antes de recargar
       setTimeout(() => {
         window.location.reload();
-      }, 2000);
+      }, 1500);
+
     } catch (error: any) {
-      console.error('Error al actualizar empresa:', error);
-      const mensajeError =
-        error?.message || 'No se pudo actualizar el perfil de la empresa';
-      setAlerta({
-        tipo: 'error',
-        texto: mensajeError,
-      });
-      toast.error(mensajeError);
+      console.error('Error:', error);
+      setAlerta({ tipo: 'error', texto: error.message || 'Error al guardar' });
     } finally {
       setLoading(false);
     }
   };
 
   const handleCancelar = () => {
-    if (formModificado) {
-      const confirmacion = confirm(
-        '¿Descartar cambios? Los datos modificados no se guardarán.'
-      );
-      if (confirmacion) {
-        router.back();
-      }
-    } else {
-      router.back();
-    }
+    if (formModificado && !confirm('¿Descartar cambios?')) return;
+    router.back();
   };
 
   if (cargandoDatos) {
     return (
-      <div className="min-h-screen bg-gray-50 p-6 flex items-center justify-center">
-        <div className="text-center">
-          <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4 text-amber-700" />
-          <p className="text-gray-600">Cargando datos de la empresa...</p>
-        </div>
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-amber-700" />
       </div>
     );
   }
@@ -282,139 +230,55 @@ export default function EditarPerfilPage() {
   return (
     <div className="min-h-screen bg-gray-50 p-6">
       <div className="max-w-6xl mx-auto">
-        {/* Breadcrumb */}
-        <div className="mb-6 text-sm text-gray-500">
-          <span>AJUSTES / PERFIL DE EMPRESA</span>
+        <div className="mb-6 text-sm text-gray-500 uppercase tracking-widest">
+          AJUSTES / PERFIL DE EMPRESA
         </div>
 
-        {/* Alert de éxito */}
         {alerta.tipo === 'exito' && (
-          <div className="mb-6 flex items-center gap-3 rounded-full bg-amber-100 px-6 py-3 text-amber-800">
-            <CheckCircle2 className="h-5 w-5 flex-shrink-0" />
-            <p className="text-sm font-medium">{alerta.texto}</p>
+          <div className="mb-6 flex items-center gap-3 rounded-xl bg-green-50 border border-green-200 p-4 text-green-800">
+            <CheckCircle2 className="h-5 w-5" />
+            <p className="font-medium">{alerta.texto}</p>
           </div>
         )}
 
-        {/* Alert de error */}
         {alerta.tipo === 'error' && (
-          <div className="mb-6 flex items-center gap-3 rounded-lg bg-red-50 px-6 py-3 border border-red-200">
-            <AlertCircle className="h-5 w-5 flex-shrink-0 text-red-600" />
-            <p className="text-sm font-medium text-red-700">{alerta.texto}</p>
+          <div className="mb-6 flex items-center gap-3 rounded-xl bg-red-50 border border-red-200 p-4 text-red-800">
+            <AlertCircle className="h-5 w-5" />
+            <p className="font-medium">{alerta.texto}</p>
           </div>
         )}
 
-        {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">
-            Editar Perfil de Empresa
-          </h1>
-        </div>
+        <h1 className="text-3xl font-bold text-gray-900 mb-8">Editar Perfil de Empresa</h1>
 
-        {/* Formulario */}
         <form onSubmit={handleActualizar} className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Columna Izquierda: Información General */}
-          <div className="lg:col-span-2">
+          <div className="lg:col-span-2 space-y-6">
             <div className="bg-white rounded-2xl p-8 border border-gray-200 shadow-sm space-y-6">
+              <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-4">Información General</p>
+
               <div>
-                <label className="block text-xs font-bold tracking-widest text-gray-500 mb-6 uppercase">
-                  Información General
-                </label>
+                <Label htmlFor="nombre">Nombre de la Empresa *</Label>
+                <Input id="nombre" name="nombre" value={formData.nombre} onChange={handleInputChange} disabled={loading} />
+                {erroresValidacion.nombre && <p className="text-xs text-red-500 mt-1">{erroresValidacion.nombre}</p>}
               </div>
 
-              {/* Nombre de la Empresa */}
               <div>
-                <Label htmlFor="nombre" className="font-semibold text-gray-700 mb-2 block">
-                  Nombre de la Empresa <span className="text-red-500">*</span>
-                </Label>
-                <Input
-                  id="nombre"
-                  name="nombre"
-                  type="text"
-                  value={formData.nombre}
-                  onChange={handleInputChange}
-                  className={`rounded-lg ${
-                    erroresValidacion.nombre ? 'border-red-500' : ''
-                  }`}
-                  disabled={loading}
-                />
-                {erroresValidacion.nombre && (
-                  <p className="text-xs text-red-600 mt-1">
-                    {erroresValidacion.nombre}
-                  </p>
-                )}
+                <Label htmlFor="rfc">RFC (No Editable)</Label>
+                <Input id="rfc" value={formData.rfc} disabled className="bg-gray-50" />
               </div>
 
-              {/* RFC (No Editable) */}
               <div>
-                <Label htmlFor="rfc" className="font-semibold text-gray-700 mb-2 block">
-                  RFC (No Editable)
-                </Label>
-                <Input
-                  id="rfc"
-                  name="rfc"
-                  type="text"
-                  value={formData.rfc}
-                  disabled={true}
-                  className="bg-gray-100 cursor-not-allowed"
-                />
-                <p className="text-xs text-gray-400 mt-1">
-                  Este campo no puede ser modificado por razones de seguridad contable
-                </p>
+                <Label htmlFor="direccion">Dirección Física</Label>
+                <Textarea id="direccion" name="direccion" value={formData.direccion} onChange={handleInputChange} disabled={loading} />
               </div>
 
-              {/* Dirección Física */}
-              <div>
-                <Label htmlFor="direccion" className="font-semibold text-gray-700 mb-2 block">
-                  Dirección Física
-                </Label>
-                <Textarea
-                  id="direccion"
-                  name="direccion"
-                  value={formData.direccion}
-                  onChange={handleInputChange}
-                  placeholder="Calle, Número, Colonia, CP, Estado"
-                  className="rounded-lg min-h-20"
-                  disabled={loading}
-                />
-              </div>
-
-              {/* Teléfono y Email */}
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <Label htmlFor="telefono" className="font-semibold text-gray-700 mb-2 block">
-                    Teléfono
-                  </Label>
-                  <Input
-                    id="telefono"
-                    name="telefono"
-                    type="tel"
-                    value={formData.telefono}
-                    onChange={handleInputChange}
-                    className="rounded-lg"
-                    disabled={loading}
-                  />
+                  <Label htmlFor="telefono">Teléfono</Label>
+                  <Input id="telefono" name="telefono" value={formData.telefono} onChange={handleInputChange} disabled={loading} />
                 </div>
-
                 <div>
-                  <Label htmlFor="email" className="font-semibold text-gray-700 mb-2 block">
-                    Correo de Contacto
-                  </Label>
-                  <Input
-                    id="email"
-                    name="email"
-                    type="email"
-                    value={formData.email}
-                    onChange={handleInputChange}
-                    className={`rounded-lg ${
-                      erroresValidacion.email ? 'border-red-500' : ''
-                    }`}
-                    disabled={loading}
-                  />
-                  {erroresValidacion.email && (
-                    <p className="text-xs text-red-600 mt-1">
-                      {erroresValidacion.email}
-                    </p>
-                  )}
+                  <Label htmlFor="email">Correo de Contacto</Label>
+                  <Input id="email" name="email" type="email" value={formData.email} onChange={handleInputChange} disabled={loading} />
                 </div>
               </div>
             </div>
@@ -435,17 +299,26 @@ export default function EditarPerfilPage() {
                 onChange={handleLogoChange}
               />
 
-              {/* Logo Preview */}
-              <div className="mb-6 rounded-xl border border-gray-200 bg-gray-50 p-4">
-                {logoPreview ? (
+              {/* Logo Preview - CORREGIDO */}
+              <div className="mb-6 rounded-xl border border-gray-200 bg-gray-50 p-4 min-h-[160px] flex items-center justify-center">
+                {/* Verificamos logoPreview. 
+          Si existe y no es un string vacío, mostramos la imagen.
+      */}
+                {logoPreview && logoPreview.trim() !== "" ? (
                   <img
                     src={logoPreview}
                     alt="Logo preview"
+                    key={logoPreview} // El key ayuda a React a refrescar la imagen si la URL cambia
                     className="w-full h-40 object-contain"
+                    onError={() => {
+                      console.error("Error cargando la imagen desde:", logoPreview);
+                      setLogoPreview(null); // Si la URL falla, mostramos el estado vacío
+                    }}
                   />
                 ) : (
-                  <div className="w-full h-40 flex items-center justify-center bg-gray-100 rounded-lg">
-                    <span className="text-xs text-gray-400">Sin logo</span>
+                  <div className="w-full h-40 flex flex-col items-center justify-center bg-gray-100 rounded-lg">
+                    <ImagePlus className="w-8 h-8 text-gray-300 mb-2" />
+                    <span className="text-xs text-gray-400">Sin logo disponible</span>
                   </div>
                 )}
               </div>
@@ -459,58 +332,30 @@ export default function EditarPerfilPage() {
                 disabled={loading}
               >
                 <ImagePlus className="w-4 h-4 mr-2" />
-                Actualizar Logotipo
+                {logoPreview ? 'Cambiar Logotipo' : 'Subir Logotipo'}
               </Button>
 
               {erroresValidacion.logo && (
                 <p className="text-xs text-red-600 mb-4">{erroresValidacion.logo}</p>
               )}
 
-              <p className="text-xs text-gray-400 italic">
-                Formatos: JPG o PNG (Máx. 5MB). Utilice una imagen cuadrada para mejor visualización.
+              <p className="text-xs text-gray-400 italic text-center">
+                Formatos: JPG o PNG (Máx. 5MB).
               </p>
-
-              {/* Info adicional */}
-              <div className="mt-6 p-4 bg-gray-50 rounded-lg border border-gray-200">
-                <p className="text-xs text-gray-600 mb-2">
-                  <span className="font-semibold">⚠️ Permisos necesarios:</span> Solo administradores
-                </p>
-                <p className="text-xs text-gray-500">
-                  Última actualización: 24 OCT 2023
-                </p>
-              </div>
             </div>
           </div>
         </form>
 
-        {/* Botones de Acción */}
         <div className="mt-8 flex justify-center gap-4">
-          <Button
-            type="button"
-            onClick={handleCancelar}
-            variant="outline"
-            className="px-8 py-2 border-amber-700 text-amber-700 hover:bg-amber-50"
-            disabled={loading}
-          >
-            Cancelar Cambios
+          <Button type="button" onClick={handleCancelar} variant="outline" className="px-8 border-amber-700 text-amber-700">
+            Cancelar
           </Button>
-          <Button
-            onClick={handleActualizar}
-            disabled={loading || !formModificado}
-            className="bg-amber-700 hover:bg-amber-800 text-white px-8 py-2 rounded-lg font-semibold"
-          >
-            {loading ? (
-              <>
-                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                Actualizando...
-              </>
-            ) : (
-              'Actualizar Datos'
-            )}
+          <Button onClick={handleActualizar} disabled={loading || !formModificado} className="bg-amber-700 hover:bg-amber-800 text-white px-8">
+            {loading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
+            Guardar Cambios
           </Button>
         </div>
       </div>
     </div>
   );
 }
-
