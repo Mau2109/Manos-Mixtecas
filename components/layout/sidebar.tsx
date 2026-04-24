@@ -21,6 +21,7 @@ import { useSidebar } from "@/app/admin/sidebar-context"
 import path from "path"
 
 const menuItems = [
+  
   { name: "Perfil de Empresa", href: "/admin/perfil_empresa/agregar_perfil_empresa", icon: Building2 },
   { name: "Inventario", href: "/admin/inventario", icon: Package },
   { name: "Artesanos", href: "/admin/proveedores", icon: Truck },
@@ -28,6 +29,8 @@ const menuItems = [
   { name: "Ventas", href: "/admin/ventas/registrar_venta", icon: DollarSign },
   { name: "Usuarios", href: "/admin/usuarios", icon: Users },
   { name: "Reportes", href: "/admin/reportes", icon: BarChart3 },
+
+  { name: "Iniciar_Seccion", href: "/admin/iniciar_seccion", icon: Users },
 ]
 
 export function Sidebar() {
