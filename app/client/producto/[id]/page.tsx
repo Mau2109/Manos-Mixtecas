@@ -19,6 +19,7 @@ export default function ProductoPage() {
   const [loading, setLoading] = useState(true);
   const [agregado, setAgregado] = useState(false);
   const [mensajeCarrito, setMensajeCarrito] = useState("");
+  const [lightboxImg, setLightboxImg] = useState<any>(null);
 
   useEffect(() => {
     async function load() {
@@ -118,234 +119,326 @@ export default function ProductoPage() {
   const fragInfo = fragFragilidad[producto.fragilidad] ?? null;
 
   return (
-    <div className="max-w-7xl mx-auto px-6 py-10">
-      {/* Botón Volver y Breadcrumb */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
-        <button
-          onClick={() => router.back()}
-          className="group flex items-center gap-2 bg-white/80 backdrop-blur-md border border-[#E6D6C5] shadow-sm text-[#5C4A3A] px-5 py-2.5 rounded-full hover:bg-[#6B3A2A] hover:text-white transition-all duration-300 w-fit"
-        >
-          <svg
-            width="18"
-            height="18"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2.5"
-            className="group-hover:-translate-x-1 transition-transform"
+    <>
+      <div className="max-w-7xl mx-auto px-6 py-10">
+        {/* Botón Volver y Breadcrumb */}
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+          <button
+            onClick={() => router.back()}
+            className="group flex items-center gap-2 bg-white/80 backdrop-blur-md border border-[#E6D6C5] shadow-sm text-[#5C4A3A] px-5 py-2.5 rounded-full hover:bg-[#6B3A2A] hover:text-white transition-all duration-300 w-fit"
           >
-            <line x1="19" y1="12" x2="5" y2="12"></line>
-            <polyline points="12 19 5 12 12 5"></polyline>
-          </svg>
-          <span className="font-medium text-sm tracking-wide">Volver</span>
-        </button>
+            <svg
+              width="18"
+              height="18"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2.5"
+              className="group-hover:-translate-x-1 transition-transform"
+            >
+              <line x1="19" y1="12" x2="5" y2="12"></line>
+              <polyline points="12 19 5 12 12 5"></polyline>
+            </svg>
+            <span className="font-medium text-sm tracking-wide">Volver</span>
+          </button>
 
-        {/* Breadcrumb */}
-        <nav className="text-xs text-[#A08070] flex max-w-[50%] md:max-w-none ml-auto md:ml-0 overflow-hidden text-ellipsis whitespace-nowrap">
-          <Link href="/client" className="hover:text-[#6B3A2A]">Inicio</Link>
-          <span className="mx-2">/</span>
-          <Link href="/client/catalogo" className="hover:text-[#6B3A2A]">Catálogo</Link>
-          <span className="mx-2">/</span>
-          <span className="text-[#2C1810] truncate block">{producto.nombre}</span>
-        </nav>
-      </div>
-
-      <div className="grid md:grid-cols-2 gap-12 lg:gap-20">
-        {/* ── Galería (USD08) ─────────────────────────────── */}
-        <div className="space-y-4">
-          <div className="aspect-square rounded-2xl overflow-hidden bg-[#F0E8DC]">
-            {todasImagenes[imgActiva] ? (
-              <img
-                src={todasImagenes[imgActiva].url}
-                alt={todasImagenes[imgActiva].descripcion ?? producto.nombre}
-                className="w-full h-full object-cover transition-all duration-300"
-              />
-            ) : (
-              <div className="w-full h-full flex items-center justify-center">
-                <span className="text-8xl">🏺</span>
-              </div>
-            )}
-          </div>
-          {todasImagenes.length > 1 && (
-            <div className="flex gap-3 overflow-x-auto pb-2">
-              {todasImagenes.map((img, i) => (
-                <button
-                  key={i}
-                  onClick={() => setImgActiva(i)}
-                  className={`shrink-0 w-20 h-20 rounded-xl overflow-hidden border-2 transition-colors ${
-                    imgActiva === i ? "border-[#6B3A2A]" : "border-transparent hover:border-[#C4A882]"
-                  }`}
-                >
-                  <img src={img.url} alt="" className="w-full h-full object-cover" />
-                </button>
-              ))}
-            </div>
-          )}
+          {/* Breadcrumb */}
+          <nav className="text-xs text-[#A08070] flex max-w-[50%] md:max-w-none ml-auto md:ml-0 overflow-hidden text-ellipsis whitespace-nowrap">
+            <Link href="/client" className="hover:text-[#6B3A2A]">Inicio</Link>
+            <span className="mx-2">/</span>
+            <Link href="/client/catalogo" className="hover:text-[#6B3A2A]">Catálogo</Link>
+            <span className="mx-2">/</span>
+            <span className="text-[#2C1810] truncate block">{producto.nombre}</span>
+          </nav>
         </div>
 
-        {/* ── Detalle (USD09) ─────────────────────────────── */}
-        <div>
-          {/* Tags */}
-          <div className="flex flex-wrap gap-2 mb-4">
-            {producto.es_unico && (
-              <span className="bg-[#6B3A2A] text-white text-xs px-4 py-1.5 rounded-full uppercase font-bold tracking-widest flex items-center gap-2 shadow-sm">
-                Pieza Única
-              </span>
-            )}
-            {fragInfo && (
-              <span
-                className="text-xs px-4 py-1.5 rounded-full uppercase font-medium tracking-wide text-white"
-                style={{ backgroundColor: fragInfo.color }}
-              >
-                {fragInfo.label}
-              </span>
-            )}
-          </div>
+        <div className="grid md:grid-cols-2 gap-12 lg:gap-20">
+          {/* ── Galería (USD08) ─────────────────────────────── */}
+          <div className="space-y-4">
+            {/* Imagen principal — clic para ampliar */}
+            <div
+              className="aspect-square rounded-2xl overflow-hidden bg-[#F0E8DC] relative group cursor-zoom-in"
+              onClick={() =>
+                todasImagenes[imgActiva] && setLightboxImg(todasImagenes[imgActiva])
+              }
+            >
+              {todasImagenes[imgActiva] ? (
+                <>
+                  <img
+                    src={todasImagenes[imgActiva].url}
+                    alt={todasImagenes[imgActiva].descripcion ?? producto.nombre}
+                    className="w-full h-full object-cover transition-all duration-300 group-hover:scale-105"
+                  />
+                  {/* Overlay hint expandir */}
+                  <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors duration-300 flex items-center justify-center">
+                    <svg
+                      className="text-white opacity-0 group-hover:opacity-100 transition-opacity duration-300 drop-shadow-lg"
+                      width="40" height="40" viewBox="0 0 24 24" fill="none"
+                      stroke="currentColor" strokeWidth="1.5"
+                    >
+                      <path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7" />
+                    </svg>
+                  </div>
+                </>
+              ) : (
+                <div className="w-full h-full flex items-center justify-center">
+                  <span className="text-8xl">🏺</span>
+                </div>
+              )}
+            </div>
 
-          <h1 className="text-3xl md:text-4xl font-bold text-[#2C1810] mb-3">{producto.nombre}</h1>
-
-          {/* Precio */}
-          <div className="flex items-baseline gap-3 mb-6">
-            <span className="text-2xl font-bold text-[#6B3A2A]">
-              ${precioFinal.toLocaleString("es-MX")} MXN
-            </span>
-            {producto.descuento_pct > 0 && (
-              <>
-                <span className="text-lg text-[#A08070] line-through">
-                  ${Number(producto.precio).toLocaleString("es-MX")}
-                </span>
-                <span className="bg-[#FEE2E2] text-[#C0392B] text-xs px-2 py-0.5 rounded-full">
-                  -{producto.descuento_pct}%
-                </span>
-              </>
-            )}
-          </div>
-
-          {/* Descripción */}
-          <p className="text-[#5C4A3A] leading-relaxed mb-6">{producto.descripcion}</p>
-
-          {/* Ficha técnica */}
-          <div className="bg-[#F0E8DC] rounded-2xl p-5 mb-8 space-y-3">
-            <h3 className="text-xs tracking-widest uppercase text-[#A08070] font-medium">Ficha Técnica</h3>
-            {producto.materiales && (
-              <div className="flex justify-between text-sm">
-                <span className="text-[#7A6A5A]">Materiales</span>
-                <span className="text-[#2C1810] font-medium">{producto.materiales}</span>
+            {/* Miniaturas */}
+            {todasImagenes.length > 1 && (
+              <div className="flex gap-3 overflow-x-auto pb-2">
+                {todasImagenes.map((img, i) => (
+                  <button
+                    key={i}
+                    onClick={() => setImgActiva(i)}
+                    className={`shrink-0 w-20 h-20 rounded-xl overflow-hidden border-2 transition-colors ${
+                      imgActiva === i ? "border-[#6B3A2A]" : "border-transparent hover:border-[#C4A882]"
+                    }`}
+                  >
+                    <img src={img.url} alt="" className="w-full h-full object-cover" />
+                  </button>
+                ))}
               </div>
             )}
-            {producto.tecnica && (
-              <div className="flex justify-between text-sm">
-                <span className="text-[#7A6A5A]">Técnica</span>
-                <span className="text-[#2C1810] font-medium">{producto.tecnica}</span>
-              </div>
-            )}
-            <div className="flex justify-between text-sm">
-              <span className="text-[#7A6A5A]">Disponibilidad</span>
-              <span className={`font-medium ${producto.stock > 5 ? "text-green-700" : producto.stock > 0 ? "text-amber-600" : "text-red-600"}`}>
-                {producto.stock > 0 ? `${producto.stock} en stock` : "Agotado"}
-              </span>
-            </div>
           </div>
 
-          {/* Artesano */}
-          {artesano && (
-            <div className="mb-8 rounded-2xl border border-[#E6D6C5] bg-[#FCF8F3] p-5">
-              <p className="text-xs tracking-widest uppercase text-[#A08070] mb-4">
-                Elaborado por
-              </p>
-              <Link
-                href={`/client/artesano/${artesano.id_artesano}`}
-                className="group flex items-start gap-4"
-              >
-                <div className="w-14 h-14 rounded-full bg-[#C4A882] overflow-hidden flex items-center justify-center shrink-0">
-                  {artesano.foto_perfil ? (
-                    <img
-                      src={artesano.foto_perfil}
-                      alt={nombreArtesano || "Artesano"}
-                      className="w-full h-full object-cover"
-                    />
-                  ) : (
-                    <span className="text-xl">🧑‍🎨</span>
-                  )}
-                </div>
-                <div className="min-w-0">
-                  <p className="text-lg font-semibold text-[#2C1810] group-hover:text-[#6B3A2A] transition-colors">
-                    {nombreArtesano}
-                  </p>
-                  {(tipoArtesano || comunidadArtesano) && (
-                    <p className="text-sm text-[#A08070] mt-1">
-                      {[tipoArtesano, comunidadArtesano].filter(Boolean).join(" · ")}
-                    </p>
-                  )}
-                  {historiaArtesano && (
-                    <p className="text-sm text-[#5C4A3A] leading-relaxed mt-3 line-clamp-3">
-                      {historiaArtesano}
-                    </p>
-                  )}
-                  <p className="text-sm font-medium text-[#6B3A2A] mt-3">
-                    Conocer al artesano →
-                  </p>
-                </div>
-              </Link>
-            </div>
-          )}
-
-          {/* Cantidad + Agregar */}
-          {producto.stock > 0 ? (
-            <div className="space-y-4">
+          {/* ── Detalle (USD09) ─────────────────────────────── */}
+          <div>
+            {/* Tags */}
+            <div className="flex flex-wrap gap-2 mb-4">
               {producto.es_unico && (
-                <p className="text-sm font-medium text-[#6B3A2A]">
-                  Existen {producto.stock} disponibles.
-                </p>
+                <span className="bg-[#6B3A2A] text-white text-xs px-4 py-1.5 rounded-full uppercase font-bold tracking-widest flex items-center gap-2 shadow-sm">
+                  Pieza Única
+                </span>
               )}
-              <div className="flex items-center gap-4">
-                <div className="flex items-center border border-[#D4C4B0] rounded-full overflow-hidden">
-                  <button
-                    onClick={() => setCantidad(Math.max(1, cantidad - 1))}
-                    className="px-4 py-2 text-[#2C1810] hover:bg-[#F0E8DC] transition-colors"
-                  >
-                    −
-                  </button>
-                  <span className="px-4 py-2 font-medium text-[#2C1810]">{cantidad}</span>
-                  <button
-                    onClick={() => setCantidad(Math.min(producto.stock, cantidad + 1))}
-                    className="px-4 py-2 text-[#2C1810] hover:bg-[#F0E8DC] transition-colors"
-                  >
-                    +
-                  </button>
-                </div>
-              </div>
-              <div className="flex gap-3">
-                <button
-                  onClick={handleAgregarCarrito}
-                  className={`flex-1 py-3.5 rounded-full font-medium transition-all ${
-                    agregado
-                      ? "bg-green-700 text-white"
-                      : "bg-[#2C1810] text-white hover:bg-[#6B3A2A]"
-                  }`}
+              {fragInfo && (
+                <span
+                  className="text-xs px-4 py-1.5 rounded-full uppercase font-medium tracking-wide text-white"
+                  style={{ backgroundColor: fragInfo.color }}
                 >
-                  {agregado ? "✓ Agregado al carrito" : yaEnCarrito ? "Agregar más" : "Agregar al carrito"}
-                </button>
-                <Link
-                  href="/client/carrito"
-                  className="border border-[#2C1810] text-[#2C1810] px-6 py-3.5 rounded-full hover:bg-[#2C1810] hover:text-white transition-colors"
-                >
-                  Ver carrito
-                </Link>
-              </div>
-              {mensajeCarrito && (
-                <p className={`text-sm ${agregado ? "text-green-700" : "text-red-600"}`}>
-                  {mensajeCarrito}
-                </p>
+                  {fragInfo.label}
+                </span>
               )}
             </div>
-          ) : (
-            <p className="text-center py-4 bg-[#F0E8DC] rounded-full text-[#A08070]">
-              Pieza agotada — contáctanos para más info
-            </p>
-          )}
+
+            <h1 className="text-3xl md:text-4xl font-bold text-[#2C1810] mb-3">{producto.nombre}</h1>
+
+            {/* Precio */}
+            <div className="flex items-baseline gap-3 mb-6">
+              <span className="text-2xl font-bold text-[#6B3A2A]">
+                ${precioFinal.toLocaleString("es-MX")} MXN
+              </span>
+              {producto.descuento_pct > 0 && (
+                <>
+                  <span className="text-lg text-[#A08070] line-through">
+                    ${Number(producto.precio).toLocaleString("es-MX")}
+                  </span>
+                  <span className="bg-[#FEE2E2] text-[#C0392B] text-xs px-2 py-0.5 rounded-full">
+                    -{producto.descuento_pct}%
+                  </span>
+                </>
+              )}
+            </div>
+
+            {/* Descripción */}
+            <p className="text-[#5C4A3A] leading-relaxed mb-6">{producto.descripcion}</p>
+
+            {/* Ficha técnica */}
+            <div className="bg-[#F0E8DC] rounded-2xl p-5 mb-8 space-y-3">
+              <h3 className="text-xs tracking-widest uppercase text-[#A08070] font-medium">Ficha Técnica</h3>
+              {producto.materiales && (
+                <div className="flex justify-between text-sm">
+                  <span className="text-[#7A6A5A]">Materiales</span>
+                  <span className="text-[#2C1810] font-medium">{producto.materiales}</span>
+                </div>
+              )}
+              {producto.tecnica && (
+                <div className="flex justify-between text-sm">
+                  <span className="text-[#7A6A5A]">Técnica</span>
+                  <span className="text-[#2C1810] font-medium">{producto.tecnica}</span>
+                </div>
+              )}
+              <div className="flex justify-between text-sm">
+                <span className="text-[#7A6A5A]">Disponibilidad</span>
+                <span className={`font-medium ${producto.stock > 5 ? "text-green-700" : producto.stock > 0 ? "text-amber-600" : "text-red-600"}`}>
+                  {producto.stock > 0 ? `${producto.stock} en stock` : "Agotado"}
+                </span>
+              </div>
+            </div>
+
+            {/* Artesano */}
+            {artesano && (
+              <div className="mb-8 rounded-2xl border border-[#E6D6C5] bg-[#FCF8F3] p-5">
+                <p className="text-xs tracking-widest uppercase text-[#A08070] mb-4">
+                  Elaborado por
+                </p>
+                {artesano.id_artesano ? (
+                  <Link
+                    href={`/client/artesano/${artesano.id_artesano}`}
+                    className="group flex items-start gap-4"
+                  >
+                    <div className="w-14 h-14 rounded-full bg-[#C4A882] overflow-hidden flex items-center justify-center shrink-0">
+                      {artesano.foto_perfil ? (
+                        <img
+                          src={artesano.foto_perfil}
+                          alt={nombreArtesano || "Artesano"}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <span className="text-xl">🧑‍🎨</span>
+                      )}
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-lg font-semibold text-[#2C1810] group-hover:text-[#6B3A2A] transition-colors">
+                        {nombreArtesano}
+                      </p>
+                      {(tipoArtesano || comunidadArtesano) && (
+                        <p className="text-sm text-[#A08070] mt-1">
+                          {[tipoArtesano, comunidadArtesano].filter(Boolean).join(" · ")}
+                        </p>
+                      )}
+                      {historiaArtesano && (
+                        <p className="text-sm text-[#5C4A3A] leading-relaxed mt-3 line-clamp-3">
+                          {historiaArtesano}
+                        </p>
+                      )}
+                      <p className="text-sm font-medium text-[#6B3A2A] mt-3">
+                        Conocer al artesano →
+                      </p>
+                    </div>
+                  </Link>
+                ) : (
+                  <div className="flex items-start gap-4">
+                    <div className="w-14 h-14 rounded-full bg-[#C4A882] overflow-hidden flex items-center justify-center shrink-0">
+                      {artesano.foto_perfil ? (
+                        <img
+                          src={artesano.foto_perfil}
+                          alt={nombreArtesano || "Artesano"}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <span className="text-xl">🧑‍🎨</span>
+                      )}
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-lg font-semibold text-[#2C1810]">
+                        {nombreArtesano}
+                      </p>
+                      {(tipoArtesano || comunidadArtesano) && (
+                        <p className="text-sm text-[#A08070] mt-1">
+                          {[tipoArtesano, comunidadArtesano].filter(Boolean).join(" · ")}
+                        </p>
+                      )}
+                      {historiaArtesano && (
+                        <p className="text-sm text-[#5C4A3A] leading-relaxed mt-3 line-clamp-3">
+                          {historiaArtesano}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Cantidad + Agregar */}
+            {producto.stock > 0 ? (
+              <div className="space-y-4">
+                {producto.es_unico && (
+                  <p className="text-sm font-medium text-[#6B3A2A]">
+                    Existen {producto.stock} disponibles.
+                  </p>
+                )}
+                <div className="flex items-center gap-4">
+                  <div className="flex items-center border border-[#D4C4B0] rounded-full overflow-hidden">
+                    <button
+                      onClick={() => setCantidad(Math.max(1, cantidad - 1))}
+                      className="px-4 py-2 text-[#2C1810] hover:bg-[#F0E8DC] transition-colors"
+                    >
+                      −
+                    </button>
+                    <span className="px-4 py-2 font-medium text-[#2C1810]">{cantidad}</span>
+                    <button
+                      onClick={() => setCantidad(Math.min(producto.stock, cantidad + 1))}
+                      className="px-4 py-2 text-[#2C1810] hover:bg-[#F0E8DC] transition-colors"
+                    >
+                      +
+                    </button>
+                  </div>
+                </div>
+                <div className="flex gap-3">
+                  <button
+                    onClick={handleAgregarCarrito}
+                    className={`flex-1 py-3.5 rounded-full font-medium transition-all ${
+                      agregado
+                        ? "bg-green-700 text-white"
+                        : "bg-[#2C1810] text-white hover:bg-[#6B3A2A]"
+                    }`}
+                  >
+                    {agregado ? "✓ Agregado al carrito" : yaEnCarrito ? "Agregar más" : "Agregar al carrito"}
+                  </button>
+                  <Link
+                    href="/client/carrito"
+                    className="border border-[#2C1810] text-[#2C1810] px-6 py-3.5 rounded-full hover:bg-[#2C1810] hover:text-white transition-colors"
+                  >
+                    Ver carrito
+                  </Link>
+                </div>
+                {mensajeCarrito && (
+                  <p className={`text-sm ${agregado ? "text-green-700" : "text-red-600"}`}>
+                    {mensajeCarrito}
+                  </p>
+                )}
+              </div>
+            ) : (
+              <p className="text-center py-4 bg-[#F0E8DC] rounded-full text-[#A08070]">
+                Pieza agotada — contáctanos para más info
+              </p>
+            )}
+          </div>
         </div>
       </div>
-    </div>
+
+      {/* ── LIGHTBOX ──────────────────────────────────────────────── */}
+      {lightboxImg && (
+        <div
+          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/85 backdrop-blur-sm p-4"
+          onClick={() => setLightboxImg(null)}
+          style={{ animation: "lbFadeIn 0.25s ease" }}
+        >
+          <div
+            className="relative max-w-5xl w-full max-h-[90vh] rounded-3xl overflow-hidden shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+            style={{ animation: "lbScaleIn 0.3s ease" }}
+          >
+            <img
+              src={lightboxImg.url}
+              alt={lightboxImg.descripcion ?? producto?.nombre ?? "Imagen"}
+              className="w-full h-full object-contain max-h-[85vh]"
+            />
+            {lightboxImg.descripcion && lightboxImg.descripcion !== producto?.nombre && (
+              <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent px-6 py-4">
+                <p className="text-white text-sm">{lightboxImg.descripcion}</p>
+              </div>
+            )}
+            <button
+              onClick={() => setLightboxImg(null)}
+              className="absolute top-4 right-4 bg-white/20 hover:bg-white/40 backdrop-blur text-white rounded-full w-10 h-10 flex items-center justify-center transition-all duration-200"
+            >
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                <line x1="18" y1="6" x2="6" y2="18" />
+                <line x1="6" y1="6" x2="18" y2="18" />
+              </svg>
+            </button>
+          </div>
+          <style>{`
+            @keyframes lbFadeIn  { from { opacity: 0 } to { opacity: 1 } }
+            @keyframes lbScaleIn { from { transform: scale(0.92) } to { transform: scale(1) } }
+          `}</style>
+        </div>
+      )}
+    </>
   );
 }

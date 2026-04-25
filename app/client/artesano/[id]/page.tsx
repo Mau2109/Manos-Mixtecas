@@ -14,6 +14,7 @@ export default function ArtesanoPage() {
   const [productos, setProductos] = useState<any[]>([]);
   const [galeria, setGaleria] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [lightboxImg, setLightboxImg] = useState<any>(null);
 
   useEffect(() => {
     async function load() {
@@ -139,13 +140,32 @@ export default function ArtesanoPage() {
             </div>
 
             <div className="lg:col-span-5 relative mt-6 lg:mt-0 flex justify-center lg:justify-start lg:ml-8">
-              <div className="aspect-square sm:aspect-[4/5] w-full max-w-[280px] lg:max-w-[320px] rounded-[1.5rem] overflow-hidden border-[6px] border-white/5 shadow-2xl relative z-10 transform -rotate-2 hover:rotate-0 transition-transform duration-700">
+              <div
+                className={`aspect-square sm:aspect-[4/5] w-full max-w-[280px] lg:max-w-[320px] rounded-[1.5rem] overflow-hidden border-[6px] border-white/5 shadow-2xl relative z-10 transform -rotate-2 hover:rotate-0 transition-transform duration-700 group ${
+                  artesano.foto_perfil ? "cursor-zoom-in" : ""
+                }`}
+                onClick={() =>
+                  artesano.foto_perfil &&
+                  setLightboxImg({
+                    url: artesano.foto_perfil,
+                    descripcion: nombreCompleto || artesano.nombre,
+                  })
+                }
+              >
                 {artesano.foto_perfil ? (
-                  <img
-                    src={artesano.foto_perfil}
-                    alt={artesano.nombre}
-                    className="w-full h-full object-cover hover:scale-105 transition-transform duration-1000 ease-in-out"
-                  />
+                  <>
+                    <img
+                      src={artesano.foto_perfil}
+                      alt={artesano.nombre}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-in-out"
+                    />
+                    {/* Hint expandir */}
+                    <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors duration-300 flex items-center justify-center">
+                      <svg className="text-white opacity-0 group-hover:opacity-100 transition-opacity duration-300 drop-shadow-lg" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                        <path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7" />
+                      </svg>
+                    </div>
+                  </>
                 ) : (
                   <div className="w-full h-full bg-gradient-to-br from-[#4A2C1C] to-[#2C1810] flex items-center justify-center">
                     <span className="text-8xl drop-shadow-xl">🧑‍🎨</span>
@@ -280,7 +300,7 @@ export default function ArtesanoPage() {
         </section>
       )}
 
-      {/* ── PROCESO / GALERÍA ────────────────────────────────── */}
+      {/* ── GALERÍA CON LIGHTBOX ──────────────────────────────── */}
       {galeriaCurada.length > 0 && (
         <section className="py-20 bg-white">
           <div className="max-w-7xl mx-auto px-6">
@@ -292,13 +312,26 @@ export default function ArtesanoPage() {
               {galeriaCurada.slice(0, 6).map((img: any, i: number) => (
                 <div
                   key={`${img.url}-${i}`}
-                  className={`relative overflow-hidden rounded-2xl ${i === 0 ? "md:col-span-2 md:row-span-2" : ""}`}
+                  className={`relative overflow-hidden rounded-2xl cursor-pointer group ${
+                    i === 0 ? "md:col-span-2 md:row-span-2" : ""
+                  }`}
+                  onClick={() => setLightboxImg(img)}
                 >
                   <img
                     src={img.url}
                     alt={img.descripcion ?? `Galería ${i + 1}`}
-                    className="w-full h-full object-cover hover:scale-105 transition-transform duration-500"
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                   />
+                  {/* overlay hover */}
+                  <div className="absolute inset-0 bg-black/0 group-hover:bg-black/25 transition-colors duration-300 flex items-center justify-center">
+                    <svg
+                      className="text-white opacity-0 group-hover:opacity-100 transition-opacity duration-300 drop-shadow-lg"
+                      width="40" height="40" viewBox="0 0 24 24" fill="none"
+                      stroke="currentColor" strokeWidth="1.5"
+                    >
+                      <path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7" />
+                    </svg>
+                  </div>
                   <div className="absolute left-3 bottom-3 rounded-full bg-white/90 px-3 py-1 text-[11px] uppercase tracking-wide text-[#6B3A2A]">
                     {img.tipo ?? (img.origen === "producto" ? "trabajo" : "perfil")}
                   </div>
@@ -307,6 +340,46 @@ export default function ArtesanoPage() {
             </div>
           </div>
         </section>
+      )}
+
+      {/* ── LIGHTBOX ──────────────────────────────────────────── */}
+      {lightboxImg && (
+        <div
+          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/85 backdrop-blur-sm p-4"
+          onClick={() => setLightboxImg(null)}
+          style={{ animation: "lbFadeIn 0.25s ease" }}
+        >
+          <div
+            className="relative max-w-5xl w-full max-h-[90vh] rounded-3xl overflow-hidden shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+            style={{ animation: "lbScaleIn 0.3s ease" }}
+          >
+            <img
+              src={lightboxImg.url}
+              alt={lightboxImg.descripcion ?? "Imagen"}
+              className="w-full h-full object-contain max-h-[85vh]"
+            />
+            {lightboxImg.descripcion && (
+              <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent px-6 py-4">
+                <p className="text-white text-sm">{lightboxImg.descripcion}</p>
+              </div>
+            )}
+            {/* Botón cerrar */}
+            <button
+              onClick={() => setLightboxImg(null)}
+              className="absolute top-4 right-4 bg-white/20 hover:bg-white/40 backdrop-blur text-white rounded-full w-10 h-10 flex items-center justify-center transition-all duration-200"
+            >
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                <line x1="18" y1="6" x2="6" y2="18" />
+                <line x1="6" y1="6" x2="18" y2="18" />
+              </svg>
+            </button>
+          </div>
+          <style>{`
+            @keyframes lbFadeIn  { from { opacity: 0 } to { opacity: 1 } }
+            @keyframes lbScaleIn { from { transform: scale(0.92) } to { transform: scale(1) } }
+          `}</style>
+        </div>
       )}
     </div>
   );
