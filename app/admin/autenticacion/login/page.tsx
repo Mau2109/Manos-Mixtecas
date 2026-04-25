@@ -6,14 +6,15 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Toaster } from "@/components/ui/sonner";
 import { loginAdministrador } from "@/lib/services/loginServices";
+import { useAuth, ROLES } from "@/app/admin/auth-context";
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export default function LoginPage() {
 	const router = useRouter();
+	const { login } = useAuth();
 	const [email, setEmail] = useState("");
 	const [password, setPassword] = useState("");
 	const [error, setError] = useState("");
@@ -32,10 +33,28 @@ export default function LoginPage() {
 		}
 		setLoading(true);
 		try {
-			await loginAdministrador(email, password);
-			// Aquí podrías redirigir o mostrar mensaje de éxito
+			const usuario = await loginAdministrador(email, password);
+			
+			// Guardar usuario en el contexto de autenticación
+			login({
+				id_usuario: usuario.id_usuario,
+				nombre: usuario.nombre,
+				email: usuario.email,
+				id_rol: usuario.id_rol,
+				estado: usuario.estado,
+			});
+			
 			setError("");
-			router.push("/admin/perfil_empresa/visualizar_empresa");
+			
+			// Redirigir según el rol
+			if (usuario.id_rol === ROLES.ADMINISTRADOR) {
+				router.push("/admin/perfil_empresa/visualizar_empresa");
+			} else if (usuario.id_rol === ROLES.VENDEDOR) {
+				// Vendedor solo puede acceder a ventas e inventario (solo ver)
+				router.push("/admin/ventas/registrar_venta");
+			} else {
+				router.push("/admin/autenticacion/login");
+			}
 		} catch (err: any) {
 			setError("Correo o contraseña incorrectos");
 		} finally {

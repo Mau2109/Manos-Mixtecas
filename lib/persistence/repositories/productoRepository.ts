@@ -114,16 +114,31 @@ export async function listarProductosDb() {
 /* ===============================
    ADM03 - Consultar productos (persistencia)
    =============================== */
+// export async function consultarProductosDb() {
+//   const { data, error } = await supabase
+//     .from("productos")
+//     .select(
+//       `
+//       *,
+//       categorias(nombre),
+//       artesanos(id_artesano, nombre, apellido, tipo, comunidad)
+//     `
+//     )
+//     .order("id_producto", { ascending: true });
+
+//   if (error) throw error;
+//   return data;
+// }
 export async function consultarProductosDb() {
   const { data, error } = await supabase
     .from("productos")
-    .select(
-      `
+    .select(`
       *,
       categorias(nombre),
       artesanos(id_artesano, nombre, apellido, tipo, comunidad)
-    `
-    )
+    `)
+    .eq("estado", true)
+    .gt("stock", 0)
     .order("id_producto", { ascending: true });
 
   if (error) throw error;

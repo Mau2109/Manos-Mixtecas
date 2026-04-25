@@ -6,6 +6,7 @@ import {
   crearUsuario, 
   eliminarUsuario 
 } from "../../../lib/services/usuarioService"
+import { RouteGuard } from "@/components/auth/route-guard"
 import { 
   UserPlus, 
   Trash2, 
@@ -55,7 +56,7 @@ export interface Usuario {
   id_rol?: number
 }
 
-export default function UsuariosPage() {
+function UsuariosPageContent() {
   const [usuarios, setUsuarios] = useState<Usuario[]>([])
   const [loading, setLoading] = useState(true)
   const [filtroRol, setFiltroRol] = useState<string>("Todos")
@@ -469,5 +470,13 @@ export default function UsuariosPage() {
       </AlertDialog>
 
     </div>
+  )
+}
+
+export default function UsuariosPage() {
+  return (
+    <RouteGuard permiso="usuarios">
+      <UsuariosPageContent />
+    </RouteGuard>
   )
 }

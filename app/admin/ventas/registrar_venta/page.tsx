@@ -42,14 +42,23 @@ export default function RegistrarVentaPage() {
   const [descuentoError, setDescuentoError] = useState<string | null>(null);
 
   useEffect(() => {
-    setMounted(true);
-    consultarProductos().then(setProductosData);
-  }, []);
+  setMounted(true);
+  consultarProductos()
+    .then((data) => {
+      console.log("PRODUCTOS RECIBIDOS:", data);
+      setProductosData(
+  (data || []).filter(p => p && p.stock > 0 && p.estado !== false)
+);
+    })
+    .catch((error) => {
+      console.error("ERROR AL CONSULTAR PRODUCTOS:", error);
+    });
+}, []);
 
   const resultadosBusqueda = productosData.filter(p => 
-    p.nombre.toLowerCase().includes(busqueda.toLowerCase()) || 
-    p.id_producto.toString().includes(busqueda)
-  );
+  (p.nombre || "").toLowerCase().includes(busqueda.toLowerCase()) || 
+  p.id_producto.toString().includes(busqueda)
+);
 
   const agregarAlCarrito = (p: any) => {
     if (p.stock <= 0) return toast.error("Producto sin stock");
@@ -204,7 +213,7 @@ export default function RegistrarVentaPage() {
   };
 
   if (!mounted) return null;
-
+  const listaMostrar = busqueda ? resultadosBusqueda : productosData;
   return (
     <div className="flex h-screen bg-[#F8F9FA] overflow-hidden">
       <Toaster richColors position="top-right" />
@@ -236,9 +245,9 @@ export default function RegistrarVentaPage() {
                 onChange={e => setBusqueda(e.target.value)}
               />
               <Search className="absolute left-5 top-1/2 -translate-y-1/2 w-6 h-6 text-neutral-300" />
-              {busqueda && (
-                <Card className="absolute w-full mt-2 bg-white rounded-2xl shadow-2xl z-50 border-none overflow-hidden max-h-64 overflow-y-auto">
-                  {resultadosBusqueda.map(p => (
+              {(busqueda || productosData.length > 0) && (
+                <Card className="relative w-full mt-2 bg-white rounded-2xl shadow-2xl border-none overflow-hidden max-h-64 overflow-y-auto">
+                  {listaMostrar.map(p => (
                     <div key={p.id_producto} className="p-4 hover:bg-amber-50 cursor-pointer border-b border-neutral-50 flex justify-between items-center" onClick={() => agregarAlCarrito(p)}>
                       <div className="flex items-center gap-4">
                         <div className="w-12 h-12 bg-neutral-100 rounded-xl overflow-hidden flex items-center justify-center border border-neutral-200">
