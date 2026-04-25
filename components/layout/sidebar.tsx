@@ -23,7 +23,7 @@ import { Button } from "@/components/ui/button"
 
 // Todos los items del menú con sus permisos requeridos
 const menuItems = [
-  { name: "Perfil de Empresa", href: "/admin/perfil_empresa/agregar_perfil_empresa", icon: Building2, permiso: "perfil_empresa" },
+  { name: "Perfil de Empresa", href: "/admin/perfil_empresa/visualizar_perfil", icon: Building2, permiso: "perfil_empresa" },
   { name: "Inventario", href: "/admin/inventario", icon: Package, permiso: "inventario" },
   { name: "Artesanos", href: "/admin/proveedores", icon: Truck, permiso: "proveedores" },
   { name: "Compras", href: "/admin/compras/registrar_compra", icon: ShoppingCart, permiso: "compras" },
