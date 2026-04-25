@@ -15,7 +15,6 @@ export async function obtenerPerfilArtesanoDb(idArtesano: number) {
     `
     )
     .eq("id_artesano", idArtesano)
-    .eq("estado", true)
     .single();
 
   if (error) throw error;
